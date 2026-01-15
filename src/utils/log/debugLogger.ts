@@ -71,6 +71,7 @@ const DEBUG_PATHS = {
   flow: () => join(DEBUG_PATHS.base(), `${STARTUP_TIMESTAMP}-flow.log`),
   api: () => join(DEBUG_PATHS.base(), `${STARTUP_TIMESTAMP}-api.log`),
   state: () => join(DEBUG_PATHS.base(), `${STARTUP_TIMESTAMP}-state.log`),
+  llm: () => join(process.cwd(), 'output', 'llm.log'),
 }
 
 function ensureDebugDir() {
@@ -535,6 +536,9 @@ export function logLLMInteraction(context: {
   timing: { start: number; end: number }
   apiFormat?: 'anthropic' | 'openai'
 }) {
+  // Always write to llm.log file regardless of debug mode
+  writeLLMLogToFile(context)
+
   if (!isDebugMode()) return
 
   const duration = context.timing.end - context.timing.start
@@ -740,6 +744,120 @@ export function logLLMInteraction(context: {
     `   Stop Reason: ${context.response.stop_reason || context.response.finish_reason || 'unknown'}`,
   )
   terminalLog(chalk.gray('━'.repeat(60)))
+}
+
+function writeLLMLogToFile(context: {
+  systemPrompt: string
+  messages: any[]
+  response: any
+  usage?: { inputTokens: number; outputTokens: number }
+  timing: { start: number; end: number }
+  apiFormat?: 'anthropic' | 'openai'
+}) {
+  try {
+    const llmLogPath = DEBUG_PATHS.llm()
+    const outputDir = join(process.cwd(), 'output')
+
+    if (!existsSync(outputDir)) {
+      mkdirSync(outputDir, { recursive: true })
+    }
+
+    const duration = context.timing.end - context.timing.start
+    const timestamp = new Date().toISOString()
+
+    const separator = '='.repeat(80)
+    const subSeparator = '-'.repeat(60)
+
+    let logContent = `\n${separator}\n`
+    logContent += `[${timestamp}] LLM Interaction (${context.apiFormat || 'unknown'} API)\n`
+    logContent += `Duration: ${duration}ms`
+    if (context.usage) {
+      logContent += ` | Tokens: ${context.usage.inputTokens} in → ${context.usage.outputTokens} out`
+    }
+    logContent += `\n${separator}\n\n`
+
+    // System Prompt
+    logContent += `${subSeparator}\n`
+    logContent += `SYSTEM PROMPT (${context.systemPrompt.length} chars):\n`
+    logContent += `${subSeparator}\n`
+    logContent += `${context.systemPrompt}\n\n`
+
+    // Messages
+    logContent += `${subSeparator}\n`
+    logContent += `MESSAGES (${context.messages.length} total):\n`
+    logContent += `${subSeparator}\n`
+
+    context.messages.forEach((msg, index) => {
+      const role = (msg.role || 'unknown').toUpperCase()
+      logContent += `\n[${index}] ${role}:\n`
+
+      if (typeof msg.content === 'string') {
+        logContent += `${msg.content}\n`
+      } else if (Array.isArray(msg.content)) {
+        msg.content.forEach((block: any, blockIndex: number) => {
+          if (block.type === 'text') {
+            logContent += `  [text] ${block.text}\n`
+          } else if (block.type === 'tool_use') {
+            logContent += `  [tool_use] ${block.name}: ${JSON.stringify(block.input, null, 2)}\n`
+          } else if (block.type === 'tool_result') {
+            const resultContent = typeof block.content === 'string'
+              ? block.content
+              : JSON.stringify(block.content, null, 2)
+            logContent += `  [tool_result] tool_use_id=${block.tool_use_id}:\n${resultContent}\n`
+          } else {
+            logContent += `  [${block.type || 'unknown'}] ${JSON.stringify(block, null, 2)}\n`
+          }
+        })
+      } else if (msg.content) {
+        logContent += `${JSON.stringify(msg.content, null, 2)}\n`
+      }
+
+      // Handle OpenAI tool_calls format
+      if (msg.tool_calls && msg.tool_calls.length > 0) {
+        logContent += `  [tool_calls]:\n`
+        msg.tool_calls.forEach((tc: any, tcIndex: number) => {
+          logContent += `    [${tcIndex}] ${tc.function?.name || tc.name}: ${tc.function?.arguments || JSON.stringify(tc.input)}\n`
+        })
+      }
+    })
+
+    // Response
+    logContent += `\n${subSeparator}\n`
+    logContent += `RESPONSE:\n`
+    logContent += `${subSeparator}\n`
+
+    let responseContent = context.response
+    if (context.response?.content) {
+      responseContent = context.response.content
+    } else if (context.response?.message?.content) {
+      responseContent = context.response.message.content
+    }
+
+    if (Array.isArray(responseContent)) {
+      responseContent.forEach((block: any, index: number) => {
+        if (block.type === 'text') {
+          logContent += `[text] ${block.text}\n`
+        } else if (block.type === 'tool_use') {
+          logContent += `[tool_use] ${block.name} (id: ${block.id}):\n${JSON.stringify(block.input, null, 2)}\n`
+        } else if (block.type === 'thinking') {
+          logContent += `[thinking] ${block.thinking}\n`
+        } else {
+          logContent += `[${block.type || 'unknown'}] ${JSON.stringify(block, null, 2)}\n`
+        }
+      })
+    } else if (typeof responseContent === 'string') {
+      logContent += `${responseContent}\n`
+    } else {
+      logContent += `${JSON.stringify(responseContent, null, 2)}\n`
+    }
+
+    logContent += `\nStop Reason: ${context.response?.stop_reason || context.response?.finish_reason || 'unknown'}\n`
+    logContent += `${separator}\n`
+
+    appendFileSync(llmLogPath, logContent)
+  } catch (error) {
+    // Silently fail to avoid disrupting the main flow
+  }
 }
 
 export function logSystemPromptConstruction(construction: {
