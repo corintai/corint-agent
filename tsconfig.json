@@ -85,6 +85,8 @@
       "@history": ["src/app/history.ts"],
       "@costTracker": ["src/core/costTracker.ts"],
       "@permissions": ["src/core/permissions/index.ts"],
+      "@agent": ["src/agent/index.ts"],
+      "@agent/*": ["src/agent/*"],
       "@query": ["src/app/query.ts"],
       "@messages": ["src/app/messages.ts"],
       "*": ["node_modules/*", "src/types/*", "src/*"]
