@@ -13,7 +13,7 @@ import { getCwd, getOriginalCwd } from '@utils/state'
 import { getPlanConversationKey, getPlanFilePath } from '@utils/plan/planMode'
 import { getSettingsFileCandidates } from '@utils/config/settingsFiles'
 import { PRODUCT_NAME } from '@constants/product'
-import { getKodeBaseDir } from '@utils/config/env'
+import { getCorintBaseDir } from '@utils/config/env'
 
 type ToolRuleValue = {
   toolName: string
@@ -37,7 +37,7 @@ const SENSITIVE_DIR_NAMES = new Set([
   '.vscode',
   '.idea',
   '.claude',
-  '.kode',
+  '.corint',
   '.ssh',
 ])
 const SENSITIVE_FILE_NAMES = new Set([
@@ -120,8 +120,7 @@ export function expandSymlinkPaths(inputPath: string): string[] {
   try {
     const resolved = realpathSync(inputPath)
     if (resolved && resolved !== inputPath) out.push(resolved)
-  } catch {
-  }
+  } catch {}
   return out
 }
 
@@ -220,8 +219,8 @@ export function isWriteProtectedPath(
 
   if (normalized.endsWith('/.claude/settings.json')) return true
   if (normalized.endsWith('/.claude/settings.local.json')) return true
-  if (normalized.endsWith('/.kode/settings.json')) return true
-  if (normalized.endsWith('/.kode/settings.local.json')) return true
+  if (normalized.endsWith('/.corint/settings.json')) return true
+  if (normalized.endsWith('/.corint/settings.local.json')) return true
   if (settingsPaths.has(normalized)) return true
 
   const projectRoot = options?.projectDir ?? getOriginalCwd()
@@ -230,9 +229,9 @@ export function isWriteProtectedPath(
     POSIX.join(projectRootPosix, '.claude', 'commands'),
     POSIX.join(projectRootPosix, '.claude', 'agents'),
     POSIX.join(projectRootPosix, '.claude', 'skills'),
-    POSIX.join(projectRootPosix, '.kode', 'commands'),
-    POSIX.join(projectRootPosix, '.kode', 'agents'),
-    POSIX.join(projectRootPosix, '.kode', 'skills'),
+    POSIX.join(projectRootPosix, '.corint', 'commands'),
+    POSIX.join(projectRootPosix, '.corint', 'agents'),
+    POSIX.join(projectRootPosix, '.corint', 'skills'),
   ]
 
   for (const dir of protectedDirs) {
@@ -346,7 +345,7 @@ function rootPathForSource(source: ToolPermissionUpdateDestination): string {
     case 'session':
       return resolveLikeCliPath(getOriginalCwd())
     case 'userSettings':
-      return resolveLikeCliPath(getKodeBaseDir())
+      return resolveLikeCliPath(getCorintBaseDir())
     case 'policySettings':
     case 'projectSettings':
     case 'localSettings':
@@ -507,7 +506,9 @@ export function getWriteSafetyCheckForPath(
   return { safe: true }
 }
 
-export function getPlanFileWritePrivilegeForContext(context: ToolUseContext): string {
+export function getPlanFileWritePrivilegeForContext(
+  context: ToolUseContext,
+): string {
   const conversationKey = getPlanConversationKey(context)
   return getPlanFilePath(context.agentId, conversationKey)
 }
@@ -598,7 +599,7 @@ export function getSpecialAllowedReadReason(args: {
 
   const conversationKey = getPlanConversationKey(args.context)
 
-  const baseDirResolved = resolveLikeCliPath(getKodeBaseDir())
+  const baseDirResolved = resolveLikeCliPath(getCorintBaseDir())
 
   const bashOutputsDir = resolveLikeCliPath(
     path.join(baseDirResolved, 'bash-outputs', conversationKey),
@@ -637,7 +638,9 @@ export function getSpecialAllowedReadReason(args: {
   }
 
   const projectDir = process.cwd().replace(/[^a-zA-Z0-9]/g, '-')
-  const tasksDir = resolveLikeCliPath(path.join(baseDirResolved, projectDir, 'tasks'))
+  const tasksDir = resolveLikeCliPath(
+    path.join(baseDirResolved, projectDir, 'tasks'),
+  )
   const tasksDirPosix = toPosixPath(tasksDir)
   if (
     absPosix === tasksDirPosix ||

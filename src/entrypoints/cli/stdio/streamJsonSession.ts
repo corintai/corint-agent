@@ -15,10 +15,8 @@ export async function runPrintModeStreamJsonSession(args: {
   ) => void
   initialMessages?: any[]
 }): Promise<void> {
-  const { runKodeAgentStreamJsonSession } = await import(
-    '@utils/protocol/kodeAgentStreamJsonSession'
-  )
+  const { runKodeAgentStreamJsonSession } =
+    await import('@utils/protocol/kodeAgentStreamJsonSession')
 
   await runKodeAgentStreamJsonSession(args as any)
 }
-

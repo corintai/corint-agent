@@ -145,8 +145,7 @@ export const GlobTool = {
     let result = output.filenames.join('\n')
     if (output.filenames.length === 0) {
       result = 'No files found'
-    }
-    else if (output.truncated) {
+    } else if (output.truncated) {
       result +=
         '\n(Results are truncated. Consider using a more specific path or pattern.)'
     }

@@ -7,4 +7,3 @@ describe('repo scaffold', () => {
     expect(MACRO.VERSION).toBe(pkg.version)
   })
 })
-

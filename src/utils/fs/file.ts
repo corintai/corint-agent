@@ -328,7 +328,6 @@ export function getAbsoluteAndRelativePaths(path: string | undefined): {
   return { absolutePath, relativePath }
 }
 
-
 export function findSimilarFile(filePath: string): string | undefined {
   try {
     const dir = dirname(filePath)

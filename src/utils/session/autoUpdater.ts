@@ -52,29 +52,29 @@ export async function getLatestVersion(): Promise<string | null> {
     }
   } catch {}
 
-	  try {
-	    const controller = new AbortController()
-	    const timer = setTimeout(() => controller.abort(), 5000)
-	    const res = await fetch(
-	      `https://registry.npmjs.org/${encodeURIComponent(MACRO.PACKAGE_URL)}`,
-	      {
-	        method: 'GET',
-	        headers: {
-	          Accept: 'application/vnd.npm.install-v1+json',
-	          'User-Agent': `${PRODUCT_NAME}/${MACRO.VERSION}`,
-	        },
-	        signal: controller.signal,
-	      },
-	    )
-	    clearTimeout(timer)
-	    if (!res.ok) return null
-	    const json: any = await res.json().catch(() => null)
-	    const latest = json && json['dist-tags'] && json['dist-tags'].latest
-	    return typeof latest === 'string' ? latest : null
-	  } catch {
-	    return null
-	  }
-	}
+  try {
+    const controller = new AbortController()
+    const timer = setTimeout(() => controller.abort(), 5000)
+    const res = await fetch(
+      `https://registry.npmjs.org/${encodeURIComponent(MACRO.PACKAGE_URL)}`,
+      {
+        method: 'GET',
+        headers: {
+          Accept: 'application/vnd.npm.install-v1+json',
+          'User-Agent': `${PRODUCT_NAME}/${MACRO.VERSION}`,
+        },
+        signal: controller.signal,
+      },
+    )
+    clearTimeout(timer)
+    if (!res.ok) return null
+    const json: any = await res.json().catch(() => null)
+    const latest = json && json['dist-tags'] && json['dist-tags'].latest
+    return typeof latest === 'string' ? latest : null
+  } catch {
+    return null
+  }
+}
 
 export async function getUpdateCommandSuggestions(): Promise<string[]> {
   return [
@@ -89,7 +89,10 @@ export async function checkAndNotifyUpdate(): Promise<void> {
     const [
       { isAutoUpdaterDisabled, getGlobalConfig, saveGlobalConfig },
       { env },
-    ] = await Promise.all([import('@utils/config'), import('@utils/config/env')])
+    ] = await Promise.all([
+      import('@utils/config'),
+      import('@utils/config/env'),
+    ])
     if (await isAutoUpdaterDisabled()) return
     if (await env.getIsDocker()) return
     if (!(await env.hasInternetAccess())) return

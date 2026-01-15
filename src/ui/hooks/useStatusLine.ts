@@ -14,7 +14,7 @@ export function useStatusLine(): string | null {
 
   useEffect(() => {
     const enabled =
-      process.env.KODE_STATUSLINE_ENABLED === '1' ||
+      process.env.CORINT_STATUSLINE_ENABLED === '1' ||
       process.env.NODE_ENV !== 'test'
     if (!enabled) return
 

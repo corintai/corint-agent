@@ -2,17 +2,17 @@
 
 ## Executive Summary
 
-This document analyzes how to integrate effective code from `corint-cognition` into `corint-agent` (Kode CLI) to implement a Risk Agent following the design in `AGENT_DESIGN.md`.
+This document analyzes how to integrate effective code from `corint-cognition` into `corint-agent` (CORINT Agent CLI) to implement a Risk Agent following the design in `AGENT_DESIGN.md`.
 
-**Goal**: Leverage Kode's mature CLI infrastructure while adding CORINT's domain-specific agent capabilities for risk management.
+**Goal**: Leverage CORINT Agent's mature CLI infrastructure while adding CORINT's domain-specific agent capabilities for risk management.
 
 ---
 
 ## 1. Project Overview
 
-### 1.1 corint-agent (Kode CLI)
+### 1.1 corint-agent (CORINT Agent CLI)
 
-**Package**: `@shareai-lab/kode` v2.0.2
+**Package**: `@shareai-lab/corint-agent` v2.0.2
 
 **Core Capabilities**:
 - Mature CLI interface with Ink/React-based UI
@@ -128,7 +128,7 @@ packages/
 
 | Component | Path | Reason |
 |-----------|------|--------|
-| Kode Branding | `README.md`, package.json name | Rebrand to CORINT |
+| CORINT Agent Branding | `README.md`, package.json name | Rebrand to CORINT |
 | Unused Commands | Review `src/commands/` | Remove non-essential commands |
 | Demo/Example Files | Various | Clean up |
 
@@ -136,11 +136,11 @@ packages/
 
 | Component | Reason |
 |-----------|--------|
-| `agent-cli/` | Replaced by Kode's superior CLI |
-| `orchestrator.ts` | Kode has its own orchestration |
-| `executor.ts` | Kode's tool execution is more mature |
-| `llm-client.ts` | Kode already has multi-model support |
-| Basic file tools | Kode's file tools are more complete |
+| `agent-cli/` | Replaced by CORINT Agent's superior CLI |
+| `orchestrator.ts` | CORINT Agent has its own orchestration |
+| `executor.ts` | CORINT Agent's tool execution is more mature |
+| `llm-client.ts` | CORINT Agent already has multi-model support |
+| Basic file tools | CORINT Agent's file tools are more complete |
 
 ---
 
@@ -171,9 +171,9 @@ src/tools/data/
 ```
 
 **Adaptation Required**:
-1. Convert `Tool` base class to Kode's tool interface
+1. Convert `Tool` base class to CORINT Agent's tool interface
 2. Add React rendering for tool results
-3. Integrate with Kode's permission system
+3. Integrate with CORINT Agent's permission system
 4. Add configuration UI for data sources
 
 ### 3.2 Phase 2: Domain Calculation Tools (High Priority)
@@ -210,7 +210,7 @@ src/services/evaluation/
 ```
 
 **Integration Points**:
-- Hook into Kode's TaskTool for plan-based execution
+- Hook into CORINT Agent's TaskTool for plan-based execution
 - Add plan visualization in UI
 - Integrate with TodoWriteTool for progress tracking
 
@@ -270,7 +270,7 @@ abstract class Tool<TInput, TOutput> {
 }
 ```
 
-### 4.2 Kode Tool Interface
+### 4.2 CORINT Agent Tool Interface
 
 ```typescript
 // From core/tools/tool.ts
@@ -297,7 +297,7 @@ Create an adapter function to convert corint-cognition tools:
 // src/utils/tool-adapter.ts
 function adaptCognitionTool<TInput, TOutput>(
   cognitionTool: CognitionTool<TInput, TOutput>
-): KodeTool<TInput, TOutput> {
+): CORINT AgentTool<TInput, TOutput> {
   return {
     name: cognitionTool.name,
     description: cognitionTool.description,
@@ -371,24 +371,24 @@ datasource:
 
 | File/Directory | Reason | Action |
 |----------------|--------|--------|
-| `README.md` | Kode-specific branding and features | Replace with CORINT README |
-| `README.zh-CN.md` | Kode Chinese documentation | Replace or remove |
-| `CONTRIBUTING.md` | Kode contribution guide | Update for CORINT |
-| `DEPLOYMENT_GUIDE.md` | Kode deployment guide | Update for CORINT |
-| `AGENTS.md` | Kode agents documentation | Update for CORINT |
-| `docs/agents-system.md` | Kode agents system docs | Update or remove |
-| `docs/mention-system.md` | Kode @ mention system docs | Update or remove |
-| `docs/intelligent-completion.md` | Kode completion docs | Update or remove |
-| `docs/PUBLISH_GUIDE.md` | Kode npm publish guide | Remove (internal) |
-| `docs/PUBLISH.md` | Kode publish docs | Remove (internal) |
-| `.github/` | Kode GitHub workflows | Update for CORINT |
+| `README.md` | CORINT Agent-specific branding and features | Replace with CORINT README |
+| `README.zh-CN.md` | CORINT Agent Chinese documentation | Replace or remove |
+| `CONTRIBUTING.md` | CORINT Agent contribution guide | Update for CORINT |
+| `DEPLOYMENT_GUIDE.md` | CORINT Agent deployment guide | Update for CORINT |
+| `AGENTS.md` | CORINT Agent agents documentation | Update for CORINT |
+| `docs/agents-system.md` | CORINT Agent agents system docs | Update or remove |
+| `docs/mention-system.md` | CORINT Agent @ mention system docs | Update or remove |
+| `docs/intelligent-completion.md` | CORINT Agent completion docs | Update or remove |
+| `docs/PUBLISH_GUIDE.md` | CORINT Agent npm publish guide | Remove (internal) |
+| `docs/PUBLISH.md` | CORINT Agent publish docs | Remove (internal) |
+| `.github/` | CORINT Agent GitHub workflows | Update for CORINT |
 
 ### 6.2 Commands to Remove or Simplify
 
 | Command | File | Reason | Action |
 |---------|------|--------|--------|
-| `/bug` | `src/commands/bug.tsx` | Kode-specific feedback | Remove or rebrand |
-| `/release-notes` | `src/commands/release-notes.ts` | Kode release notes (disabled) | Remove |
+| `/bug` | `src/commands/bug.tsx` | CORINT Agent-specific feedback | Remove or rebrand |
+| `/release-notes` | `src/commands/release-notes.ts` | CORINT Agent release notes (disabled) | Remove |
 | `/login` | `src/commands/login.tsx` | ShareAI Lab OAuth | Remove (not needed) |
 | `/logout` | `src/commands/logout.tsx` | ShareAI Lab OAuth | Remove (not needed) |
 | `/pr-comments` | `src/commands/pr-comments.ts` | GitHub PR comments | Keep (useful for dev) |
@@ -409,7 +409,7 @@ datasource:
 | Service | Path | Reason | Action |
 |---------|------|--------|--------|
 | OAuth Service | `src/services/auth/oauth.ts` | ShareAI Lab specific | Remove |
-| Sentry Telemetry | `src/services/telemetry/sentry.ts` | Kode telemetry | Remove or replace |
+| Sentry Telemetry | `src/services/telemetry/sentry.ts` | CORINT Agent telemetry | Remove or replace |
 
 ### 6.4 Tools to Review
 
@@ -425,24 +425,24 @@ datasource:
 | Component | Path | Reason | Action |
 |-----------|------|--------|--------|
 | ACP Module | `src/acp/` | Agent communication protocol | Review - may be useful for multi-agent |
-| `kodeAcpAgent.ts` | `src/acp/kodeAcpAgent.ts` | 45KB, complex | Simplify or remove if not needed |
+| `corint-agentAcpAgent.ts` | `src/acp/corint-agentAcpAgent.ts` | 45KB, complex | Simplify or remove if not needed |
 | `cli-acp.js` | `cli-acp.js` | ACP entry point | Remove if ACP not needed |
 
 ### 6.6 Scripts to Review
 
 | Script | Path | Reason | Action |
 |--------|------|--------|--------|
-| `publish-dev.js` | `scripts/publish-dev.js` | Kode npm publish | Remove |
-| `publish-release.js` | `scripts/publish-release.js` | Kode npm publish | Remove |
-| `reference-parity-check.mjs` | `scripts/reference-parity-check.mjs` | Kode parity check | Remove |
+| `publish-dev.js` | `scripts/publish-dev.js` | CORINT Agent npm publish | Remove |
+| `publish-release.js` | `scripts/publish-release.js` | CORINT Agent npm publish | Remove |
+| `reference-parity-check.mjs` | `scripts/reference-parity-check.mjs` | CORINT Agent parity check | Remove |
 | `bench-startup.mjs` | `scripts/bench-startup.mjs` | Startup benchmark | Keep (useful) |
 
 ### 6.7 Constants and Branding
 
 | File | Path | Reason | Action |
 |------|------|--------|--------|
-| Product constants | `src/constants/product.ts` | PRODUCT_NAME = "Kode" | Update to "CORINT" |
-| Release notes | `src/constants/releaseNotes.ts` | Kode release notes | Clear or update |
+| Product constants | `src/constants/product.ts` | PRODUCT_NAME = "CORINT Agent" | Update to "CORINT" |
+| Release notes | `src/constants/releaseNotes.ts` | CORINT Agent release notes | Clear or update |
 | Macros | `src/constants/macros.ts` | Version info | Update |
 
 ### 6.8 Recommended Deletion Summary
@@ -471,7 +471,7 @@ src/commands/logout.tsx
 src/acp/                         # Entire directory
 cli-acp.js
 
-# Kode-specific scripts
+# CORINT Agent-specific scripts
 scripts/publish-dev.js
 scripts/publish-release.js
 scripts/reference-parity-check.mjs
@@ -523,10 +523,10 @@ src/constants/releaseNotes.ts
 
 ### Phase 1: Foundation (COMPLETED ✅)
 - [x] Create `src/services/datasource/` module
-- [x] Adapt `data-source.ts` for Kode
-- [x] Create `QuerySQLTool` with Kode interface
-- [x] Create `ExploreSchemaTool` with Kode interface
-- [x] Create `ListDataSourcesTool` with Kode interface
+- [x] Adapt `data-source.ts` for CORINT Agent
+- [x] Create `QuerySQLTool` with CORINT Agent interface
+- [x] Create `ExploreSchemaTool` with CORINT Agent interface
+- [x] Create `ListDataSourcesTool` with CORINT Agent interface
 - [x] Add data source configuration support (YAML, ENV)
 - [x] Register tools in tools/index.ts
 - [ ] Add permission rules for data tools
@@ -540,7 +540,7 @@ src/constants/releaseNotes.ts
 - [ ] Design `ValidateRDLTool` interface
 
 ### Phase 3: Planning (PENDING)
-- [ ] Adapt `planner.ts` for Kode
+- [ ] Adapt `planner.ts` for CORINT Agent
 - [ ] Integrate with TaskTool
 - [ ] Add plan visualization
 
@@ -569,7 +569,7 @@ src/constants/releaseNotes.ts
 | Tool interface mismatch | Medium | Create robust adapter layer |
 | Permission system conflicts | Medium | Carefully integrate permission rules |
 | Performance with large datasets | High | Add pagination, streaming support |
-| Breaking existing Kode features | High | Comprehensive testing |
+| Breaking existing CORINT Agent features | High | Comprehensive testing |
 
 ---
 
@@ -577,13 +577,13 @@ src/constants/releaseNotes.ts
 
 The integration strategy focuses on:
 
-1. **Preserving Kode's strengths**: CLI, UI, tool framework, multi-model support
+1. **Preserving CORINT Agent's strengths**: CLI, UI, tool framework, multi-model support
 2. **Adding CORINT's domain capabilities**: Data source management, SQL tools, risk calculations
 3. **Gradual integration**: Phase-based approach to minimize risk
 4. **Clean architecture**: Adapter pattern for tool compatibility
 
 The result will be a powerful Risk Agent CLI that combines:
-- Kode's excellent developer experience
+- CORINT Agent's excellent developer experience
 - CORINT's domain-specific risk management tools
 - Multi-database support for enterprise data
 - Planning and evaluation capabilities for complex tasks

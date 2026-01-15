@@ -121,7 +121,13 @@ describe('Naming conventions', () => {
   })
 
   test('src/ui/components/messages subdirectories must be lowercase', () => {
-    const messagesDir = join(process.cwd(), 'src', 'ui', 'components', 'messages')
+    const messagesDir = join(
+      process.cwd(),
+      'src',
+      'ui',
+      'components',
+      'messages',
+    )
     const entries = readdirSync(messagesDir, { withFileTypes: true })
 
     const violations: string[] = []

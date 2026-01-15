@@ -54,10 +54,12 @@ export function createStdioCanUseTool(args: {
           subtype: 'can_use_tool',
           tool_name: tool.name,
           input,
-          ...(typeof toolUseContext?.toolUseId === 'string' && toolUseContext.toolUseId
+          ...(typeof toolUseContext?.toolUseId === 'string' &&
+          toolUseContext.toolUseId
             ? { tool_use_id: toolUseContext.toolUseId }
             : {}),
-          ...(typeof toolUseContext?.agentId === 'string' && toolUseContext.agentId
+          ...(typeof toolUseContext?.agentId === 'string' &&
+          toolUseContext.agentId
             ? { agent_id: toolUseContext.agentId }
             : {}),
           ...(Array.isArray((denied as any).suggestions)
@@ -76,7 +78,8 @@ export function createStdioCanUseTool(args: {
 
       if (response && (response as any).behavior === 'allow') {
         const updatedInput =
-          (response as any).updatedInput && typeof (response as any).updatedInput === 'object'
+          (response as any).updatedInput &&
+          typeof (response as any).updatedInput === 'object'
             ? (response as any).updatedInput
             : null
         if (updatedInput) {
@@ -87,7 +90,8 @@ export function createStdioCanUseTool(args: {
         const updatedPermissions =
           Array.isArray(updatedPermissionsRaw) &&
           updatedPermissionsRaw.every(
-            u => u && typeof u === 'object' && typeof (u as any).type === 'string',
+            u =>
+              u && typeof u === 'object' && typeof (u as any).type === 'string',
           )
             ? (updatedPermissionsRaw as any[])
             : null

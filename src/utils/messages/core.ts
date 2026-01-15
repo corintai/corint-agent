@@ -369,9 +369,7 @@ export function reorderMessages(
         ms.splice(ms.indexOf(toolUseMessage) + 1, 0, message)
         continue
       }
-    }
-
-    else {
+    } else {
       ms.push(message)
     }
   }

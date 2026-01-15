@@ -473,8 +473,8 @@ export function validatePluginOrMarketplacePath(
   const stat = lstatSync(abs)
   let filePath = abs
   if (stat.isDirectory()) {
-    const marketplace = join(abs, '.kode-plugin', 'marketplace.json')
-    const plugin = join(abs, '.kode-plugin', 'plugin.json')
+    const marketplace = join(abs, '.corint-plugin', 'marketplace.json')
+    const plugin = join(abs, '.corint-plugin', 'plugin.json')
     const legacyMarketplace = join(abs, '.claude-plugin', 'marketplace.json')
     const legacyPlugin = join(abs, '.claude-plugin', 'plugin.json')
     if (existsSync(marketplace)) filePath = marketplace
@@ -490,7 +490,7 @@ export function validatePluginOrMarketplacePath(
           {
             path: 'directory',
             message:
-              'No manifest found in directory. Expected .kode-plugin/marketplace.json or .kode-plugin/plugin.json (legacy .claude-plugin/* is also supported)',
+              'No manifest found in directory. Expected .corint-plugin/marketplace.json or .corint-plugin/plugin.json (legacy .claude-plugin/* is also supported)',
           },
         ],
         warnings: [],

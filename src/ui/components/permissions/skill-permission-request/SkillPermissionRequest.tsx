@@ -28,14 +28,14 @@ export function SkillPermissionRequest({
 
   usePermissionRequestLogging(toolUseConfirm, unaryEvent)
 
-	  const raw =
-	    typeof toolUseConfirm.input.skill === 'string'
-	      ? toolUseConfirm.input.skill
-	      : ''
-	  const skill = raw.trim().replace(/^\//, '')
+  const raw =
+    typeof toolUseConfirm.input.skill === 'string'
+      ? toolUseConfirm.input.skill
+      : ''
+  const skill = raw.trim().replace(/^\//, '')
 
-	  return (
-	    <Box
+  return (
+    <Box
       flexDirection="column"
       borderStyle="round"
       borderColor={theme.permission}

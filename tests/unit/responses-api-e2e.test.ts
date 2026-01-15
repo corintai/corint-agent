@@ -5,7 +5,6 @@ import { testModels, getResponsesAPIModels } from '../testAdapters'
 import { processResponsesStream } from '@services/adapters/responsesStreaming'
 import { ReadableStream } from 'node:stream/web'
 
-
 describe('Responses API Tests', () => {
   describe('Responses API-specific functionality', () => {
     const testModel = getResponsesAPIModels(testModels)[0] || testModels[0]

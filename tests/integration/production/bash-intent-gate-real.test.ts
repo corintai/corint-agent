@@ -27,11 +27,11 @@ describe('Bash LLM intent gate (real request)', () => {
         sandboxRequired: false,
         cwd: process.cwd(),
         originalCwd: process.cwd(),
-	      })
+      })
 
-	      expect(['allow', 'block']).toContain(result.decision)
-	      expect(result.decision).not.toBe('error')
-	    },
+      expect(['allow', 'block']).toContain(result.decision)
+      expect(result.decision).not.toBe('error')
+    },
     { timeout: 90_000 },
   )
 })

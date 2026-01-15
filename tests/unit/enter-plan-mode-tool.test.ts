@@ -1,6 +1,9 @@
 import { beforeEach, describe, expect, test } from 'bun:test'
 import { EnterPlanModeTool } from '@tools/agent/PlanModeTool/EnterPlanModeTool'
-import { __resetPlanModeForTests, isPlanModeEnabled } from '@utils/plan/planMode'
+import {
+  __resetPlanModeForTests,
+  isPlanModeEnabled,
+} from '@utils/plan/planMode'
 import {
   __resetPermissionModeStateForTests,
   getPermissionMode,

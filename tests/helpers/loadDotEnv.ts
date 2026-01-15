@@ -22,4 +22,3 @@ export function loadDotEnvIfPresent(cwd: string = process.cwd()): void {
     console.log('⚠️  Could not load .env file:', message)
   }
 }
-

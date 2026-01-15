@@ -13,7 +13,7 @@ function parseBoolLike(value: string): boolean | null {
 }
 
 export function getSystemSandboxModeFromEnv(): SystemSandboxMode | null {
-  const raw = process.env.KODE_SYSTEM_SANDBOX
+  const raw = process.env.CORINT_SYSTEM_SANDBOX
   if (!raw) return null
   const bool = parseBoolLike(raw)
   if (bool === true) return 'auto'
@@ -27,7 +27,7 @@ export function getSystemSandboxModeFromEnv(): SystemSandboxMode | null {
 }
 
 export function getSystemSandboxNetworkModeFromEnv(): SystemSandboxNetworkMode | null {
-  const raw = process.env.KODE_SYSTEM_SANDBOX_NETWORK
+  const raw = process.env.CORINT_SYSTEM_SANDBOX_NETWORK
   if (!raw) return null
   const v = raw.trim().toLowerCase()
   if (['inherit', 'allow', 'enabled', 'true', '1'].includes(v)) return 'inherit'

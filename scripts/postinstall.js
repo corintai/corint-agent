@@ -51,7 +51,7 @@ function downloadFile(url, destPath, redirectCount = 0) {
       url,
       {
         headers: {
-          'User-Agent': '@shareai-lab/kode postinstall',
+          'User-Agent': '@corint/risk-agent postinstall',
           Accept: 'application/octet-stream',
         },
       },
@@ -133,9 +133,9 @@ async function maybeInstallBinary() {
 }
 
 async function postinstallNotice() {
-  safeLog('✅ @shareai-lab/kode installed. Commands available: kode, kwa, kd')
+  safeLog('✅ @corint/risk-agent installed. Commands available: corint, risk-agent')
   safeLog('   If shell cannot find them, reload your terminal or reinstall globally:')
-  safeLog('   npm i -g @shareai-lab/kode  (or use: npx @shareai-lab/kode)')
+  safeLog('   npm i -g @corint/risk-agent  (or use: npx @corint/risk-agent)')
   await maybeInstallBinary()
 }
 

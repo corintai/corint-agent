@@ -126,4 +126,3 @@ describe('ModelSelector modularization', () => {
     expect(h.getOutput()).toContain('SELECTED:foo')
   })
 })
-

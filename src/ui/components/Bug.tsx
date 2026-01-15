@@ -65,14 +65,9 @@ export function Bug({ onDone }: Props): React.ReactNode {
 
   const submitReport = useCallback(async () => {
     setStep('done')
-
-
-
-
   }, [description, envInfo.isGit, messages])
 
   useInput((input, key) => {
-
     if (error) {
       onDone('<bash-stderr>Error submitting bug report</bash-stderr>')
       return

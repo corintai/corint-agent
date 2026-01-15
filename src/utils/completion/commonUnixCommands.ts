@@ -1,4 +1,3 @@
-
 export const COMMON_UNIX_COMMANDS = [
   'ls',
   'cd',

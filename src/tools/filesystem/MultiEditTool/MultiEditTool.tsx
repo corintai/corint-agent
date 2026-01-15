@@ -374,7 +374,6 @@ export const MultiEditTool = {
         structuredPatch,
       }
 
-
       yield {
         type: 'result',
         data: resultData,

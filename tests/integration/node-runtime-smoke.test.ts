@@ -45,20 +45,27 @@ describe('npm runtime (Node.js)', () => {
 
       const node = (globalThis as any).Bun?.which?.('node') ?? 'node'
 
-      const versionRes = spawnSync(node, [join(distDir, 'index.js'), '--version'], {
-        encoding: 'utf8',
-      })
+      const versionRes = spawnSync(
+        node,
+        [join(distDir, 'index.js'), '--version'],
+        {
+          encoding: 'utf8',
+        },
+      )
       expect(versionRes.status).toBe(0)
       expect((versionRes.stdout ?? '').trim()).toBe(String(pkg.version))
 
-      const helpRes = spawnSync(node, [join(distDir, 'index.js'), '--help-lite'], {
-        encoding: 'utf8',
-      })
+      const helpRes = spawnSync(
+        node,
+        [join(distDir, 'index.js'), '--help-lite'],
+        {
+          encoding: 'utf8',
+        },
+      )
       expect(helpRes.status).toBe(0)
-      expect((helpRes.stdout ?? '')).toContain('Usage: kode')
+      expect(helpRes.stdout ?? '').toContain('Usage: kode')
     } finally {
       rmSync(root, { recursive: true, force: true })
     }
   })
 })
-

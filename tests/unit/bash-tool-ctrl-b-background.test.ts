@@ -128,7 +128,11 @@ describe('BashTool ctrl+b backgrounding parity (Reference CLI K41 + gH5)', () =>
 
       const events: any[] = []
       for await (const ev of BashTool.call(
-        { command: 'echo hello', description: 'Print greeting', timeout: 10_000 },
+        {
+          command: 'echo hello',
+          description: 'Print greeting',
+          timeout: 10_000,
+        },
         ctx,
       )) {
         events.push(ev)

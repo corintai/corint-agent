@@ -13,5 +13,4 @@ type LogEvent = {
   }
 }
 
-export function logUnaryEvent(event: LogEvent): void {
-}
+export function logUnaryEvent(event: LogEvent): void {}

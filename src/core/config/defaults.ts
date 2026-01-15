@@ -47,4 +47,3 @@ export const DEFAULT_GLOBAL_CONFIG: GlobalConfig = {
   },
   lastDismissedUpdateVersion: undefined,
 }
-

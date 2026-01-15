@@ -94,7 +94,8 @@ async function requestAll<
       let timeoutSignal: TimeoutSignal | null = null
 
       try {
-        let capabilities: Record<string, unknown> | null = client.capabilities ?? null
+        let capabilities: Record<string, unknown> | null =
+          client.capabilities ?? null
 
         if (!capabilities) {
           try {
@@ -137,15 +138,23 @@ async function requestAll<
     .filter(
       (
         result,
-      ): result is PromiseFulfilledResult<{ client: ConnectedClient; result: ResultT } | null> =>
-        result.status === 'fulfilled',
+      ): result is PromiseFulfilledResult<{
+        client: ConnectedClient
+        result: ResultT
+      } | null> => result.status === 'fulfilled',
     )
     .map(result => result.value)
-    .filter((result): result is { client: ConnectedClient; result: ResultT } => result !== null)
+    .filter(
+      (result): result is { client: ConnectedClient; result: ResultT } =>
+        result !== null,
+    )
 }
 
 export const getMCPTools = memoize(async (): Promise<Tool[]> => {
-  const toolsList = await requestAll<ListToolsResult, typeof ListToolsResultSchema>(
+  const toolsList = await requestAll<
+    ListToolsResult,
+    typeof ListToolsResultSchema
+  >(
     {
       method: 'tools/list',
     },
@@ -161,7 +170,10 @@ export const getMCPTools = memoize(async (): Promise<Tool[]> => {
         const toolPart = sanitizeMcpIdentifierPart(tool.name)
         const name = `mcp__${serverPart}__${toolPart}`
 
-        if (name.startsWith('mcp__ide__') && !IDE_MCP_TOOL_ALLOWLIST.has(name)) {
+        if (
+          name.startsWith('mcp__ide__') &&
+          !IDE_MCP_TOOL_ALLOWLIST.has(name)
+        ) {
           return null
         }
 
@@ -263,7 +275,10 @@ async function callMCPTool({
       return String(result.toolResult)
     }
 
-    if ('structuredContent' in result && result.structuredContent !== undefined) {
+    if (
+      'structuredContent' in result &&
+      result.structuredContent !== undefined
+    ) {
       return JSON.stringify(result.structuredContent)
     }
 
@@ -290,7 +305,10 @@ async function callMCPTool({
 }
 
 export const getMCPCommands = memoize(async (): Promise<Command[]> => {
-  const results = await requestAll<ListPromptsResult, typeof ListPromptsResultSchema>(
+  const results = await requestAll<
+    ListPromptsResult,
+    typeof ListPromptsResultSchema
+  >(
     {
       method: 'prompts/list',
     },
@@ -310,13 +328,17 @@ export const getMCPCommands = memoize(async (): Promise<Command[]> => {
         isHidden: false,
         progressMessage: 'running',
         userFacingName() {
-          const title = typeof (_ as any).title === 'string' ? (_ as any).title : _.name
+          const title =
+            typeof (_ as any).title === 'string' ? (_ as any).title : _.name
           return `${client.name}:${title} (MCP)`
         },
         argNames,
         async getPromptForCommand(args: string) {
           const argsArray = args.split(' ')
-          return await runCommand({ name: _.name, client }, zipObject(argNames, argsArray))
+          return await runCommand(
+            { name: _.name, client },
+            zipObject(argNames, argsArray),
+          )
         },
       } satisfies Command
     }),
@@ -350,7 +372,8 @@ export async function runCommand(
               type: 'image',
               source: {
                 data: String((content as any).data),
-                media_type: (content as any).mimeType as ImageBlockParam.Source['media_type'],
+                media_type: (content as any)
+                  .mimeType as ImageBlockParam.Source['media_type'],
                 type: 'base64',
               },
             },
@@ -375,4 +398,3 @@ export async function runCommand(
     throw error
   }
 }
-

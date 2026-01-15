@@ -1059,7 +1059,7 @@ function validatePathRestrictedCommand(
     return {
       behavior: 'ask',
       message:
-        "Commands that change directories and perform write operations require explicit approval to ensure paths are evaluated correctly. For security, Kode Agent cannot automatically determine the final working directory when 'cd' is used in compound commands.",
+        "Commands that change directories and perform write operations require explicit approval to ensure paths are evaluated correctly. For security, Corint Agent cannot automatically determine the final working directory when 'cd' is used in compound commands.",
       decisionReason: {
         type: 'other',
         reason:
@@ -1151,7 +1151,7 @@ function validateOutputRedirections(
     return {
       behavior: 'ask',
       message:
-        "Commands that change directories and write via output redirection require explicit approval to ensure paths are evaluated correctly. For security, Kode Agent cannot automatically determine the final working directory when 'cd' is used in compound commands.",
+        "Commands that change directories and write via output redirection require explicit approval to ensure paths are evaluated correctly. For security, Corint Agent cannot automatically determine the final working directory when 'cd' is used in compound commands.",
       decisionReason: {
         type: 'other',
         reason:
@@ -2427,7 +2427,7 @@ function h02(args: {
 
   if (
     !parseBoolLikeEnv(
-      process.env.KODE_DISABLE_COMMAND_INJECTION_CHECK ??
+      process.env.CORINT_DISABLE_COMMAND_INJECTION_CHECK ??
         process.env.CLAUDE_CODE_DISABLE_COMMAND_INJECTION_CHECK,
     )
   ) {
@@ -2480,7 +2480,7 @@ export async function checkBashPermissions(args: {
 
   if (
     !parseBoolLikeEnv(
-      process.env.KODE_DISABLE_COMMAND_INJECTION_CHECK ??
+      process.env.CORINT_DISABLE_COMMAND_INJECTION_CHECK ??
         process.env.CLAUDE_CODE_DISABLE_COMMAND_INJECTION_CHECK,
     ) &&
     isUnsafeCompoundCommand(trimmed)

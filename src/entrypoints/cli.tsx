@@ -14,4 +14,3 @@ Object.keys(dontcare)
 
 installProcessHandlers()
 void runCli()
-

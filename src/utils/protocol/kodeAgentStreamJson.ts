@@ -1,6 +1,5 @@
 import type { Message as KodeMessage } from '@query'
 
-
 export type SdkMessage =
   | {
       type: 'system'

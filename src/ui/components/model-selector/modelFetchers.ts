@@ -550,14 +550,14 @@ export async function fetchGeminiModels({
   apiKey: string
   setModelLoadError: SetModelLoadError
 }): Promise<ModelInfo[]> {
-	  try {
-	    const response = await fetch(
-	      `https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`,
-	    )
+  try {
+    const response = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`,
+    )
 
-	    if (!response.ok) {
-	      const errorData = await response.json()
-	      throw new Error(
+    if (!response.ok) {
+      const errorData = await response.json()
+      throw new Error(
         errorData.error?.message || `API error: ${response.status}`,
       )
     }

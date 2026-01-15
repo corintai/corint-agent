@@ -1,4 +1,3 @@
-
 import { useRef } from 'react'
 
 export const DOUBLE_PRESS_TIMEOUT_MS = 2000

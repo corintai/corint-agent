@@ -151,7 +151,7 @@ export type DestructiveCommandBlock = {
   resolvedTarget: string
 }
 
-const ENV_ALLOW = 'KODE_ALLOW_DESTRUCTIVE_RM'
+const ENV_ALLOW = 'CORINT_ALLOW_DESTRUCTIVE_RM'
 
 export function getBashDestructiveCommandBlock(args: {
   command: string

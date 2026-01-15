@@ -18,7 +18,7 @@ import { generateAgentFileContent } from './generation'
 export type AgentLocation = 'user' | 'project'
 
 const PRIMARY_FOLDER = '.claude'
-const LEGACY_FOLDER = '.kode'
+const LEGACY_FOLDER = '.corint'
 const AGENTS_DIR = 'agents'
 
 export function getAgentDirectory(location: AgentLocation): string {
@@ -125,7 +125,10 @@ export async function saveAgent(
     } catch (cleanupError) {
       logError(cleanupError)
       debugLogger.warn('AGENT_STORAGE_TEMP_CLEANUP_FAILED', {
-        error: cleanupError instanceof Error ? cleanupError.message : String(cleanupError),
+        error:
+          cleanupError instanceof Error
+            ? cleanupError.message
+            : String(cleanupError),
       })
     }
     throw error

@@ -11,4 +11,3 @@ export const PLAN_MODE_ALLOWED_NON_READONLY_TOOLS = new Set<string>([
 export function isToolAllowedInPlanMode(toolName: string): boolean {
   return PLAN_MODE_ALLOWED_NON_READONLY_TOOLS.has(toolName)
 }
-

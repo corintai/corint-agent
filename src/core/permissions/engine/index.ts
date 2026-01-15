@@ -136,7 +136,7 @@ export const hasPermissionsToUseTool: CanUseToolFn = async (
 
   if (permissionMode === 'bypassPermissions' && !requiresUserInteraction) {
     const bypassSafetyFloor =
-      parseBoolLike(process.env.KODE_BYPASS_SAFETY_FLOOR) && !safeMode
+      parseBoolLike(process.env.CORINT_BYPASS_SAFETY_FLOOR) && !safeMode
 
     if (!bypassSafetyFloor) {
       const denyIfUnsafeWrite = (toolPath: string): PermissionResult | null => {
@@ -431,13 +431,13 @@ export const hasPermissionsToUseTool: CanUseToolFn = async (
         }
       }
       case SkillTool: {
-	        const rawSkill =
-	          typeof (input as any).skill === 'string' ? (input as any).skill : ''
-	        const skillName = rawSkill.trim().replace(/^\//, '')
-	        const exactKey = getPermissionKey(tool, { skill: skillName }, null)
-	        if (effectiveDeniedTools.includes(exactKey)) {
-	          return {
-	            result: false,
+        const rawSkill =
+          typeof (input as any).skill === 'string' ? (input as any).skill : ''
+        const skillName = rawSkill.trim().replace(/^\//, '')
+        const exactKey = getPermissionKey(tool, { skill: skillName }, null)
+        if (effectiveDeniedTools.includes(exactKey)) {
+          return {
+            result: false,
             message: `Permission to use ${tool.name}(${skillName}) has been denied.`,
             shouldPromptUser: false,
           }

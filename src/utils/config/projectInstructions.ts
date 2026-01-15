@@ -85,7 +85,7 @@ export function getProjectInstructionFiles(
 }
 
 export function getProjectDocMaxBytes(): number {
-  const raw = process.env.KODE_PROJECT_DOC_MAX_BYTES
+  const raw = process.env.CORINT_PROJECT_DOC_MAX_BYTES
   if (!raw) return DEFAULT_PROJECT_DOC_MAX_BYTES
   const parsed = Number.parseInt(raw, 10)
   if (!Number.isFinite(parsed) || parsed <= 0)

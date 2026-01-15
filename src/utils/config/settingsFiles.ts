@@ -43,19 +43,19 @@ function getDefaultHomeDir(): string {
   return homedir()
 }
 
-function getUserKodeBaseDir(options?: {
+function getUserCorintBaseDir(options?: {
   homeDir?: string
   respectEnvOverride?: boolean
 }): string {
   const respectEnvOverride = options?.respectEnvOverride ?? true
   if (respectEnvOverride) {
     const override = normalizeOverride(
-      process.env.KODE_CONFIG_DIR ?? process.env.CLAUDE_CONFIG_DIR,
+      process.env.CORINT_CONFIG_DIR ?? process.env.CLAUDE_CONFIG_DIR,
     )
     if (override) return override
   }
   const home = options?.homeDir ?? getDefaultHomeDir()
-  return join(home, '.kode')
+  return join(home, '.corint')
 }
 
 function getUserLegacyBaseDir(options?: {
@@ -82,18 +82,18 @@ export function getSettingsFileCandidates(options: {
 
   switch (options.destination) {
     case 'localSettings': {
-      const primary = join(projectDir, '.kode', 'settings.local.json')
+      const primary = join(projectDir, '.corint', 'settings.local.json')
       const legacy = [join(projectDir, '.claude', 'settings.local.json')]
       return { primary, legacy }
     }
     case 'projectSettings': {
-      const primary = join(projectDir, '.kode', 'settings.json')
+      const primary = join(projectDir, '.corint', 'settings.json')
       const legacy = [join(projectDir, '.claude', 'settings.json')]
       return { primary, legacy }
     }
     case 'userSettings': {
       const primary = join(
-        getUserKodeBaseDir({ homeDir, respectEnvOverride }),
+        getUserCorintBaseDir({ homeDir, respectEnvOverride }),
         'settings.json',
       )
       const legacy = dedupeStrings([

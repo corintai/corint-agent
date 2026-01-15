@@ -14,4 +14,3 @@ export function createPrintModeStructuredStdio(args: {
     onControlRequest: args.onControlRequest,
   })
 }
-

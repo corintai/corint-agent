@@ -15,7 +15,7 @@ export function getLocalSettingsPath(options?: {
   projectDir?: string
 }): string {
   const projectDir = options?.projectDir ?? getCwd()
-  return join(projectDir, '.kode', 'settings.local.json')
+  return join(projectDir, '.corint', 'settings.local.json')
 }
 
 export function readLocalSettings(options?: {

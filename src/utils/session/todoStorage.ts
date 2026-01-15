@@ -1,5 +1,9 @@
 import { setSessionState, getSessionState } from './sessionState'
-import { readAgentData, writeAgentData, resolveAgentId } from '@utils/agent/storage'
+import {
+  readAgentData,
+  writeAgentData,
+  resolveAgentId,
+} from '@utils/agent/storage'
 
 export interface TodoItem {
   id: string

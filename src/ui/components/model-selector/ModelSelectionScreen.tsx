@@ -45,7 +45,9 @@ export function ModelSelectionScreen({
       >
         <Text bold>
           Model Selection{' '}
-          {exitState.pending ? `(press ${exitState.keyName} again to exit)` : ''}
+          {exitState.pending
+            ? `(press ${exitState.keyName} again to exit)`
+            : ''}
         </Text>
         <Box flexDirection="column" gap={1}>
           <Text bold>
@@ -90,7 +92,9 @@ export function ModelSelectionScreen({
                   No models match your search. Try a different query.
                 </Text>
               ) : (
-                <Text color="yellow">No models available for this provider.</Text>
+                <Text color="yellow">
+                  No models available for this provider.
+                </Text>
               )}
             </Box>
           )}

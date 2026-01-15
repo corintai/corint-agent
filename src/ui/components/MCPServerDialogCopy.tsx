@@ -11,7 +11,7 @@ export function MCPServerDialogCopy(): React.ReactNode {
         execute code, make network requests, or access system resources via tool
         calls. All tool calls will require your explicit approval before
         execution. For more information, see{' '}
-        <Link url="https://github.com/shareAI-lab/kode/blob/main/docs/mcp.md">
+        <Link url="https://github.com/corintai/corint-agent/blob/main/docs/mcp.md">
           MCP documentation
         </Link>
       </Text>

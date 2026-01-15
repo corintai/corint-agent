@@ -136,7 +136,7 @@ export const BashTool = {
     if (!input) return 'Bash'
 
     const raw =
-      process.env.KODE_BASH_SANDBOX_SHOW_INDICATOR ??
+      process.env.CORINT_BASH_SANDBOX_SHOW_INDICATOR ??
       process.env.CLAUDE_CODE_BASH_SANDBOX_SHOW_INDICATOR
     const showIndicator = raw
       ? ['1', 'true', 'yes', 'on'].includes(raw.trim().toLowerCase())
@@ -491,18 +491,19 @@ export const BashTool = {
         permissionCallback: async ({ host, port }) => {
           if (mode === 'acceptEdits' || mode === 'bypassPermissions')
             return true
-          if ((mode as string) === 'dontAsk' || shouldAvoidPermissionPrompts) return false
+          if ((mode as string) === 'dontAsk' || shouldAvoidPermissionPrompts)
+            return false
           if (!setToolJSX) return false
           if (abortController.signal.aborted) return false
 
-	          const hostForUrl =
-	            host.includes(':') && !host.startsWith('[') ? `[${host}]` : host
-	          const url = `http://${hostForUrl}:${port}/`
+          const hostForUrl =
+            host.includes(':') && !host.startsWith('[') ? `[${host}]` : host
+          const url = `http://${hostForUrl}:${port}/`
 
-	          return await new Promise<boolean>(resolve => {
-	            const assistantMessage = createAssistantMessage('')
-	            if (context.messageId) {
-	              ;(assistantMessage.message as any).id = context.messageId
+          return await new Promise<boolean>(resolve => {
+            const assistantMessage = createAssistantMessage('')
+            if (context.messageId) {
+              ;(assistantMessage.message as any).id = context.messageId
             }
 
             const toolUseConfirm: any = {

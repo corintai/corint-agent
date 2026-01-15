@@ -90,7 +90,7 @@ function maybeAnnotateMacosSandboxStderr(
 
   const lower = stderr.toLowerCase()
   const looksLikeSandboxViolation =
-    stderr.includes('KODE_SANDBOX') ||
+    stderr.includes('CORINT_SANDBOX') ||
     (lower.includes('sandbox-exec') &&
       (lower.includes('deny') || lower.includes('operation not permitted'))) ||
     (lower.includes('operation not permitted') && lower.includes('sandbox'))
@@ -100,7 +100,7 @@ function maybeAnnotateMacosSandboxStderr(
   return [
     stderr.trimEnd(),
     '',
-    '[sandbox] This failure looks like a macOS sandbox denial. Adjust sandbox settings (e.g. /sandbox or .kode/settings.json) to grant the minimal required access.',
+    '[sandbox] This failure looks like a macOS sandbox denial. Adjust sandbox settings (e.g. /sandbox or .corint/settings.json) to grant the minimal required access.',
   ].join('\n')
 }
 
@@ -135,16 +135,14 @@ export function normalizeLinuxSandboxPath(
         const real = realpathSync(dir)
         const suffix = resolved.slice(dir.length)
         return real + suffix
-      } catch {
-      }
+      } catch {}
     }
     return resolved
   }
 
   try {
     resolved = realpathSync(resolved)
-  } catch {
-  }
+  } catch {}
 
   return resolved
 }
@@ -500,13 +498,13 @@ export function buildMacosSandboxExecCommand(options: {
   readConfig?: BunShellSandboxReadConfig
   writeConfig?: BunShellSandboxWriteConfig
 }): string[] {
-  const logTag = 'KODE_SANDBOX'
+  const logTag = 'CORINT_SANDBOX'
 
   const profileLines: string[] = [
     '(version 1)',
     `(deny default (with message "${logTag}"))`,
     '',
-    '; Kode sandbox-exec profile (reference CLI compatible)',
+    '; Corint sandbox-exec profile (reference CLI compatible)',
     '',
     '(allow process*)',
     '(allow sysctl-read)',

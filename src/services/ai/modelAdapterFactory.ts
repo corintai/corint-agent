@@ -38,7 +38,6 @@ export class ModelAdapterFactory {
       return capabilities.apiArchitecture.primary
     }
 
-
     return capabilities.apiArchitecture.primary
   }
 

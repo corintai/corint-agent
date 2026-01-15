@@ -293,15 +293,15 @@ async function startHttpProxy(): Promise<number> {
           } catch {
             targetUrl = null
           }
-	        } else if (hostHeader) {
-	          try {
-	            targetUrl = new URL(
-	              `http://${hostHeader}${target.startsWith('/') ? target : '/' + target}`,
-	            )
-	          } catch {
-	            targetUrl = null
-	          }
-	        }
+        } else if (hostHeader) {
+          try {
+            targetUrl = new URL(
+              `http://${hostHeader}${target.startsWith('/') ? target : '/' + target}`,
+            )
+          } catch {
+            targetUrl = null
+          }
+        }
 
         if (!targetUrl) {
           writeHttpErrorResponse(clientSocket, '400 Bad Request')

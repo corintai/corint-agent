@@ -1,4 +1,3 @@
-
 export interface MatchResult {
   score: number
   matched: boolean

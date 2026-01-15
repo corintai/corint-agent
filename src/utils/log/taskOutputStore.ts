@@ -7,7 +7,7 @@ import {
   writeFileSync,
 } from 'fs'
 import { dirname, join } from 'path'
-import { getKodeBaseDir } from '@utils/config/env'
+import { getCorintBaseDir } from '@utils/config/env'
 
 function getProjectDir(cwd: string): string {
   return cwd.replace(/[^a-zA-Z0-9]/g, '-')
@@ -16,7 +16,7 @@ function getProjectDir(cwd: string): string {
 const PROJECT_ROOT = process.cwd()
 
 export function getTaskOutputsDir(): string {
-  return join(getKodeBaseDir(), getProjectDir(PROJECT_ROOT), 'tasks')
+  return join(getCorintBaseDir(), getProjectDir(PROJECT_ROOT), 'tasks')
 }
 
 export function getTaskOutputFilePath(taskId: string): string {
@@ -44,8 +44,7 @@ export function appendTaskOutput(taskId: string, chunk: string): void {
   try {
     ensureTaskOutputsDirExists()
     appendFileSync(getTaskOutputFilePath(taskId), chunk, 'utf8')
-  } catch {
-  }
+  } catch {}
 }
 
 export function readTaskOutputDelta(

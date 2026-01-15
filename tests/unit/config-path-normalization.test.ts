@@ -27,10 +27,14 @@ describe('config path normalization', () => {
     const expected = 'c:\\users\\alice\\work\\repo'
 
     expect(
-      normalizeProjectPathForComparison('C:\\Users\\Alice\\work\\repo', baseDir, {
-        platform: 'win32',
-        homeDir,
-      }),
+      normalizeProjectPathForComparison(
+        'C:\\Users\\Alice\\work\\repo',
+        baseDir,
+        {
+          platform: 'win32',
+          homeDir,
+        },
+      ),
     ).toBe(expected)
 
     expect(
@@ -56,12 +60,11 @@ describe('config path normalization', () => {
   })
 
   test('returns empty string for empty/whitespace input', () => {
-    expect(normalizeProjectPathForComparison('', '/', { platform: 'darwin' })).toBe(
-      '',
-    )
+    expect(
+      normalizeProjectPathForComparison('', '/', { platform: 'darwin' }),
+    ).toBe('')
     expect(
       normalizeProjectPathForComparison('   ', '/', { platform: 'darwin' }),
     ).toBe('')
   })
 })
-

@@ -2,7 +2,7 @@ import { existsSync, mkdirSync, readFileSync, realpathSync } from 'fs'
 import { randomBytes } from 'crypto'
 import { isAbsolute, join, relative, resolve, parse } from 'path'
 import type { ToolUseContext } from '@tool'
-import { getKodeBaseDir } from '@utils/config/env'
+import { getCorintBaseDir } from '@utils/config/env'
 import {
   PLAN_SLUG_ADJECTIVES,
   PLAN_SLUG_NOUNS,
@@ -435,7 +435,7 @@ export function hydratePlanSlugFromMessages(
 }
 
 export function getPlanDirectory(): string {
-  const dir = join(getKodeBaseDir(), 'plans')
+  const dir = join(getCorintBaseDir(), 'plans')
   if (!existsSync(dir)) {
     mkdirSync(dir, { recursive: true })
   }

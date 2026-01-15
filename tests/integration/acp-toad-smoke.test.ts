@@ -54,8 +54,7 @@ function createAcpHarness(options: { configDir: string }) {
       try {
         messages.push(JSON.parse(line))
         notify()
-      } catch {
-      }
+      } catch {}
     }
   })
 
@@ -67,7 +66,10 @@ function createAcpHarness(options: { configDir: string }) {
     proc.stdin?.write(`${JSON.stringify(msg)}\n`)
   }
 
-  const waitFor = async (predicate: (msg: JsonRpcMessage) => boolean, timeoutMs: number) => {
+  const waitFor = async (
+    predicate: (msg: JsonRpcMessage) => boolean,
+    timeoutMs: number,
+  ) => {
     const deadline = Date.now() + timeoutMs
     while (true) {
       const idx = messages.findIndex(predicate)
@@ -133,8 +135,12 @@ describe('ACP (toad-style smoke)', () => {
         const initRes = await acp1.waitFor(m => m.id === 1, 5_000)
         expect(initRes.result.protocolVersion).toBe(1)
         expect(initRes.result.agentCapabilities.loadSession).toBe(true)
-        expect(initRes.result.agentCapabilities.promptCapabilities.embeddedContent).toBe(true)
-        expect(initRes.result.agentCapabilities.promptCapabilities.embeddedContext).toBe(true)
+        expect(
+          initRes.result.agentCapabilities.promptCapabilities.embeddedContent,
+        ).toBe(true)
+        expect(
+          initRes.result.agentCapabilities.promptCapabilities.embeddedContext,
+        ).toBe(true)
 
         acp1.send({
           jsonrpc: '2.0',
@@ -154,7 +160,9 @@ describe('ACP (toad-style smoke)', () => {
             m.params?.update?.sessionUpdate === 'available_commands_update',
           15_000,
         )
-        expect(Array.isArray(commandsUpdate.params.update.availableCommands)).toBe(true)
+        expect(
+          Array.isArray(commandsUpdate.params.update.availableCommands),
+        ).toBe(true)
 
         const modeUpdate = await acp1.waitFor(
           m =>

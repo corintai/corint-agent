@@ -13,7 +13,7 @@ import type { Message } from '@query'
 import { MACRO } from '@constants/macros'
 import { getCwd } from '@utils/state'
 import { getKodeAgentSessionId } from './kodeAgentSessionId'
-import { getKodeBaseDir } from '@utils/config/env'
+import { getCorintBaseDir } from '@utils/config/env'
 import {
   PLAN_SLUG_ADJECTIVES,
   PLAN_SLUG_NOUNS,
@@ -66,7 +66,7 @@ type SessionJsonlEntry =
     }
 
 function getSessionStoreBaseDir(): string {
-  return getKodeBaseDir()
+  return getCorintBaseDir()
 }
 
 export function sanitizeProjectNameForSessionStore(cwd: string): string {
@@ -109,8 +109,7 @@ function safeAppendJsonl(path: string, record: unknown): void {
   try {
     safeEnsureFile(path)
     appendFileSync(path, JSON.stringify(record) + '\n', 'utf8')
-  } catch {
-  }
+  } catch {}
 }
 
 const lastUuidByFile = new Map<string, string | null>()
@@ -213,8 +212,7 @@ function ensureFileHistorySnapshot(
       snapshotWrittenByFile.add(filePath)
       return
     }
-  } catch {
-  }
+  } catch {}
 
   const now = new Date().toISOString()
   safeAppendJsonl(filePath, {

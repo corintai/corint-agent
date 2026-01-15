@@ -15,8 +15,7 @@ export function handleHashCommand(interpreted: string): void {
     try {
       readFileSync(legacyPath, 'utf-8')
       filesToUpdate.push({ path: legacyPath, name: 'CLAUDE.md' })
-    } catch {
-    }
+    } catch {}
 
     const now = new Date()
     const timezoneMatch = now.toString().match(/\(([A-Z]+)\)/)
@@ -38,8 +37,7 @@ export function handleHashCommand(interpreted: string): void {
         let existingContent = ''
         try {
           existingContent = readFileSync(file.path, 'utf-8').trim()
-        } catch {
-        }
+        } catch {}
 
         const separator = existingContent ? '\n\n' : ''
         const newContent = `${existingContent}${separator}${interpreted}${timestamp}`

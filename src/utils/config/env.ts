@@ -3,25 +3,25 @@ import { memoize } from 'lodash-es'
 import { join } from 'path'
 import { homedir } from 'os'
 import { CONFIG_BASE_DIR, CONFIG_FILE } from '@constants/product'
-export function getKodeBaseDir(): string {
+export function getCorintBaseDir(): string {
   return (
-    process.env.KODE_CONFIG_DIR ??
+    process.env.CORINT_CONFIG_DIR ??
     process.env.CLAUDE_CONFIG_DIR ??
     join(homedir(), CONFIG_BASE_DIR)
   )
 }
 
 export function getGlobalConfigFilePath(): string {
-  return process.env.KODE_CONFIG_DIR || process.env.CLAUDE_CONFIG_DIR
-    ? join(getKodeBaseDir(), 'config.json')
+  return process.env.CORINT_CONFIG_DIR || process.env.CLAUDE_CONFIG_DIR
+    ? join(getCorintBaseDir(), 'config.json')
     : join(homedir(), CONFIG_FILE)
 }
 
 export function getMemoryDir(): string {
-  return join(getKodeBaseDir(), 'memory')
+  return join(getCorintBaseDir(), 'memory')
 }
 
-export const KODE_BASE_DIR = getKodeBaseDir()
+export const CORINT_BASE_DIR = getCorintBaseDir()
 export const GLOBAL_CONFIG_FILE = getGlobalConfigFilePath()
 export const MEMORY_DIR = getMemoryDir()
 
@@ -35,7 +35,7 @@ const getIsDocker = memoize(async (): Promise<boolean> => {
 
 const hasInternetAccess = memoize(async (): Promise<boolean> => {
   const offline =
-    process.env.KODE_OFFLINE ??
+    process.env.CORINT_OFFLINE ??
     process.env.OFFLINE ??
     process.env.NO_NETWORK ??
     ''

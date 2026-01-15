@@ -320,8 +320,7 @@ class SystemReminderService {
       this.sessionState.lastFileAccess = Date.now()
     })
 
-    this.addEventListener('file:edited', context => {
-    })
+    this.addEventListener('file:edited', context => {})
 
     this.addEventListener('agent:mentioned', context => {
       this.createMentionReminder({

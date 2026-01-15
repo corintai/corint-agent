@@ -3,7 +3,6 @@ import { ModelAdapterFactory } from '@services/modelAdapterFactory'
 import { getModelCapabilities } from '@constants/modelCapabilities'
 import { testModels, getChatCompletionsModels } from '../testAdapters'
 
-
 describe('Chat Completions API Tests', () => {
   describe('Chat Completions API-specific functionality', () => {
     const testModel = getChatCompletionsModels(testModels)[0] || testModels[0]

@@ -1,6 +1,8 @@
 import type { GlobalConfig, ModelPointers, ModelProfile } from './schema'
 
-export function migrateModelProfilesRemoveId(config: GlobalConfig): GlobalConfig {
+export function migrateModelProfilesRemoveId(
+  config: GlobalConfig,
+): GlobalConfig {
   if (!config.modelProfiles) return config
 
   const idToModelNameMap = new Map<string, string>()
@@ -63,4 +65,3 @@ export function migrateModelProfilesRemoveId(config: GlobalConfig): GlobalConfig
     defaultModelName,
   }
 }
-

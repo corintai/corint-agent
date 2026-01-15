@@ -209,8 +209,7 @@ function readSessionCwdBestEffort(filePath: string): string | null {
       const cwd = (parsed as any).cwd
       if (typeof cwd === 'string' && cwd.trim()) return cwd.trim()
     }
-  } catch {
-  }
+  } catch {}
   return null
 }
 

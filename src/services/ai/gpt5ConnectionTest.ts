@@ -1,4 +1,3 @@
-
 import { getModelFeatures } from './openai'
 import { debug as debugLogger } from '@utils/log/debugLogger'
 
@@ -46,11 +45,15 @@ export async function testGPT5Connection(
   })
 
   if (isGPT5 && modelFeatures.supportsResponsesAPI && isOfficialOpenAI) {
-    debugLogger.api('GPT5_CONNECTION_TEST_TRY_RESPONSES', { model: config.model })
+    debugLogger.api('GPT5_CONNECTION_TEST_TRY_RESPONSES', {
+      model: config.model,
+    })
     const responsesResult = await testResponsesAPI(config, baseURL, startTime)
 
     if (responsesResult.success) {
-      debugLogger.api('GPT5_CONNECTION_TEST_RESPONSES_OK', { model: config.model })
+      debugLogger.api('GPT5_CONNECTION_TEST_RESPONSES_OK', {
+        model: config.model,
+      })
       return responsesResult
     } else {
       debugLogger.warn('GPT5_CONNECTION_TEST_RESPONSES_FAILED', {
@@ -60,7 +63,9 @@ export async function testGPT5Connection(
     }
   }
 
-  debugLogger.api('GPT5_CONNECTION_TEST_FALLBACK_CHAT_COMPLETIONS', { model: config.model })
+  debugLogger.api('GPT5_CONNECTION_TEST_FALLBACK_CHAT_COMPLETIONS', {
+    model: config.model,
+  })
   return await testChatCompletionsAPI(config, baseURL, startTime)
 }
 

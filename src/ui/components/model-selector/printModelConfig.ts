@@ -7,7 +7,9 @@ export function printModelConfig() {
   const activeProfiles = modelProfiles.filter(p => p.isActive)
 
   if (activeProfiles.length === 0) {
-    process.stdout.write(`${chalk.gray('  ⎿  No active model profiles configured')}\n`)
+    process.stdout.write(
+      `${chalk.gray('  ⎿  No active model profiles configured')}\n`,
+    )
     return
   }
 

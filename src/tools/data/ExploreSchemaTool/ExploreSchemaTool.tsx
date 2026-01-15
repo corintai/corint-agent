@@ -13,9 +13,7 @@ import {
 } from '@services/datasource'
 
 export const inputSchema = z.strictObject({
-  datasource: z
-    .string()
-    .describe('Name of the data source to explore'),
+  datasource: z.string().describe('Name of the data source to explore'),
   table: z
     .string()
     .optional()
@@ -23,7 +21,9 @@ export const inputSchema = z.strictObject({
   schema: z
     .string()
     .optional()
-    .describe('Database schema/namespace to explore (optional, defaults to public/default)'),
+    .describe(
+      'Database schema/namespace to explore (optional, defaults to public/default)',
+    ),
   timeout: z
     .number()
     .optional()
@@ -34,10 +34,7 @@ export const inputSchema = z.strictObject({
 const DEFAULT_TIMEOUT = 30000
 const MAX_TIMEOUT = 300000
 
-async function withTimeout<T>(
-  promise: Promise<T>,
-  ms: number,
-): Promise<T> {
+async function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
   const timeoutMs = Math.min(Math.max(ms, 1000), MAX_TIMEOUT)
   let timeoutId: ReturnType<typeof setTimeout>
   const timeoutPromise = new Promise<never>((_, reject) => {
@@ -371,11 +368,7 @@ This tool helps you understand the database structure before writing queries.`
       const table = output.tables[0]
       const columnsInfo = table.columns
         .map(col => {
-          const parts = [
-            col.name,
-            col.type,
-            col.nullable ? 'NULL' : 'NOT NULL',
-          ]
+          const parts = [col.name, col.type, col.nullable ? 'NULL' : 'NOT NULL']
           if (col.isPrimaryKey) parts.push('PRIMARY KEY')
           if (col.defaultValue) parts.push(`DEFAULT ${col.defaultValue}`)
           if (col.comment) parts.push(`-- ${col.comment}`)
@@ -394,7 +387,10 @@ This tool helps you understand the database structure before writing queries.`
     return <FallbackToolUseRejectedMessage />
   },
 
-  async *call({ datasource, table, schema, timeout }: Input, { abortController }) {
+  async *call(
+    { datasource, table, schema, timeout }: Input,
+    { abortController },
+  ) {
     try {
       if (abortController.signal.aborted) {
         yield {

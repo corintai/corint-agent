@@ -468,7 +468,6 @@ export async function runPrintMode({
     process.exit(0)
   }
 
-
   const abortController = new AbortController()
   const userMsg = await (async () => {
     if (normalizedInputFormat !== 'stream-json') {

@@ -213,7 +213,6 @@ export function REPL({
     }
   }, [messages, showCostDialog, haveShownCostDialog])
 
-
   const canUseTool = useCanUseTool(setToolUseConfirm)
 
   async function onInit() {

@@ -46,19 +46,29 @@ describe('stream-json session interrupt (integration)', () => {
     structured.start()
 
     let queryCalls = 0
-    const query = (async function* (_messages: any, _sp: any, _ctx: any, _cu: any, toolUseContext: any) {
+    const query = async function* (
+      _messages: any,
+      _sp: any,
+      _ctx: any,
+      _cu: any,
+      toolUseContext: any,
+    ) {
       queryCalls += 1
       if (queryCalls === 1) {
         await new Promise<void>(resolve => {
           if (toolUseContext.abortController.signal.aborted) return resolve()
-          toolUseContext.abortController.signal.addEventListener('abort', () => resolve(), {
-            once: true,
-          })
+          toolUseContext.abortController.signal.addEventListener(
+            'abort',
+            () => resolve(),
+            {
+              once: true,
+            },
+          )
         })
         return
       }
       yield createAssistantMessage(`turn:${queryCalls}`) as any
-    }) as any
+    } as any
 
     const sessionPromise = runKodeAgentStreamJsonSession({
       structured,
@@ -139,4 +149,3 @@ describe('stream-json session interrupt (integration)', () => {
     stdout.end()
   })
 })
-

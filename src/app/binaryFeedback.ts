@@ -26,7 +26,6 @@ function getMessageBlockSequence(m: AssistantMessage) {
   })
 }
 
-
 function textContentBlocksEqual(cb1: TextBlock, cb2: TextBlock): boolean {
   return cb1.text === cb2.text
 }

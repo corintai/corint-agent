@@ -50,4 +50,3 @@ await server.connect(transport)
 process.stdin.on('close', () => {
   process.exit(0)
 })
-

@@ -16,7 +16,7 @@ import { unzipSync } from 'fflate'
 import { z } from 'zod'
 import { CONFIG_BASE_DIR } from '@constants/product'
 import { getCwd } from '@utils/state'
-import { getKodeBaseDir } from '@utils/config/env'
+import { getCorintBaseDir } from '@utils/config/env'
 
 const KNOWN_MARKETPLACES_FILE = 'known_marketplaces.json'
 const MARKETPLACES_CACHE_DIR = 'marketplaces'
@@ -123,7 +123,7 @@ type InstalledSkillPlugin = {
 type InstalledSkillPluginsFile = Record<string, InstalledSkillPlugin>
 
 function userKodeDir(): string {
-  return getKodeBaseDir()
+  return getCorintBaseDir()
 }
 
 function normalizePluginScope(options?: {
@@ -257,14 +257,13 @@ function safeCopyDirectory(srcDir: string, destDir: string): void {
       copyFileSync(srcPath, destPath)
       continue
     }
-
   }
 }
 
 function readMarketplaceFromDirectory(rootDir: string): MarketplaceManifest {
   const primaryMarketplaceFile = resolve(
     rootDir,
-    '.kode-plugin',
+    '.corint-plugin',
     'marketplace.json',
   )
   const legacyMarketplaceFile = resolve(
@@ -277,7 +276,7 @@ function readMarketplaceFromDirectory(rootDir: string): MarketplaceManifest {
     : legacyMarketplaceFile
   if (!existsSync(marketplaceFile)) {
     throw new Error(
-      `Marketplace file not found (expected .kode-plugin/marketplace.json or .claude-plugin/marketplace.json)`,
+      `Marketplace file not found (expected .corint-plugin/marketplace.json or .claude-plugin/marketplace.json)`,
     )
   }
   const raw = readFileSync(marketplaceFile, 'utf8')
@@ -334,8 +333,7 @@ function resolvePluginForInstall(pluginInput: string): {
       const manifest = readMarketplaceFromDirectory(entry.installLocation)
       const found = manifest.plugins.find(p => p.name === trimmed)
       if (found) matches.push({ marketplace, entry: found })
-    } catch {
-    }
+    } catch {}
   }
 
   if (matches.length === 0) {
@@ -542,14 +540,14 @@ async function tryDownloadGithubZip(
     ? [ref]
     : [`refs/heads/${ref}`, `refs/tags/${ref}`]
 
-	  let lastError: Error | null = null
-	  for (const candidate of candidates) {
-	    const url = `https://codeload.github.com/${owner}/${name}/zip/${candidate}`
-	    try {
-	      return await fetchBinary(url)
-	    } catch (err) {
-	      lastError = err instanceof Error ? err : Error(String(err))
-	    }
+  let lastError: Error | null = null
+  for (const candidate of candidates) {
+    const url = `https://codeload.github.com/${owner}/${name}/zip/${candidate}`
+    try {
+      return await fetchBinary(url)
+    } catch (err) {
+      lastError = err instanceof Error ? err : Error(String(err))
+    }
   }
   throw lastError ?? new Error(`Failed to download GitHub repo ${repo}@${ref}`)
 }
@@ -574,7 +572,7 @@ async function cacheMarketplaceToTempDir(
     if (!existsSync(file) || !lstatSync(file).isFile()) {
       throw new Error(`File not found: ${source.path}`)
     }
-    const out = join(tempDir, '.kode-plugin')
+    const out = join(tempDir, '.corint-plugin')
     ensureDir(out)
     copyFileSync(file, join(out, 'marketplace.json'))
     return
@@ -637,7 +635,7 @@ async function cacheMarketplaceToTempDir(
     const url = source.url
     if (url.toLowerCase().endsWith('.json')) {
       const data = await fetchBinary(url)
-      const out = join(tempDir, '.kode-plugin')
+      const out = join(tempDir, '.corint-plugin')
       ensureDir(out)
       writeFileSync(join(out, 'marketplace.json'), Buffer.from(data))
       return
@@ -770,8 +768,7 @@ export function removeMarketplace(name: string): void {
     if (existsSync(entry.installLocation)) {
       rmSync(entry.installLocation, { recursive: true, force: true })
     }
-  } catch {
-  }
+  } catch {}
 }
 
 export async function refreshMarketplaceAsync(name: string): Promise<void> {
@@ -919,7 +916,7 @@ export function installSkillPlugin(
   const entrySourceBase = resolve(rootDir, entry.source ?? './')
   const primaryManifestPath = join(
     entrySourceBase,
-    '.kode-plugin',
+    '.corint-plugin',
     'plugin.json',
   )
   const legacyManifestPath = join(

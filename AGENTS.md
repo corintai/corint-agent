@@ -6,7 +6,7 @@ This file provides concise guidance to automation agents working in this reposit
 
 - Do not change any external CLI behavior/flags/output/protocols.
 - Keep gates green: `bun run typecheck`, `bun run lint`, `bun test`, `bun run build:npm`.
-- When a reference repo is available, keep parity green: `KODE_REFERENCE_REPO=/path/to/legacy-kode-cli bun run parity:reference`.
+- When a reference repo is available, keep parity green: `CORINT_REFERENCE_REPO=/path/to/legacy-cli bun run parity:reference`.
 
 ## Development Commands
 

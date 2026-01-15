@@ -285,8 +285,7 @@ export class SecureFileService {
             if (existsSync(tempPath)) {
               unlinkSync(tempPath)
             }
-          } catch {
-          }
+          } catch {}
           throw renameError
         }
       } else {

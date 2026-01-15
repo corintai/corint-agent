@@ -71,7 +71,6 @@ export class ChatCompletionsAdapter extends OpenAIAdapter {
     }))
   }
 
-
   protected parseNonStreamingResponse(response: any): UnifiedResponse {
     if (!response || typeof response !== 'object') {
       throw new Error('Invalid response: response must be an object')

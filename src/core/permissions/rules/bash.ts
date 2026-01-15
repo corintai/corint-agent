@@ -130,7 +130,9 @@ export const bashToolHasPermission = async (
         shouldPromptUser: false,
       }
     }
-    if (bashToolCommandHasExplicitRule(tool, trimmedCommand, null, askedTools)) {
+    if (
+      bashToolCommandHasExplicitRule(tool, trimmedCommand, null, askedTools)
+    ) {
       return {
         result: false,
         message: `${PRODUCT_NAME} requested permissions to use ${tool.name}, but you haven't granted it yet.`,

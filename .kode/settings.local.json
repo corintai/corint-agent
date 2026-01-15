@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "ExploreSchema",
+      "WebSearch(risk management best practices 2026 enterprise data analysis)",
+      "QuerySQL"
+    ]
+  }
+}

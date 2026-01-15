@@ -8,7 +8,6 @@ type Props = {
   doctorMode?: boolean
 }
 
-
 export function Doctor({ onDone, doctorMode = false }: Props): React.ReactNode {
   const [checked, setChecked] = useState(false)
   const theme = getTheme()

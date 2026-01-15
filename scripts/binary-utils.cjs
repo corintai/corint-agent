@@ -36,8 +36,8 @@ function getGithubReleaseBinaryUrl(options) {
   const version = options?.version
   const platform = options?.platform ?? process.platform
   const arch = options?.arch ?? process.arch
-  const owner = options?.owner ?? 'shareAI-lab'
-  const repo = options?.repo ?? 'kode'
+  const owner = options?.owner ?? 'corintai'
+  const repo = options?.repo ?? 'corint-agent'
   const tag = options?.tag ?? `v${version}`
   const baseUrl = options?.baseUrl ?? process.env.KODE_BINARY_BASE_URL
 

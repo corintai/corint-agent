@@ -111,8 +111,7 @@ async function readResponseTextLimited(
       if (bytes > maxBytes) {
         try {
           await reader.cancel()
-        } catch {
-        }
+        } catch {}
         throw new Error(
           `Response exceeded maximum allowed size (${maxBytes} bytes)`,
         )
@@ -122,8 +121,7 @@ async function readResponseTextLimited(
   } finally {
     try {
       reader.releaseLock()
-    } catch {
-    }
+    } catch {}
   }
 
   const buffer = Buffer.concat(chunks.map(chunk => Buffer.from(chunk)))

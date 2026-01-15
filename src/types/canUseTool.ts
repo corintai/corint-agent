@@ -16,4 +16,3 @@ export type CanUseToolFn = (
       suggestions?: ToolPermissionContextUpdate[]
     }
 >
-

@@ -336,8 +336,7 @@ function getOrCreateTsProject(projectCwd: string): TsProjectState | null {
         rootFileNames = parsed.fileNames
       }
     }
-  } catch {
-  }
+  } catch {}
 
   const rootFiles = new Set(rootFileNames)
   const versions = new Map<string, string>()
@@ -526,8 +525,7 @@ export const LspTool = {
           parts.push(`in: "${filePathForDisplay}"`)
           return parts.join(', ')
         }
-      } catch {
-      }
+      } catch {}
 
       parts.push(`operation: "${input.operation}"`)
       parts.push(`file: "${filePathForDisplay}"`)

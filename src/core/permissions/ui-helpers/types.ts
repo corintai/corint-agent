@@ -8,4 +8,3 @@ export type PermissionResult =
       shouldPromptUser?: boolean
       suggestions?: ToolPermissionContextUpdate[]
     }
-

@@ -1,4 +1,3 @@
-
 export interface MatchResult {
   score: number
   algorithm: string
@@ -284,9 +283,8 @@ export function matchCommands(
   commands: string[],
   query: string,
 ): Array<{ command: string; score: number }> {
-  return matchManyAdvanced(commands, query, 5)
-    .map(item => ({
-      command: item.candidate,
-      score: item.score,
-    }))
+  return matchManyAdvanced(commands, query, 5).map(item => ({
+    command: item.candidate,
+    score: item.score,
+  }))
 }

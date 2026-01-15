@@ -10,10 +10,10 @@ import {
 } from '@utils/config'
 
 export const USE_BEDROCK = !!(
-  process.env.KODE_USE_BEDROCK ?? process.env.CLAUDE_CODE_USE_BEDROCK
+  process.env.CORINT_USE_BEDROCK ?? process.env.CLAUDE_CODE_USE_BEDROCK
 )
 export const USE_VERTEX = !!(
-  process.env.KODE_USE_VERTEX ?? process.env.CLAUDE_CODE_USE_VERTEX
+  process.env.CORINT_USE_VERTEX ?? process.env.CLAUDE_CODE_USE_VERTEX
 )
 
 export interface ModelConfig {
@@ -465,7 +465,6 @@ export class ModelManager {
   hasConfiguredModels(): boolean {
     return this.getActiveModelProfiles().length > 0
   }
-
 
   getModel(pointer: ModelPointerType): ModelProfile | null {
     const pointerId = this.config.modelPointers?.[pointer]

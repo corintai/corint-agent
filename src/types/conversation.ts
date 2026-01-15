@@ -1,4 +1,3 @@
-
 import { UUID } from 'crypto'
 import type { MessageParam } from '@anthropic-ai/sdk/resources/index.mjs'
 import type { Message as APIAssistantMessage } from '@anthropic-ai/sdk/resources/index.mjs'

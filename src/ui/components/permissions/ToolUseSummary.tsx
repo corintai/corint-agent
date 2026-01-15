@@ -13,11 +13,12 @@ export function ToolUseSummary({
   suffix,
 }: Props): React.ReactNode {
   const messageNode =
-    toolMessage === null || toolMessage === undefined
-      ? null
-      : typeof toolMessage === 'string'
-        ? <Text>{toolMessage}</Text>
-        : toolMessage
+    toolMessage === null ||
+    toolMessage === undefined ? null : typeof toolMessage === 'string' ? (
+      <Text>{toolMessage}</Text>
+    ) : (
+      toolMessage
+    )
 
   return (
     <Box flexDirection="row" flexWrap="wrap">

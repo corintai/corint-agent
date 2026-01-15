@@ -56,4 +56,3 @@ export function isSettingSourceEnabled(source: SettingSource): boolean {
 export function __resetSettingSourcesForTests(): void {
   enabledSettingSources = new Set(Object.values(CLI_TO_SETTING_SOURCE))
 }
-

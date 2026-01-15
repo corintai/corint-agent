@@ -4,7 +4,7 @@ function isTruthyEnv(value: string | undefined): boolean {
 }
 
 export function isPackagedRuntime(): boolean {
-  if (isTruthyEnv(process.env.KODE_PACKAGED)) return true
+  if (isTruthyEnv(process.env.CORINT_PACKAGED)) return true
 
   try {
     const exec = (process.execPath || '').split(/[\\/]/).pop()?.toLowerCase()
@@ -79,8 +79,8 @@ export function maybeTruncateVerboseToolOutput(
   text: string,
   options?: { maxLines?: number; maxChars?: number },
 ): { text: string; truncated: boolean } {
-  const maxLinesEnv = Number(process.env.KODE_TOOL_OUTPUT_MAX_LINES ?? '')
-  const maxCharsEnv = Number(process.env.KODE_TOOL_OUTPUT_MAX_CHARS ?? '')
+  const maxLinesEnv = Number(process.env.CORINT_TOOL_OUTPUT_MAX_LINES ?? '')
+  const maxCharsEnv = Number(process.env.CORINT_TOOL_OUTPUT_MAX_CHARS ?? '')
   const envOverrides = {
     maxLines:
       Number.isFinite(maxLinesEnv) && maxLinesEnv > 0 ? maxLinesEnv : undefined,
@@ -93,7 +93,7 @@ export function maybeTruncateVerboseToolOutput(
     maxChars: envOverrides.maxChars ?? options?.maxChars,
   }
 
-  const fullAllowed = isTruthyEnv(process.env.KODE_TOOL_OUTPUT_FULL)
+  const fullAllowed = isTruthyEnv(process.env.CORINT_TOOL_OUTPUT_FULL)
   if (!isPackagedRuntime() || fullAllowed) {
     return { text: String(text ?? ''), truncated: false }
   }

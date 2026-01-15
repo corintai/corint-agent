@@ -37,7 +37,7 @@ export function formatSystemPromptWithContext(
     if (!skipContextReminders) {
       const kodeContext = generateKodeContext()
       if (kodeContext) {
-        enhancedPrompt.push('\n---\n# 项目上下文\n')
+        enhancedPrompt.push('\n---\n# Project Context\n')
         enhancedPrompt.push(kodeContext)
         enhancedPrompt.push('\n---\n')
       }

@@ -123,8 +123,7 @@ export const ListMcpResourcesTool = {
             server: wrapped.name,
           })),
         )
-      } catch {
-      }
+      } catch {}
     }
 
     yield {

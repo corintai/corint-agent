@@ -25,4 +25,3 @@ export async function processUserInput(
   const impl = await import('./userInput')
   return impl.processUserInput(input, mode, setToolJSX, context, pastedImages)
 }
-

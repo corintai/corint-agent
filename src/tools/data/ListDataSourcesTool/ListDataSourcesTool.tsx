@@ -76,7 +76,9 @@ Use this tool first to discover available data sources before running queries.`
 
     return (
       <Box flexDirection="column">
-        <Text color="green">{content.sources.length} data source(s) available</Text>
+        <Text color="green">
+          {content.sources.length} data source(s) available
+        </Text>
         <Text color={theme.text}>{sourceLines}</Text>
       </Box>
     )

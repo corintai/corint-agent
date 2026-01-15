@@ -3,7 +3,10 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterEach, beforeEach, expect, test } from 'bun:test'
 import { rgPath } from '@vscode/ripgrep'
-import { getRipgrepPath, resetRipgrepPathCacheForTests } from '@utils/system/ripgrep'
+import {
+  getRipgrepPath,
+  resetRipgrepPathCacheForTests,
+} from '@utils/system/ripgrep'
 
 const ORIGINAL_ENV = { ...process.env }
 

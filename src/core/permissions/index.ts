@@ -6,4 +6,3 @@ export {
   bashToolCommandHasPermission,
   bashToolHasPermission,
 } from './rules'
-

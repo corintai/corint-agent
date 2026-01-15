@@ -5,17 +5,17 @@ import { randomUUID } from 'crypto'
 import { debug as debugLogger } from '@utils/log/debugLogger'
 import { logError } from '@utils/log'
 
-
 function getConfigDirectory(): string {
   return (
-    process.env.KODE_CONFIG_DIR ??
-    process.env.ANYKODE_CONFIG_DIR ??
-    join(homedir(), '.kode')
+    process.env.CORINT_CONFIG_DIR ??
+    process.env.CORINT_CONFIG_DIR ??
+    process.env.ANYCORINT_CONFIG_DIR ??
+    join(homedir(), '.corint')
   )
 }
 
 function getSessionId(): string {
-  return process.env.ANYKODE_SESSION_ID ?? 'default-session'
+  return process.env.ANYCORINT_SESSION_ID ?? 'default-session'
 }
 
 export function getAgentFilePath(agentId: string): string {

@@ -18,10 +18,12 @@ function isTruthyEnv(value: string | undefined): boolean {
 }
 
 function resolveRipgrepPathOrThrow(): string {
-  const explicit = process.env.KODE_RIPGREP_PATH
+  const explicit = process.env.CORINT_RIPGREP_PATH
   if (explicit) {
     if (!existsSync(explicit)) {
-      throw new Error(`KODE_RIPGREP_PATH points to a missing file: ${explicit}`)
+      throw new Error(
+        `CORINT_RIPGREP_PATH points to a missing file: ${explicit}`,
+      )
     }
     return explicit
   }
@@ -41,7 +43,7 @@ function resolveRipgrepPathOrThrow(): string {
         'ripgrep (rg) was not found on PATH, and @vscode/ripgrep is missing.',
         'Fix:',
         '- Install ripgrep: https://github.com/BurntSushi/ripgrep',
-        '- Or reinstall @shareai-lab/kode (ensure dependencies are present)',
+        '- Or reinstall @corint/risk-agent (ensure dependencies are present)',
       ].join('\n'),
     )
   }
@@ -181,4 +183,3 @@ export function resetRipgrepPathCacheForTests(): void {
   ;(getRipgrepPath as any).cache?.clear?.()
   alreadyDoneSignCheck = false
 }
-

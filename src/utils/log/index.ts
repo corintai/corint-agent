@@ -15,7 +15,7 @@ import type { LogOption, SerializedMessage } from '@kode-types/logs'
 import { MACRO } from '@constants/macros'
 import { PRODUCT_COMMAND } from '@constants/product'
 import { getPlanSlugForConversationKey } from '@utils/plan/planMode'
-import { getKodeBaseDir } from '@utils/config/env'
+import { getCorintBaseDir } from '@utils/config/env'
 
 // Stub for removed sentry
 function captureException(_error: unknown): void {
@@ -74,11 +74,11 @@ function getProjectDir(cwd: string): string {
 }
 
 function getLegacyCacheRoot(): string {
-  return process.env.KODE_LEGACY_CACHE_ROOT ?? paths.cache
+  return process.env.CORINT_LEGACY_CACHE_ROOT ?? paths.cache
 }
 
 function getNewLogRoot(): string {
-  return process.env.KODE_LOG_ROOT ?? getKodeBaseDir()
+  return process.env.CORINT_LOG_ROOT ?? getCorintBaseDir()
 }
 
 export const CACHE_PATHS = {
@@ -177,8 +177,7 @@ function migrateLegacyMessageLogsIfNeeded() {
     if (existsSync(dest)) continue
     try {
       copyFileSync(src, dest)
-    } catch {
-    }
+    } catch {}
   }
 }
 
@@ -204,8 +203,7 @@ export function logError(error: unknown): void {
     appendToLog(getErrorsPath(), {
       error: errorStr,
     })
-  } catch {
-  }
+  } catch {}
   captureException(error)
 }
 
@@ -529,6 +527,5 @@ export function logMCPError(serverName: string, error: unknown): void {
     const messages = readLog(logFile)
     messages.push(errorInfo)
     writeFileSync(logFile, JSON.stringify(messages, null, 2), 'utf8')
-  } catch {
-  }
+  } catch {}
 }

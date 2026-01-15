@@ -4,7 +4,10 @@ import { join, resolve } from 'path'
 import { z } from 'zod'
 import { glob as globLib } from 'glob'
 import { getCwd } from '@utils/state'
-import { setSessionPlugins, type SessionPlugin } from '@utils/session/sessionPlugins'
+import {
+  setSessionPlugins,
+  type SessionPlugin,
+} from '@utils/session/sessionPlugins'
 
 const PluginManifestSchema = z
   .object({
@@ -37,7 +40,8 @@ async function expandPluginDirInputs(
     const abs = resolve(baseDir, expanded)
 
     if (isLikelyGlob(trimmed) || isLikelyGlob(expanded)) {
-      const patternsToTry = expanded !== trimmed ? [expanded, trimmed] : [trimmed]
+      const patternsToTry =
+        expanded !== trimmed ? [expanded, trimmed] : [trimmed]
       let matched = false
       for (const pattern of patternsToTry) {
         try {
@@ -59,8 +63,7 @@ async function expandPluginDirInputs(
             matched = true
             break
           }
-        } catch {
-        }
+        } catch {}
       }
       if (matched) continue
     }
@@ -116,14 +119,14 @@ function resolveManifestPaths(
 }
 
 function loadPluginFromDir(rootDir: string): SessionPlugin {
-  const primaryManifestPath = join(rootDir, '.kode-plugin', 'plugin.json')
+  const primaryManifestPath = join(rootDir, '.corint-plugin', 'plugin.json')
   const legacyManifestPath = join(rootDir, '.claude-plugin', 'plugin.json')
   const manifestPath = existsSync(primaryManifestPath)
     ? primaryManifestPath
     : legacyManifestPath
   if (!existsSync(manifestPath)) {
     throw new Error(
-      `Plugin manifest not found (expected .kode-plugin/plugin.json or .claude-plugin/plugin.json)`,
+      `Plugin manifest not found (expected .corint-plugin/plugin.json or .claude-plugin/plugin.json)`,
     )
   }
 

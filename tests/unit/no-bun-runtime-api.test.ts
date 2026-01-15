@@ -18,4 +18,3 @@ describe('Runtime portability', () => {
     expect(offenders).toEqual([])
   })
 })
-

@@ -6,7 +6,7 @@ function isTruthyEnv(value: string | undefined): boolean {
 }
 
 function isEnabled(): boolean {
-  return isTruthyEnv(process.env.KODE_STARTUP_PROFILE)
+  return isTruthyEnv(process.env.CORINT_STARTUP_PROFILE)
 }
 
 const seen = new Set<StartupEvent>()

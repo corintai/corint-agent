@@ -259,7 +259,10 @@ export const getClients = memoize(async (): Promise<WrappedClient[]> => {
     const batchResults = await Promise.all(
       batch.map(async ([name, serverRef]) => {
         try {
-          const client = await connectToServer(name, serverRef as McpServerConfig)
+          const client = await connectToServer(
+            name,
+            serverRef as McpServerConfig,
+          )
           let capabilities: Record<string, unknown> | null = null
           try {
             capabilities = client.getServerCapabilities() as any
@@ -309,7 +312,11 @@ function parseMcpServersFromCliConfigEntries(options: {
         ? (parsed as any).mcpServers
         : parsed
 
-    if (!rawServers || typeof rawServers !== 'object' || Array.isArray(rawServers))
+    if (
+      !rawServers ||
+      typeof rawServers !== 'object' ||
+      Array.isArray(rawServers)
+    )
       continue
 
     for (const [name, cfg] of Object.entries(rawServers as any)) {
@@ -344,12 +351,19 @@ export async function getClientsForCliMcpConfig(options: {
 
   const pluginServers = strict ? {} : listPluginMCPServers()
   const globalServers = strict ? {} : (getGlobalConfig().mcpServers ?? {})
-  const projectFileServers = strict ? {} : getProjectMcpServerDefinitions().servers
-  const projectServers = strict ? {} : (getCurrentProjectConfig().mcpServers ?? {})
+  const projectFileServers = strict
+    ? {}
+    : getProjectMcpServerDefinitions().servers
+  const projectServers = strict
+    ? {}
+    : (getCurrentProjectConfig().mcpServers ?? {})
 
   const approvedProjectFileServers = strict
     ? {}
-    : pickBy(projectFileServers, (_, name) => getMcprcServerStatus(name) === 'approved')
+    : pickBy(
+        projectFileServers,
+        (_, name) => getMcprcServerStatus(name) === 'approved',
+      )
 
   const allServers = {
     ...(pluginServers ?? {}),
@@ -368,7 +382,10 @@ export async function getClientsForCliMcpConfig(options: {
     const batchResults = await Promise.all(
       batch.map(async ([name, serverRef]) => {
         try {
-          const client = await connectToServer(name, serverRef as McpServerConfig)
+          const client = await connectToServer(
+            name,
+            serverRef as McpServerConfig,
+          )
           let capabilities: Record<string, unknown> | null = null
           try {
             capabilities = client.getServerCapabilities() as any

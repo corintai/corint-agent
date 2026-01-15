@@ -8,8 +8,8 @@ export const MAX_TIMEOUT_MS = 600000
 export const MAX_OUTPUT_LENGTH = 30000
 export const MAX_RENDERED_LINES = 5
 
-const PROJECT_URL = 'https://github.com/shareAI-lab/kode'
-const DEFAULT_CO_AUTHOR = 'ShareAI Lab'
+const PROJECT_URL = 'https://github.com/corintai/corint-agent'
+const DEFAULT_CO_AUTHOR = 'CORINT AI'
 
 const TOOL_NAME_BASH = 'Bash'
 const TOOL_NAME_GLOB = 'Glob'

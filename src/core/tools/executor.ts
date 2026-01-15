@@ -22,4 +22,3 @@ export async function collectToolResult(
     newMessages: last.newMessages,
   }
 }
-

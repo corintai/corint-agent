@@ -2,7 +2,10 @@ import { afterEach, beforeEach, describe, expect, test } from 'bun:test'
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'fs'
 import { tmpdir } from 'os'
 import { dirname, join } from 'path'
-import { __resetKodeHooksCacheForTests, runStopHooks } from '@utils/session/kodeHooks'
+import {
+  __resetKodeHooksCacheForTests,
+  runStopHooks,
+} from '@utils/session/kodeHooks'
 import { setCwd } from '@utils/state'
 
 function writeJson(path: string, value: unknown) {

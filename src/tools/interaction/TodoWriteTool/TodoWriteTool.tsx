@@ -9,7 +9,10 @@ import {
   getTodos,
   TodoItem as StoredTodoItem,
 } from '@utils/session/todoStorage'
-import { getTodoRenderModel, TodoRenderModel } from '@utils/session/todoRenderModel'
+import {
+  getTodoRenderModel,
+  TodoRenderModel,
+} from '@utils/session/todoRenderModel'
 import { emitReminderEvent } from '@services/systemReminder'
 import { startWatchingTodoFile } from '@services/fileFreshness'
 import { DESCRIPTION, PROMPT } from './prompt'

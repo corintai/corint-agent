@@ -14,8 +14,11 @@ import { UserBashInputMessage } from '@components/messages/UserBashInputMessage'
 import { Spinner } from '@components/Spinner'
 import { BashTool } from '@tools/BashTool/BashTool'
 import type { Message, UserMessage } from '@query'
-import { NO_RESPONSE_REQUESTED, createAssistantMessage, createUserMessage } from './core'
-
+import {
+  NO_RESPONSE_REQUESTED,
+  createAssistantMessage,
+  createUserMessage,
+} from './core'
 
 export async function processUserInput(
   input: string,
@@ -103,8 +106,7 @@ export async function processUserInput(
     } finally {
       setToolJSX(null)
     }
-  }
-  else if (mode === 'koding') {
+  } else if (mode === 'koding') {
     const userMessage = createUserMessage(
       `<koding-input>${input}</koding-input>`,
     )
@@ -129,7 +131,6 @@ export async function processUserInput(
     }
 
     if (!hasCommand(commandName, context.options.commands)) {
-
       return [createUserMessage(input)]
     }
 
@@ -159,10 +160,8 @@ export async function processUserInput(
       return newMessages
     }
 
-
     return newMessages
   }
-
 
   const isKodingRequest = context.options?.isKodingRequest === true
   const kodingContextInfo = context.options?.kodingContext

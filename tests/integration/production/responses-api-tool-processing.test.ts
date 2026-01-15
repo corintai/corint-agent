@@ -4,7 +4,6 @@ import { productionTestModels, getResponsesAPIModels } from '../../testAdapters'
 
 const MOCK_SERVER_TEST_MODE = process.env.MOCK_SERVER_TEST_MODE === 'true'
 
-
 describe('🧪 Response API Tool Processing - Real Mock Server Test', () => {
   if (!MOCK_SERVER_TEST_MODE) {
     test.skip('should process tool calls correctly without duplication (requires MOCK_SERVER_TEST_MODE=true)', () => {})

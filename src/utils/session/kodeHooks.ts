@@ -385,12 +385,10 @@ function matcherMatchesTool(matcher: string, toolName: string): boolean {
   if (matcher === toolName) return true
   try {
     if (minimatch(toolName, matcher, { dot: true, nocase: false })) return true
-  } catch {
-  }
+  } catch {}
   try {
     if (new RegExp(matcher).test(toolName)) return true
-  } catch {
-  }
+  } catch {}
   return false
 }
 
@@ -971,8 +969,7 @@ export async function getSessionStartAdditionalContext(args?: {
   const envFilePath = join(envFileDir, `${sessionId}.env`)
   try {
     writeFileSync(envFilePath, '', 'utf8')
-  } catch {
-  }
+  } catch {}
 
   const additionalContexts: string[] = []
 

@@ -5,7 +5,6 @@ import { randomUUID } from 'crypto'
 import { debug as debugLogger } from '@utils/log/debugLogger'
 import { logError } from '@utils/log'
 
-
 export interface ChatMessage {
   role: 'user' | 'assistant'
   content: string
@@ -21,9 +20,10 @@ export interface ExpertChatSession {
 
 function getExpertChatDirectory(): string {
   const configDir =
+    process.env.CORINT_CONFIG_DIR ??
     process.env.KODE_CONFIG_DIR ??
     process.env.ANYKODE_CONFIG_DIR ??
-    join(homedir(), '.kode')
+    join(homedir(), '.corint')
   const expertChatDir = join(configDir, 'expert-chats')
 
   if (!existsSync(expertChatDir)) {

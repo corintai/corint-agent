@@ -1,6 +1,6 @@
 # CORINT Risk Agent Development TODO
 
-> Priority: **P0** = MVP 必须, **P1** = 重要但可延后, **P2** = 未来增强
+> Priority: **P0** = MVP Required, **P1** = Important but Deferrable, **P2** = Future Enhancement
 
 ---
 

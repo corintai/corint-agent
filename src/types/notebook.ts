@@ -1,4 +1,3 @@
-
 export type NotebookCellType = 'code' | 'markdown'
 
 export interface NotebookOutputImage {

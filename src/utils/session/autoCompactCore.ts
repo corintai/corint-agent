@@ -12,9 +12,7 @@ import { addLineNumbers } from '@utils/fs/file'
 import { getModelManager } from '@utils/model'
 import { debug as debugLogger } from '@utils/log/debugLogger'
 import { logError } from '@utils/log'
-import {
-  calculateAutoCompactThresholds,
-} from './autoCompactThreshold'
+import { calculateAutoCompactThresholds } from './autoCompactThreshold'
 
 async function getMainConversationContextLimit(): Promise<number> {
   try {

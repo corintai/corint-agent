@@ -81,14 +81,14 @@ describe('macOS sandbox-exec network proxy (Reference CLI parity: i64/p64/l64 + 
       5_000,
       { sandbox },
     )
-	    expect(direct.code).not.toBe(0)
+    expect(direct.code).not.toBe(0)
 
-	    const proxied = await shell.exec(
-	      `NO_PROXY= no_proxy= curl --noproxy '' -sS http://localhost:${destPort} --max-time 2`,
-	      undefined,
-	      5_000,
-	      { sandbox },
-	    )
+    const proxied = await shell.exec(
+      `NO_PROXY= no_proxy= curl --noproxy '' -sS http://localhost:${destPort} --max-time 2`,
+      undefined,
+      5_000,
+      { sandbox },
+    )
     expect(proxied.code).toBe(0)
     expect(proxied.stdout).toContain('OK')
 

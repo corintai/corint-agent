@@ -399,18 +399,11 @@ ${output.expertAnswer}`
         })
 
         response = await Promise.race([
-          queryLLM(
-            systemMessages,
-            [],
-            0,
-            [],
-            abortController.signal,
-            {
-              safeMode: false,
-              model: expertModel,
-              prependCLISysprompt: false,
-            },
-          ),
+          queryLLM(systemMessages, [], 0, [], abortController.signal, {
+            safeMode: false,
+            model: expertModel,
+            prependCLISysprompt: false,
+          }),
           timeoutPromise,
         ])
       } catch (error: any) {

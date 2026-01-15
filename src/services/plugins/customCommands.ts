@@ -6,7 +6,7 @@ import type { MessageParam } from '@anthropic-ai/sdk/resources/index.mjs'
 import type { Command } from '@commands'
 import { getCwd } from '@utils/state'
 import { getSessionPlugins } from '@utils/session/sessionPlugins'
-import { getKodeBaseDir } from '@utils/config/env'
+import { getCorintBaseDir } from '@utils/config/env'
 import { debug as debugLogger } from '@utils/log/debugLogger'
 import { logError } from '@utils/log'
 import { execFile } from 'child_process'
@@ -168,8 +168,8 @@ function isSkillMarkdownFile(filePath: string): boolean {
   return /^skill\.md$/i.test(basename(filePath))
 }
 
-function getUserKodeBaseDir(): string {
-  return getKodeBaseDir()
+function getUserCorintBaseDir(): string {
+  return getCorintBaseDir()
 }
 
 function toBoolean(value: unknown): boolean {
@@ -389,8 +389,7 @@ function loadPluginCommandsFromDir(args: {
         content,
       })
       if (cmd) out.push(cmd)
-    } catch {
-    }
+    } catch {}
   }
   return out
 }
@@ -447,7 +446,10 @@ function loadPluginSkillDirectoryCommandsFromBaseDir(args: {
       const name = buildPluginQualifiedName(args.pluginName, dirName)
       if (!validateName(dirName)) {
         if (strictMode) continue
-        debugLogger.warn('CUSTOM_COMMAND_SKILL_DIR_INVALID', { dirName, skillFile })
+        debugLogger.warn('CUSTOM_COMMAND_SKILL_DIR_INVALID', {
+          dirName,
+          skillFile,
+        })
       }
       const descriptionText =
         frontmatter.description ??
@@ -509,8 +511,7 @@ function loadPluginSkillDirectoryCommandsFromBaseDir(args: {
           return [{ role: 'user', content: prompt }]
         },
       })
-    } catch {
-    }
+    } catch {}
   }
 
   return out
@@ -656,8 +657,7 @@ function loadCommandMarkdownFilesFromBaseDir(
       const raw = readFileSync(filePath, 'utf8')
       const { frontmatter, content } = parseFrontmatter(raw)
       records.push({ baseDir, filePath, frontmatter, content, source, scope })
-    } catch {
-    }
+    } catch {}
   }
   return records
 }
@@ -715,7 +715,10 @@ function loadSkillDirectoryCommandsFromBaseDir(
       const name = dirName
       if (!validateName(name)) {
         if (strictMode) continue
-        debugLogger.warn('CUSTOM_COMMAND_SKILL_DIR_INVALID', { name, skillFile })
+        debugLogger.warn('CUSTOM_COMMAND_SKILL_DIR_INVALID', {
+          name,
+          skillFile,
+        })
       }
       const descriptionText =
         frontmatter.description ??
@@ -775,8 +778,7 @@ function loadSkillDirectoryCommandsFromBaseDir(
           return [{ role: 'user', content: prompt }]
         },
       })
-    } catch {
-    }
+    } catch {}
   }
 
   return out
@@ -785,18 +787,18 @@ function loadSkillDirectoryCommandsFromBaseDir(
 export const loadCustomCommands = memoize(
   async (): Promise<CustomCommandWithScope[]> => {
     const cwd = getCwd()
-    const userKodeBaseDir = getUserKodeBaseDir()
+    const userCorintBaseDir = getUserCorintBaseDir()
     const sessionPlugins = getSessionPlugins()
 
     const projectLegacyCommandsDir = join(cwd, '.claude', 'commands')
     const userLegacyCommandsDir = join(homedir(), '.claude', 'commands')
-    const projectKodeCommandsDir = join(cwd, '.kode', 'commands')
-    const userKodeCommandsDir = join(userKodeBaseDir, 'commands')
+    const projectCorintCommandsDir = join(cwd, '.corint', 'commands')
+    const userCorintCommandsDir = join(userCorintBaseDir, 'commands')
 
     const projectLegacySkillsDir = join(cwd, '.claude', 'skills')
     const userLegacySkillsDir = join(homedir(), '.claude', 'skills')
-    const projectKodeSkillsDir = join(cwd, '.kode', 'skills')
-    const userKodeSkillsDir = join(userKodeBaseDir, 'skills')
+    const projectCorintSkillsDir = join(cwd, '.corint', 'skills')
+    const userCorintSkillsDir = join(userCorintBaseDir, 'skills')
 
     const abortController = new AbortController()
     const timeout = setTimeout(() => abortController.abort(), 3000)
@@ -810,7 +812,7 @@ export const loadCustomCommands = memoize(
           abortController.signal,
         ),
         ...loadCommandMarkdownFilesFromBaseDir(
-          projectKodeCommandsDir,
+          projectCorintCommandsDir,
           'localSettings',
           'project',
           abortController.signal,
@@ -822,7 +824,7 @@ export const loadCustomCommands = memoize(
           abortController.signal,
         ),
         ...loadCommandMarkdownFilesFromBaseDir(
-          userKodeCommandsDir,
+          userCorintCommandsDir,
           'userSettings',
           'user',
           abortController.signal,
@@ -840,7 +842,7 @@ export const loadCustomCommands = memoize(
           'project',
         ),
         ...loadSkillDirectoryCommandsFromBaseDir(
-          projectKodeSkillsDir,
+          projectCorintSkillsDir,
           'localSettings',
           'project',
         ),
@@ -850,7 +852,7 @@ export const loadCustomCommands = memoize(
           'user',
         ),
         ...loadSkillDirectoryCommandsFromBaseDir(
-          userKodeSkillsDir,
+          userCorintSkillsDir,
           'userSettings',
           'user',
         ),
@@ -907,16 +909,16 @@ export const loadCustomCommands = memoize(
   },
   () => {
     const cwd = getCwd()
-    const userKodeBaseDir = getUserKodeBaseDir()
+    const userCorintBaseDir = getUserCorintBaseDir()
     const dirs = [
       join(homedir(), '.claude', 'commands'),
       join(cwd, '.claude', 'commands'),
-      join(userKodeBaseDir, 'commands'),
-      join(cwd, '.kode', 'commands'),
+      join(userCorintBaseDir, 'commands'),
+      join(cwd, '.corint', 'commands'),
       join(homedir(), '.claude', 'skills'),
       join(cwd, '.claude', 'skills'),
-      join(userKodeBaseDir, 'skills'),
-      join(cwd, '.kode', 'skills'),
+      join(userCorintBaseDir, 'skills'),
+      join(cwd, '.corint', 'skills'),
     ]
     const exists = dirs.map(d => (existsSync(d) ? '1' : '0')).join('')
     return `${cwd}:${exists}:${Math.floor(Date.now() / 60000)}`
@@ -932,21 +934,21 @@ export function getCustomCommandDirectories(): {
   projectClaudeCommands: string
   userClaudeSkills: string
   projectClaudeSkills: string
-  userKodeCommands: string
-  projectKodeCommands: string
-  userKodeSkills: string
-  projectKodeSkills: string
+  userCorintCommands: string
+  projectCorintCommands: string
+  userCorintSkills: string
+  projectCorintSkills: string
 } {
-  const userKodeBaseDir = getUserKodeBaseDir()
+  const userCorintBaseDir = getUserCorintBaseDir()
   return {
     userClaudeCommands: join(homedir(), '.claude', 'commands'),
     projectClaudeCommands: join(getCwd(), '.claude', 'commands'),
     userClaudeSkills: join(homedir(), '.claude', 'skills'),
     projectClaudeSkills: join(getCwd(), '.claude', 'skills'),
-    userKodeCommands: join(userKodeBaseDir, 'commands'),
-    projectKodeCommands: join(getCwd(), '.kode', 'commands'),
-    userKodeSkills: join(userKodeBaseDir, 'skills'),
-    projectKodeSkills: join(getCwd(), '.kode', 'skills'),
+    userCorintCommands: join(userCorintBaseDir, 'commands'),
+    projectCorintCommands: join(getCwd(), '.corint', 'commands'),
+    userCorintSkills: join(userCorintBaseDir, 'skills'),
+    projectCorintSkills: join(getCwd(), '.corint', 'skills'),
   }
 }
 
@@ -957,9 +959,9 @@ export function hasCustomCommands(): boolean {
     existsSync(dirs.projectClaudeCommands) ||
     existsSync(dirs.userClaudeSkills) ||
     existsSync(dirs.projectClaudeSkills) ||
-    existsSync(dirs.userKodeCommands) ||
-    existsSync(dirs.projectKodeCommands) ||
-    existsSync(dirs.userKodeSkills) ||
-    existsSync(dirs.projectKodeSkills)
+    existsSync(dirs.userCorintCommands) ||
+    existsSync(dirs.projectCorintCommands) ||
+    existsSync(dirs.userCorintSkills) ||
+    existsSync(dirs.projectCorintSkills)
   )
 }

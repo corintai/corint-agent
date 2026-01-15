@@ -1,4 +1,3 @@
-
 export type CommandSource = 'user_bash_mode' | 'agent_call'
 
 export interface BashValidationContext {

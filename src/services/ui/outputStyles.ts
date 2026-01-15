@@ -6,7 +6,10 @@ import { homedir } from 'os'
 import matter from 'gray-matter'
 import yaml from 'js-yaml'
 import { getSessionPlugins } from '@utils/session/sessionPlugins'
-import { readLocalSettings, updateLocalSettings } from '@utils/config/localSettings'
+import {
+  readLocalSettings,
+  updateLocalSettings,
+} from '@utils/config/localSettings'
 import { getCwd } from '@utils/state'
 import { isSettingSourceEnabled } from '@utils/config/settingSources'
 
@@ -48,36 +51,41 @@ function getClaudePolicyBaseDir(): string {
   }
 }
 
-function getUserConfigBaseDirs(): { claude: string; kode: string }[] {
-  const out: { claude: string; kode: string }[] = []
+function getUserConfigBaseDirs(): { claude: string; corint: string }[] {
+  const out: { claude: string; corint: string }[] = []
 
   const hasAnyOverride =
     typeof process.env.CLAUDE_CONFIG_DIR === 'string' ||
+    typeof process.env.CORINT_CONFIG_DIR === 'string' ||
     typeof process.env.KODE_CONFIG_DIR === 'string'
 
   const claudeBase = normalizeString(process.env.CLAUDE_CONFIG_DIR)
-  const kodeBase = normalizeString(process.env.KODE_CONFIG_DIR)
+  const corintBase = normalizeString(
+    process.env.CORINT_CONFIG_DIR ?? process.env.KODE_CONFIG_DIR,
+  )
 
-  if (claudeBase) out.push({ claude: resolve(claudeBase), kode: resolve(claudeBase) })
-  if (kodeBase) out.push({ claude: resolve(kodeBase), kode: resolve(kodeBase) })
+  if (claudeBase)
+    out.push({ claude: resolve(claudeBase), corint: resolve(claudeBase) })
+  if (corintBase)
+    out.push({ claude: resolve(corintBase), corint: resolve(corintBase) })
 
   if (hasAnyOverride) {
     return dedupeConfigBases(out)
   }
 
   return dedupeConfigBases([
-    { claude: join(homedir(), '.claude'), kode: join(homedir(), '.claude') },
-    { claude: join(homedir(), '.kode'), kode: join(homedir(), '.kode') },
+    { claude: join(homedir(), '.claude'), corint: join(homedir(), '.claude') },
+    { claude: join(homedir(), '.corint'), corint: join(homedir(), '.corint') },
   ])
 }
 
 function dedupeConfigBases(
-  bases: Array<{ claude: string; kode: string }>,
-): Array<{ claude: string; kode: string }> {
+  bases: Array<{ claude: string; corint: string }>,
+): Array<{ claude: string; corint: string }> {
   const seen = new Set<string>()
-  const out: Array<{ claude: string; kode: string }> = []
+  const out: Array<{ claude: string; corint: string }> = []
   for (const base of bases) {
-    const key = `${base.claude}::${base.kode}`
+    const key = `${base.claude}::${base.corint}`
     if (seen.has(key)) continue
     seen.add(key)
     out.push(base)
@@ -94,8 +102,8 @@ function findProjectSubdirs(subdir: string, cwd: string): string[] {
     const claudeDir = join(current, '.claude', subdir)
     if (existsSync(claudeDir)) result.push(claudeDir)
 
-    const kodeDir = join(current, '.kode', subdir)
-    if (existsSync(kodeDir)) result.push(kodeDir)
+    const corintDir = join(current, '.corint', subdir)
+    if (existsSync(corintDir)) result.push(corintDir)
 
     const parent = dirname(current)
     if (parent === current) break
@@ -133,9 +141,17 @@ function listMarkdownFilesRecursively(rootDir: string): string[] {
     if (visitedDirs.has(dirKey)) return
     visitedDirs.add(dirKey)
 
-    let entries: Array<{ name: string; isDirectory(): boolean; isFile(): boolean; isSymbolicLink(): boolean }>
+    let entries: Array<{
+      name: string
+      isDirectory(): boolean
+      isFile(): boolean
+      isSymbolicLink(): boolean
+    }>
     try {
-      entries = readdirSync(dirPath, { withFileTypes: true, encoding: 'utf8' }) as any
+      entries = readdirSync(dirPath, {
+        withFileTypes: true,
+        encoding: 'utf8',
+      }) as any
     } catch {
       return
     }
@@ -174,7 +190,9 @@ function listMarkdownFilesRecursively(rootDir: string): string[] {
   return files
 }
 
-function readMarkdownFile(filePath: string): { frontmatter: any; content: string } | null {
+function readMarkdownFile(
+  filePath: string,
+): { frontmatter: any; content: string } | null {
   try {
     const raw = readFileSync(filePath, 'utf8')
     const yamlSchema = (yaml as any).JSON_SCHEMA
@@ -188,7 +206,10 @@ function readMarkdownFile(filePath: string): { frontmatter: any; content: string
       },
     }
     const parsed = matter(raw, matterOptions)
-    return { frontmatter: (parsed.data as any) ?? {}, content: String(parsed.content ?? '') }
+    return {
+      frontmatter: (parsed.data as any) ?? {},
+      content: String(parsed.content ?? ''),
+    }
   } catch {
     return null
   }
@@ -197,7 +218,10 @@ function readMarkdownFile(filePath: string): { frontmatter: any; content: string
 function inodeKeyForPath(filePath: string): string | null {
   try {
     const st = statSync(filePath)
-    if (typeof (st as any).dev === 'number' && typeof (st as any).ino === 'number') {
+    if (
+      typeof (st as any).dev === 'number' &&
+      typeof (st as any).ino === 'number'
+    ) {
       return `${(st as any).dev}:${(st as any).ino}`
     }
     return null
@@ -221,7 +245,8 @@ function getBuiltInOutputStyles(): OutputStyleMap {
     Explanatory: {
       name: 'Explanatory',
       source: 'built-in',
-      description: 'Claude explains its implementation choices and codebase patterns',
+      description:
+        'Claude explains its implementation choices and codebase patterns',
       keepCodingInstructions: true,
       prompt: `You are an interactive CLI tool that helps users with software engineering tasks. In addition to software engineering tasks, you should provide educational insights about the codebase along the way.
 
@@ -416,15 +441,13 @@ function loadPluginOutputStyles(): OutputStyleDefinition[] {
   return out
 }
 
-function loadCustomOutputStyles(options: { cwd: string }): OutputStyleDefinition[] {
+function loadCustomOutputStyles(options: {
+  cwd: string
+}): OutputStyleDefinition[] {
   const out: OutputStyleDefinition[] = []
   const seen = new Set<string>()
 
-  const policyDir = join(
-    getClaudePolicyBaseDir(),
-    '.claude',
-    'output-styles',
-  )
+  const policyDir = join(getClaudePolicyBaseDir(), '.claude', 'output-styles')
   for (const filePath of listMarkdownFilesRecursively(policyDir)) {
     const inodeKey = inodeKeyForPath(filePath)
     const dedupeKey = inodeKey ? `inode:${inodeKey}` : `path:${filePath}`
@@ -440,7 +463,7 @@ function loadCustomOutputStyles(options: { cwd: string }): OutputStyleDefinition
   if (isSettingSourceEnabled('userSettings')) {
     const userBases = getUserConfigBaseDirs()
     for (const base of userBases) {
-      for (const userBaseDir of new Set([base.claude, base.kode])) {
+      for (const userBaseDir of new Set([base.claude, base.corint])) {
         const dirPath = join(userBaseDir, 'output-styles')
         for (const filePath of listMarkdownFilesRecursively(dirPath)) {
           const inodeKey = inodeKeyForPath(filePath)

@@ -19,10 +19,7 @@ export type {
 export { query } from '@agent'
 
 // Re-export executor utilities
-export {
-  normalizeToolInput,
-  __ToolUseQueueForTests,
-} from '@agent'
+export { normalizeToolInput, __ToolUseQueueForTests } from '@agent'
 
 // Re-export type guard
 export { isToolUseLikeBlock as __isToolUseLikeBlockForTests } from '@agent'

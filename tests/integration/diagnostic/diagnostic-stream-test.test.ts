@@ -1,4 +1,3 @@
-
 import { test, expect, describe } from 'bun:test'
 import { ModelAdapterFactory } from '@services/modelAdapterFactory'
 import { callGPT5ResponsesAPI } from '@services/openai'

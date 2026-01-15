@@ -1,4 +1,3 @@
-
 import type { BoxProps, TextProps } from 'ink'
 
 export interface Theme {

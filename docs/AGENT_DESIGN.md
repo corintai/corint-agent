@@ -2,15 +2,15 @@
 
 ## Executive Summary
 
-> **用一个 AI Agent + 极少量核心人员，高效运营风控业务。**
+> **Efficiently operate risk control business with one AI Agent + minimal core personnel.**
 >
-> 用户只关心**规则、指标、策略和结果**，不关心代码。
+> Users care about **rules, metrics, strategies, and results** - not code.
 
 CORINT Risk Agent is an AI-native assistant designed for risk management professionals, enabling natural language interaction with the CORINT decision engine for risk analysis, strategy optimization, model iteration, anomaly detection, and data analytics.
 
 **Design Philosophy**: Model-driven, Tool-centric, Sandbox-isolated, Skills-first
 
-**Target Users**: 
+**Target Users**:
 - **Risk Strategy Analysts**: Design and optimize risk strategies
 - **Risk Modeling Engineers**: Feature engineering and model development
 - **Business Stakeholders**: Monitor metrics and make decisions
@@ -19,7 +19,7 @@ CORINT Risk Agent is an AI-native assistant designed for risk management profess
 - **Credit Risk Management** (Priority): Credit approval, limit management, overdue prediction
 - **Fraud Detection**: Transaction fraud, account takeover, identity fraud
 
-**User Experience**: 
+**User Experience**:
 - **Web UI**: Manus-like conversational interface
 - **CLI**: Claude Code-style interactive terminal
 
@@ -113,10 +113,10 @@ CORINT Risk Agent is an AI-native assistant designed for risk management profess
 │  │                                                      │     │
 │  │  ┌──────────────────────────────────────────────┐  │     │
 │  │  │              Agent Tools                      │  │     │
-│  │  │  • Foundation Tools (基础访问)                 │  │     │
-│  │  │  • Domain Calculation Tools (领域计算)         │  │     │
-│  │  │  • Domain Action Tools (领域操作)              │  │     │
-│  │  │  • MCP Extensions (外部数据源/服务)            │  │     │
+│  │  │  • Foundation Tools (Basic Access)            │  │     │
+│  │  │  • Domain Calculation Tools                   │  │     │
+│  │  │  • Domain Action Tools                        │  │     │
+│  │  │  • MCP Extensions (External Data/Services)    │  │     │
 │  │  │  • User-defined Skills                        │  │     │
 │  │  └──────────────────────────────────────────────┘  │     │
 │  └────────────────────────────────────────────────────┘     │
@@ -203,107 +203,107 @@ Auto-save state before destructive operations, enabling rollback:
 
 ### 3.1 Tool Design Philosophy
 
-**工具边界原则**：
-- **工具负责**：执行确定性操作、访问外部系统、执行复杂计算、返回结构化数据
-- **LLM 负责**：推理、分析、建议、决策、对比、归因
+**Tool Boundary Principles**:
+- **Tools are responsible for**: Executing deterministic operations, accessing external systems, performing complex computations, returning structured data
+- **LLM is responsible for**: Reasoning, analysis, recommendations, decisions, comparisons, attribution
 
-**工具选择策略**：
-- **内置工具优先**：优先使用预定义的领域工具，保证执行效率和结果一致性
-- **代码兜底**：当内置工具无法满足需求时，Agent 可编写代码解决长尾问题
-- **沙盒隔离**：所有代码在隔离沙盒中执行，确保安全
+**Tool Selection Strategy**:
+- **Built-in Tools First**: Prioritize predefined domain tools to ensure execution efficiency and result consistency
+- **Code as Fallback**: When built-in tools cannot meet requirements, Agent can write code to solve long-tail problems
+- **Sandbox Isolation**: All code executes in isolated sandboxes to ensure security
 
-**不应成为工具的能力**：
-- `root_cause_analysis` → LLM 根据数据自己推理
-- `recommend_strategy` → LLM 根据模拟结果自己推荐
-- `suggest_cleaning` → LLM 看到数据问题后自己建议
-- `detect_anomalies` → LLM 看统计数据后自己判断
-- `compare_strategies` → LLM 看到多个策略的指标后自己对比
+**What Should NOT Be Tools**:
+- `root_cause_analysis` → LLM reasons from data itself
+- `recommend_strategy` → LLM recommends based on simulation results
+- `suggest_cleaning` → LLM suggests after seeing data issues
+- `detect_anomalies` → LLM judges after seeing statistical data
+- `compare_strategies` → LLM compares after seeing metrics from multiple strategies
 
-### 3.2 Foundation Tools (基础访问)
+### 3.2 Foundation Tools (Basic Access)
 
-最底层的原子工具，提供数据访问、文件操作、搜索、子Agent调用和代码执行能力。
+The most fundamental atomic tools, providing data access, file operations, search, sub-agent invocation, and code execution capabilities.
 
-#### 3.2.1 Data Access Tools (数据访问)
-
-| Tool | Purpose | Input | Output |
-|------|---------|-------|--------|
-| `explore_schema` | 获取表结构、字段、注释 | `table_name`, `data_source` | Schema JSON |
-| `query_sql` | 执行 SQL 查询 | `sql`, `data_source` | DataFrame / JSON |
-
-**支持的数据源**：PostgreSQL, MySQL, ClickHouse, Spark SQL, Snowflake, Hive 等
-
-#### 3.2.2 File Tools (文件操作)
+#### 3.2.1 Data Access Tools
 
 | Tool | Purpose | Input | Output |
 |------|---------|-------|--------|
-| `read_file` | 读取本地文件 | `file_path`, `offset?`, `limit?` | Content (text/binary) |
-| `write_file` | 写入/创建文件 | `file_path`, `content` | Success / Fail |
-| `edit_file` | 精确编辑文件 | `file_path`, `old_string`, `new_string` | Success / Fail |
+| `explore_schema` | Get table structure, fields, comments | `table_name`, `data_source` | Schema JSON |
+| `query_sql` | Execute SQL queries | `sql`, `data_source` | DataFrame / JSON |
 
-#### 3.2.3 Search Tools (搜索工具)
+**Supported Data Sources**: PostgreSQL, MySQL, ClickHouse, Spark SQL, Snowflake, Hive, etc.
 
-| Tool | Purpose | Input | Output |
-|------|---------|-------|--------|
-| `glob_files` | 模式匹配搜索文件 | `pattern`, `path?` | File path list |
-| `grep_content` | 正则搜索文件内容 | `pattern`, `path?`, `include?` | Matches with context |
-
-#### 3.2.4 Execution Tools (执行工具)
+#### 3.2.2 File Tools
 
 | Tool | Purpose | Input | Output |
 |------|---------|-------|--------|
-| `execute_code` | 在沙盒中执行代码 | `language`, `code` | Execution result |
-| `run_bash` | 执行 Bash 命令 | `command`, `working_dir` | stdout / stderr |
+| `read_file` | Read local files | `file_path`, `offset?`, `limit?` | Content (text/binary) |
+| `write_file` | Write/create files | `file_path`, `content` | Success / Fail |
+| `edit_file` | Precisely edit files | `file_path`, `old_string`, `new_string` | Success / Fail |
 
-#### 3.2.5 Web Tools (网络工具)
-
-| Tool | Purpose | Input | Output |
-|------|---------|-------|--------|
-| `fetch_web` | 获取网页内容 | `url`, `prompt` | Extracted content |
-
-#### 3.2.6 Agent Tools (Agent 工具)
+#### 3.2.3 Search Tools
 
 | Tool | Purpose | Input | Output |
 |------|---------|-------|--------|
-| `spawn_agent` | 创建隔离子Agent执行任务 | `agent_type`, `prompt`, `model?` | Agent result |
-| `todo_write` | 更新任务列表状态 | `todos[]` | Updated list |
+| `glob_files` | Pattern-based file search | `pattern`, `path?` | File path list |
+| `grep_content` | Regex content search | `pattern`, `path?`, `include?` | Matches with context |
 
-**说明**：
-
-- **数据访问**：LLM 负责根据需求生成正确的 SQL；`fetch_web` 用于获取外部文档或网页信息
-- **文件操作**：`edit_file` 使用精确字符串匹配替换，避免重写整个文件；`read_file` 支持分页读取大文件
-- **搜索工具**：`glob_files` 用于快速定位文件，`grep_content` 用于搜索代码内容，两者配合减少 token 消耗
-- **执行工具**：`execute_code` 优先使用 Python（数据分析生态丰富），用于处理内置工具无法覆盖的长尾需求；`run_shell` 用于执行系统命令，需在沙盒环境中运行
-- **Agent 工具**：
-  - `spawn_agent` 创建隔离的子会��，支持并行执行多个子任务，子Agent 有独立的上下文和 token 预算
-  - `todo_write` 用于 UI 状态管理，实时展示任务进度给用户，非文件写入操作
-
-### 3.3 Domain Calculation Tools (领域计算)
-
-封装风控领域的**确定性计算逻辑**，这些计算 LLM 无法自己完成。
+#### 3.2.4 Execution Tools
 
 | Tool | Purpose | Input | Output |
 |------|---------|-------|--------|
-| `calculate_metrics` | 计算模型评估指标 | `predictions`, `labels`, `metrics[]` | KS / AUC / PSI / IV / Gini |
-| `calculate_vintage` | 计算账龄分析矩阵 | `loan_data`, `observation_months` | Vintage Matrix |
-| `calculate_dpd_distribution` | 计算 DPD 逾期分布 | `repayment_data`, `bucket_days[]` | DPD Histogram |
-| `calculate_flow_rate` | 计算迁徙率 | `collection_data`, `periods` | Flow Rate Matrix |
-| `simulate_threshold` | 模拟单阈值效果 | `score_data`, `threshold` | PassRate / BadRate / Volume |
-| `simulate_strategy` | 模拟多阈值策略效果 | `score_data`, `strategy_config` | Segment-level metrics |
-| `backtest_rule` | 规则历史回测 | `rule_definition`, `historical_data` | HitRate / Precision / Recall |
-| `validate_rdl` | RDL 语法校验 | `rdl_content` | Valid / Syntax Errors |
-| `validate_semantics` | RDL 语义校验 | `rdl_content`, `schema` | Valid / Semantic Errors |
+| `execute_code` | Execute code in sandbox | `language`, `code` | Execution result |
+| `run_bash` | Execute Bash commands | `command`, `working_dir` | stdout / stderr |
 
-### 3.4 Domain Action Tools (领域操作)
-
-执行有副作用的领域操作，通常需要用户确认。
+#### 3.2.5 Web Tools
 
 | Tool | Purpose | Input | Output |
 |------|---------|-------|--------|
-| `deploy_config` | 部署配置到仓库 | `config`, `env`, `version` | Deployment Result |
-| `rollback_config` | 回滚到指定版本 | `config_name`, `target_version` | Rollback Result |
-| `create_ab_test` | 创建 A/B 实验 | `variants[]`, `traffic_split` | Experiment ID |
-| `stop_ab_test` | 停止 A/B 实验 | `experiment_id` | Stop Result |
-| `export_report` | 导出报告文件 | `content`, `format`, `path` | File Path |
+| `fetch_web` | Fetch web content | `url`, `prompt` | Extracted content |
+
+#### 3.2.6 Agent Tools
+
+| Tool | Purpose | Input | Output |
+|------|---------|-------|--------|
+| `spawn_agent` | Create isolated sub-agent for tasks | `agent_type`, `prompt`, `model?` | Agent result |
+| `todo_write` | Update task list status | `todos[]` | Updated list |
+
+**Notes**:
+
+- **Data Access**: LLM is responsible for generating correct SQL based on requirements; `fetch_web` is used to retrieve external documents or web pages
+- **File Operations**: `edit_file` uses precise string matching for replacement, avoiding rewriting entire files; `read_file` supports paginated reading of large files
+- **Search Tools**: `glob_files` for quick file location, `grep_content` for searching code content; combining both reduces token consumption
+- **Execution Tools**: `execute_code` prefers Python (rich data analysis ecosystem) for handling long-tail requirements not covered by built-in tools; `run_shell` for executing system commands, must run in sandbox environment
+- **Agent Tools**:
+  - `spawn_agent` creates isolated sub-sessions, supports parallel execution of multiple sub-tasks, sub-agents have independent context and token budgets
+  - `todo_write` for UI state management, displays task progress to users in real-time, not file write operations
+
+### 3.3 Domain Calculation Tools
+
+Encapsulates **deterministic calculation logic** in the risk control domain that LLM cannot complete on its own.
+
+| Tool | Purpose | Input | Output |
+|------|---------|-------|--------|
+| `calculate_metrics` | Calculate model evaluation metrics | `predictions`, `labels`, `metrics[]` | KS / AUC / PSI / IV / Gini |
+| `calculate_vintage` | Calculate vintage analysis matrix | `loan_data`, `observation_months` | Vintage Matrix |
+| `calculate_dpd_distribution` | Calculate DPD overdue distribution | `repayment_data`, `bucket_days[]` | DPD Histogram |
+| `calculate_flow_rate` | Calculate flow rate | `collection_data`, `periods` | Flow Rate Matrix |
+| `simulate_threshold` | Simulate single threshold effect | `score_data`, `threshold` | PassRate / BadRate / Volume |
+| `simulate_strategy` | Simulate multi-threshold strategy effect | `score_data`, `strategy_config` | Segment-level metrics |
+| `backtest_rule` | Backtest rule on historical data | `rule_definition`, `historical_data` | HitRate / Precision / Recall |
+| `validate_rdl` | RDL syntax validation | `rdl_content` | Valid / Syntax Errors |
+| `validate_semantics` | RDL semantic validation | `rdl_content`, `schema` | Valid / Semantic Errors |
+
+### 3.4 Domain Action Tools
+
+Execute domain operations with side effects, typically requiring user confirmation.
+
+| Tool | Purpose | Input | Output |
+|------|---------|-------|--------|
+| `deploy_config` | Deploy configuration to repository | `config`, `env`, `version` | Deployment Result |
+| `rollback_config` | Rollback to specified version | `config_name`, `target_version` | Rollback Result |
+| `create_ab_test` | Create A/B test | `variants[]`, `traffic_split` | Experiment ID |
+| `stop_ab_test` | Stop A/B test | `experiment_id` | Stop Result |
+| `export_report` | Export report file | `content`, `format`, `path` | File Path |
 
 ### 3.5 Tool Execution Flow
 
@@ -313,39 +313,40 @@ User Request
     ▼
 ┌─────────────────────────────────────────────────────────┐
 │                        LLM                               │
-│  1. 理解用户意图                                          │
-│  2. 规划执行步骤                                          │
-│  3. 生成 SQL / 选择工具                                   │
-│  4. 解读工具返回结果                                      │
-│  5. 推理、分析、给出建议                                  │
+│  1. Understand user intent                               │
+│  2. Plan execution steps                                 │
+│  3. Generate SQL / Select tools                          │
+│  4. Interpret tool results                               │
+│  5. Reason, analyze, provide recommendations             │
 └─────────────────────────────────────────────────────────┘
     │
     ▼ (Tool Calls)
 ┌─────────────────────────────────────────────────────────┐
 │               Foundation Tools                           │
-│  query_sql → 获取原始数据                                │
-│  explore_schema → 理解数据结构                           │
+│  query_sql → Fetch raw data                              │
+│  explore_schema → Understand data structure              │
 └─────────────────────────────────────────────────────────┘
     │
-    ▼ (如需复杂计算)
+    ▼ (If complex calculation needed)
 ┌─────────────────────────────────────────────────────────┐
 │            Domain Calculation Tools                      │
-│  calculate_metrics → 获取 KS/AUC                        │
-│  simulate_threshold → 获取不同阈值效果                   │
-│  backtest_rule → 获取规则回测结果                        │
+│  calculate_metrics → Get KS/AUC                          │
+│  simulate_threshold → Get threshold effects              │
+│  backtest_rule → Get rule backtest results               │
 └─────────────────────────────────────────────────────────┘
     │
-    ▼ (LLM 分析结果，给出建议)
+    ▼ (LLM analyzes results, provides recommendations)
 ┌─────────────────────────────────────────────────────────┐
 │                        LLM                               │
-│  "根据回测结果，建议将阈值从 0.6 调整到 0.55，           │
-│   预计通过率提升 3%，坏账率仅增加 0.2%"                  │
+│  "Based on backtest results, recommend adjusting         │
+│   threshold from 0.6 to 0.55, expect approval rate      │
+│   increase by 3%, bad debt rate only increase by 0.2%"  │
 └─────────────────────────────────────────────────────────┘
     │
-    ▼ (用户确认后)
+    ▼ (After user confirmation)
 ┌─────────────────────────────────────────────────────────┐
 │              Domain Action Tools                         │
-│  deploy_config → 部署新策略                              │
+│  deploy_config → Deploy new strategy                     │
 └─────────────────────────────────────────────────────────┘
 ```
 
@@ -355,33 +356,33 @@ User Request
 
 | | Tools | Skills |
 |---|-------|--------|
-| 来源 | 系统内置 | 用户定义 |
-| 粒度 | 原子操作 | 组合工作流 |
-| 扩展性 | 需开发 | Markdown 配置 |
-| 示例 | query_sql, backtest_rule | 日报生成, 规则优化流程 |
+| Source | Built-in system | User-defined |
+| Granularity | Atomic operations | Composite workflows |
+| Extensibility | Requires development | Markdown configuration |
+| Examples | query_sql, backtest_rule | Daily report generation, rule optimization process |
 
 ### 4.2 Built-in Skills
 
-| Skill | Description | 典型触发 |
-|-------|-------------|----------|
-| `daily_report` | 生成风控日报（放款、通过率、DPD 分布） | "生成今日风控报告" |
-| `rule_optimization` | 规则阈值优化流程（回测→分析→建议） | "优化规则 R001 的阈值" |
-| `vintage_analysis` | 账龄分析报告 | "分析 2024Q1 放款的逾期表现" |
-| `strategy_comparison` | 多策略效果对比 | "对比这三个策略方案" |
-| `anomaly_investigation` | 指标异常根因分析 | "为什么昨天拒绝率上升了" |
+| Skill | Description | Typical Trigger |
+|-------|-------------|-----------------|
+| `daily_report` | Generate risk control daily report (loan volume, approval rate, DPD distribution) | "Generate today's risk report" |
+| `rule_optimization` | Rule threshold optimization process (backtest → analysis → recommendation) | "Optimize threshold for rule R001" |
+| `vintage_analysis` | Vintage analysis report | "Analyze 2024Q1 loan overdue performance" |
+| `strategy_comparison` | Multi-strategy effectiveness comparison | "Compare these three strategy options" |
+| `anomaly_investigation` | Anomaly root cause analysis | "Why did rejection rate increase yesterday" |
 
 ### 4.3 Custom Skills
 
-用户可定义自己的 Skills 扩展 Agent 能力：
+Users can define their own Skills to extend Agent capabilities:
 
-- **格式**: Markdown 文件描述工作流程、输入输出、示例对话
-- **存储**: 本地目录或团队共享仓库
-- **调用**: 通过自然语言触发或显式命令调用
+- **Format**: Markdown file describing workflow, inputs/outputs, example dialogues
+- **Storage**: Local directory or team shared repository
+- **Invocation**: Triggered by natural language or explicit command invocation
 
-**典型自定义场景**:
-- 特定渠道的分析流程
-- 公司内部的合规检查流程
-- 定制化的报告模板
+**Typical Custom Scenarios**:
+- Analysis process for specific channels
+- Internal compliance checking process
+- Customized report templates
 
 ---
 
@@ -393,7 +394,7 @@ User Request
   - OpenAI GPT-4 Turbo (primary)
   - Anthropic Claude 3.5 Sonnet (alternative)
   - DeepSeek (cost-effective option)
-- **Tool Execution**: Async/await with native Promise 
+- **Tool Execution**: Async/await with native Promise
 
 ### Architecture Modules
 ```
@@ -428,15 +429,15 @@ corint-cognition/
 
 | Metric | Target | Measurement Method |
 |--------|--------|-------------------|
-| Result Acceptance Rate | ≥ 80% | 用户对生成结果的 👍/👎 反馈统计 |
-| Task Completion Rate | ≥ 95% | 任务状态跟踪（成功/失败/超时） |
-| First-time Success Rate | ≥ 70% | 无需用户修正即可使用的比例 |
+| Result Acceptance Rate | ≥ 80% | User thumbs up/down feedback statistics on generated results |
+| Task Completion Rate | ≥ 95% | Task status tracking (success/failure/timeout) |
+| First-time Success Rate | ≥ 70% | Percentage usable without user corrections |
 
 **Error Handling:**
-- Error Recovery: 遇到错误时优雅降级或提示用户干预
-- Timeout Handling: 长时间任务需要进度反馈，避免卡死假象（>10s 显示进度）
-- Operation Atomicity: 部署操作要么全部成功要么全部回滚
-- Retry Strategy: 可重试错误自动重试（最多 3 次，指数退避）
+- Error Recovery: Graceful degradation or prompt user intervention when encountering errors
+- Timeout Handling: Long-running tasks need progress feedback to avoid appearing stuck (show progress after >10s)
+- Operation Atomicity: Deployment operations must fully succeed or fully rollback
+- Retry Strategy: Automatically retry retriable errors (max 3 times, exponential backoff)
 
 ### 6.2 Security
 - Authentication & Authorization (Role-based access control)
@@ -445,17 +446,17 @@ corint-cognition/
 - No credential exposure in generated code
 
 ### 6.3 Explainability
-- **Reasoning Trace**: 展示中间推理步骤和决策依据
-- **Data Provenance**: 标注数据来源（哪个表、哪个时间段）
-- **Confidence Score**: 对生成结果标注置信度（高/中/低）
-- **Alternative Options**: 低置信度时提供备选方案
-- **Query Preview**: 执行查询前展示 SQL/代码，允许用户确认
+- **Reasoning Trace**: Display intermediate reasoning steps and decision basis
+- **Data Provenance**: Annotate data sources (which table, which time period)
+- **Confidence Score**: Annotate confidence level (high/medium/low) for generated results
+- **Alternative Options**: Provide alternatives when confidence is low
+- **Query Preview**: Display SQL/code before execution, allow user confirmation
 
 ### 6.4 Maintainability
-- **Skills Support**: 支持用户自定义 Skills（参考 Claude Skills）
-- **Plugin Architecture**: 工具和数据源可插拔扩展
-- **Configuration Management**: 支持多环境配置（dev/staging/prod）
-- **Logging & Debugging**: 详细的执行日志，支持问题排查
+- **Skills Support**: Support user-defined Skills (reference Claude Skills)
+- **Plugin Architecture**: Pluggable tool and data source extensions
+- **Configuration Management**: Support multi-environment configuration (dev/staging/prod)
+- **Logging & Debugging**: Detailed execution logs for troubleshooting
 
 ---
 
@@ -520,10 +521,10 @@ corint-cognition/
 
 
 1. CORINT Decision Engine Architecture - `../corint-decision/docs/ARCHITECTURE.md`
-2. CORINT DSL Design - `../corint-decision/docs/DSL_DESIGN.md` 
+2. CORINT DSL Design - `../corint-decision/docs/DSL_DESIGN.md`
 
 ---
 
-**Document Version**: 1.0  
-**Last Updated**: 2026-01-12  
+**Document Version**: 1.0
+**Last Updated**: 2026-01-12
 **Status**: Design Phase

@@ -13,7 +13,9 @@ import {
 export const inputSchema = z.strictObject({
   datasource: z
     .string()
-    .describe('Name of the data source to query (e.g., "risk_db", "analytics")'),
+    .describe(
+      'Name of the data source to query (e.g., "risk_db", "analytics")',
+    ),
   sql: z
     .string()
     .describe(
@@ -34,10 +36,7 @@ export const inputSchema = z.strictObject({
 const DEFAULT_TIMEOUT = 30000
 const MAX_TIMEOUT = 300000
 
-async function withTimeout<T>(
-  promise: Promise<T>,
-  ms: number,
-): Promise<T> {
+async function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
   const timeoutMs = Math.min(Math.max(ms, 1000), MAX_TIMEOUT)
   let timeoutId: ReturnType<typeof setTimeout>
   const timeoutPromise = new Promise<never>((_, reject) => {
@@ -164,7 +163,13 @@ Example usage:
     }
 
     const upperSql = sql.toUpperCase().trim()
-    const destructiveKeywords = ['DELETE', 'DROP', 'TRUNCATE', 'ALTER', 'UPDATE']
+    const destructiveKeywords = [
+      'DELETE',
+      'DROP',
+      'TRUNCATE',
+      'ALTER',
+      'UPDATE',
+    ]
     for (const keyword of destructiveKeywords) {
       if (upperSql.startsWith(keyword)) {
         return {
@@ -190,8 +195,7 @@ Example usage:
 
   renderToolUseMessage({ datasource, sql, limit }: Input, { verbose }) {
     const theme = getTheme()
-    const truncatedSql =
-      sql.length > 200 ? sql.substring(0, 200) + '...' : sql
+    const truncatedSql = sql.length > 200 ? sql.substring(0, 200) + '...' : sql
 
     if (verbose) {
       return (
@@ -233,9 +237,7 @@ Example usage:
             Columns: {content.columns.join(', ')}
           </Text>
         )}
-        {preview.length > 0 && (
-          <Text color={theme.text}>{previewText}</Text>
-        )}
+        {preview.length > 0 && <Text color={theme.text}>{previewText}</Text>}
         {content.rowCount > preview.length && (
           <Text color={theme.secondaryText} dimColor>
             ... and {content.rowCount - preview.length} more rows

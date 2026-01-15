@@ -111,7 +111,10 @@ export function listPluginMCPServers(): Record<string, McpServerConfig> {
       }
     }
 
-    const merged: Record<string, McpServerConfig> = Object.assign({}, ...configs)
+    const merged: Record<string, McpServerConfig> = Object.assign(
+      {},
+      ...configs,
+    )
 
     for (const [serverName, cfg] of Object.entries(merged)) {
       const fullName = `plugin_${pluginName}_${serverName}`
@@ -184,8 +187,7 @@ export function addMcpServer(
           if (existingConfig && typeof existingConfig === 'object') {
             mcprcConfig = existingConfig as Record<string, McpServerConfig>
           }
-        } catch {
-        }
+        } catch {}
       }
 
       mcprcConfig[name] = server
@@ -207,8 +209,7 @@ export function addMcpServer(
         if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
           config = parsed as Record<string, unknown>
         }
-      } catch {
-      }
+      } catch {}
     }
 
     const rawServers = (config as { mcpServers?: unknown }).mcpServers

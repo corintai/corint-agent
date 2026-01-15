@@ -12,8 +12,8 @@ import { MACRO } from '@constants/macros'
 export const MIN_LOGO_WIDTH = 50
 
 const DEFAULT_UPDATE_COMMANDS = [
-  'bun add -g @shareai-lab/kode@latest',
-  'npm install -g @shareai-lab/kode@latest',
+  'bun add -g @corint/risk-agent@latest',
+  'npm install -g @corint/risk-agent@latest',
 ] as const
 
 export function Logo({

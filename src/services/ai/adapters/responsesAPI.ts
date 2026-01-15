@@ -357,7 +357,6 @@ ${reasoningContent}
     return state
   }
 
-
   protected async parseStreamingOpenAIResponse(
     response: any,
   ): Promise<{ assistantMessage: any; rawResponse: any }> {

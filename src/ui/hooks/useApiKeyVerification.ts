@@ -14,9 +14,6 @@ export type ApiKeyVerificationResult = {
 }
 
 export function useApiKeyVerification(): ApiKeyVerificationResult {
-
-
-
   return {
     status: 'valid',
     reverify: async () => {},

@@ -4,65 +4,65 @@
 
 ### 1.0 Product Vision
 
-> **用一个 AI Agent + 极少量核心人员，高效运营风控业务。**
+> **Efficiently operate risk control business with one AI Agent + minimal core personnel.**
 >
-> 用户只关心**规则、指标、策略和结果**，不关心代码。
+> Users care about **rules, metrics, strategies, and results** - not code.
 
 ### 1.1 Product References
-- **Web UI**: 参考 [Manus](https://www.manus.app/) 的对话式交互体验
-  - 自然语言驱动的工作流
-  - 可视化结果展示
-  - 多轮对话上下文管理
-  
-- **CLI**: 参考 [Anthropic Claude Code](https://docs.anthropic.com/en/docs/agents) 的命令行交互方式
-  - 交互式 REPL 模式
-  - 工具调用透明化
-  - 支持脚本化执行
+- **Web UI**: Reference [Manus](https://www.manus.app/) conversational interaction experience
+  - Natural language driven workflows
+  - Visual result presentation
+  - Multi-turn conversation context management
+
+- **CLI**: Reference [Anthropic Claude Code](https://docs.anthropic.com/en/docs/agents) command line interaction
+  - Interactive REPL mode
+  - Transparent tool invocation
+  - Scripting support
 
 ### 1.2 Agent Design Principles
->参考Manus两位创始人的访谈
-- **Agent架构**：由三部分组成；大脑（LLM），环境（Sandbox+Runtime），执行工具（Tools）
-- **Model-driven**: 不预设人工规则或复杂的工作流（Workflow），而是主张由大模型本身决定完成任务的路径
-- **Planning Stage**: 有单独的规划阶段，将复杂任务拆解为多步计划（Plan），并根据环境反馈（Observation）不断调整。
-- **Coding & Tools Calling**：能自己写代码、调试、运行，调用API 以及工具，从而能胜任各种长尾任务
-- **异步通信与插嘴机制**：不需要问一句回一句，而是异步执行任务并同步进度，在必要时请求用户介入，在执行过程中用户也可以随时插嘴补充信息、改变目标或终止任务。
-- **Sandbox云端沙盒机制**：为每个会话分配一个独立、隔离的云端虚拟化环境，从而保证安全性并方便Agent持续执行长链路的任务
-- **Scale Out**： 通过Wide Research等功能，可以启动上百个Sandbox并行完成子任务，最后进行汇总，实现超越人类单体效率的产出
+> Reference interviews with Manus founders
+- **Agent Architecture**: Composed of three parts: Brain (LLM), Environment (Sandbox + Runtime), Execution Tools (Tools)
+- **Model-driven**: No preset manual rules or complex workflows; the model itself decides the task completion path
+- **Planning Stage**: Dedicated planning phase to decompose complex tasks into multi-step plans, continuously adjusting based on environment feedback (Observation)
+- **Coding & Tools Calling**: Can write code, debug, run, call APIs and tools to handle various long-tail tasks
+- **Async Communication & Interruption**: No need for turn-by-turn Q&A; async task execution with progress sync, user intervention when necessary, users can interrupt to add info, change goals, or terminate tasks
+- **Sandbox Cloud Isolation**: Allocate independent, isolated cloud virtualized environment per session for security and continuous long-chain task execution
+- **Scale Out**: Through Wide Research and similar features, launch hundreds of Sandboxes to complete sub-tasks in parallel, then aggregate results for output exceeding individual human efficiency
 
-> 参考Claude Skills
-- 用户可以自定义自己的Skills，用来进行Agent能力的扩展和约束规范
+> Reference Claude Skills
+- Users can define custom Skills to extend Agent capabilities and constraint specifications
 
 ---
 
 ## 2. Target Users
 
 ### Primary Users
-- **Risk Strategy Analysts**: 负责设计和优化风控策略的分析师
-- **Risk Modeling Engineers**: 负责特征工程和模型开发的工程师
-- **Business Stakeholders**: 管理层和运营人员，关注业务指标
+- **Risk Strategy Analysts**: Responsible for designing and optimizing risk control strategies
+- **Risk Modeling Engineers**: Responsible for feature engineering and model development
+- **Business Stakeholders**: Management and operations personnel focused on business metrics
 
 ### User Personas
 
 **Alice (Strategy Analyst)**
-- 每天需要分析通过率、拒绝率变化，找出异常规则，调优阈值
+- Daily analysis of approval rate and rejection rate changes, identifying anomalous rules, tuning thresholds
 - User Stories:
-  - As Alice, I want to ask "为什么昨天拒绝率上升了 5%", so that I can quickly identify problematic rules
-  - As Alice, I want to say "调整规则 R001 的阈值，使误伤率降低 10%", so that I can optimize strategy without coding
-  - As Alice, I want to ask "对比本周和上周的规则触发分布", so that I can spot trends
+  - As Alice, I want to ask "Why did the rejection rate increase by 5% yesterday", so that I can quickly identify problematic rules
+  - As Alice, I want to say "Adjust rule R001 threshold to reduce false positive rate by 10%", so that I can optimize strategy without coding
+  - As Alice, I want to ask "Compare rule trigger distribution between this week and last week", so that I can spot trends
 
 **Bob (Modeling Engineer)**
-- 需要快速验证新特征效果，回测策略表现，部署新规则
+- Needs to quickly validate new feature effectiveness, backtest strategy performance, deploy new rules
 - User Stories:
-  - As Bob, I want to say "用最近 30 天数据回测这条规则", so that I can validate rule effectiveness
-  - As Bob, I want to say "生成一个检测多头借贷的特征", so that I can quickly prototype new features
-  - As Bob, I want to say "将这个 ruleset 部署到 staging 环境", so that I can test in real environment
+  - As Bob, I want to say "Backtest this rule using the last 30 days of data", so that I can validate rule effectiveness
+  - As Bob, I want to say "Generate a feature to detect multi-loan borrowing", so that I can quickly prototype new features
+  - As Bob, I want to say "Deploy this ruleset to staging environment", so that I can test in real environment
 
 **Carol (Business Manager)**
-- 需要查看风控报表，理解策略影响，做业务决策
+- Needs to view risk control reports, understand strategy impact, make business decisions
 - User Stories:
-  - As Carol, I want to ask "本月风控策略对通过率的影响是多少", so that I can make informed decisions
-  - As Carol, I want to ask "生成一份本周风控表现报告", so that I can share with stakeholders
-  - As Carol, I want to ask "如果放宽阈值 10%，预计坏账率会增加多少", so that I can evaluate trade-offs
+  - As Carol, I want to ask "What is the impact of this month's risk strategy on approval rate", so that I can make informed decisions
+  - As Carol, I want to ask "Generate a weekly risk performance report", so that I can share with stakeholders
+  - As Carol, I want to ask "If we relax the threshold by 10%, how much will the bad debt rate increase", so that I can evaluate trade-offs
 
 ---
 
@@ -70,37 +70,37 @@
 
 ### 3.1 Primary Scenarios (Phase 1)
 
-**Credit Risk Management** (信贷审批、额度管理、逾期预测)
-- 新用户授信审批规则生成与优化
-- 存量用户额度调整策略
-- 逾期预警规则配置
+**Credit Risk Management** (Credit approval, limit management, overdue prediction)
+- New user credit approval rule generation and optimization
+- Existing user limit adjustment strategies
+- Overdue warning rule configuration
 
-**Fraud Detection** (交易反欺诈、账户盗用检测、虚假身份识别)
-- 异常交易实时拦截规则
-- 设备指纹与行为特征分析
-- 团伙欺诈模式识别
+**Fraud Detection** (Transaction anti-fraud, account takeover detection, fake identity identification)
+- Abnormal transaction real-time interception rules
+- Device fingerprint and behavioral feature analysis
+- Gang fraud pattern recognition
 
 ### 3.2 Extended Scenarios (Future)
-- **Payment Risk**: 支付欺诈、洗钱检测
-- **E-commerce Risk**: 恶意刷单、虚假评论、账号养号
-- **Insurance Risk**: 骗保检测、理赔审核
+- **Payment Risk**: Payment fraud, money laundering detection
+- **E-commerce Risk**: Malicious order brushing, fake reviews, account farming
+- **Insurance Risk**: Insurance fraud detection, claims review
 
 ---
 
 ## 4. Core Objectives
 
 ### 4.1 User Experience Goal
-让用户能够像使用 **Manus** 一样，通过自然语言对话完成日常风控工作，无需编写代码或学习复杂工具。具体场景见 [Section 2 User Personas](#user-personas)。
+Enable users to complete daily risk control work through natural language conversation like using **Manus**, without writing code or learning complex tools. See [Section 2 User Personas](#user-personas) for specific scenarios.
 
 ### 4.2 Technical Goals
 
 | Goal | Description | Success Criteria |
 |------|-------------|------------------|
-| **DSL Generation** | 自动生成 CORINT RDL（Rules, Rulesets, Pipelines） | 语法正确率 100%，语义正确率 ≥ 90% |
-| **Iterative Workflow** | 支持多轮对话、迭代优化 | 单次会话支持 ≥ 20 轮对话 |
-| **Production-Ready** | 生成的代码可直接部署到生产环境 | 无需人工修改即可通过 CI 校验 |
-| **Extensibility** | 支持新数据源和工具扩展 | 新增数据源 < 1 人天 |
-| **Observability** | 全链路可追踪 | 每个请求可追溯完整执行路径 |
+| **DSL Generation** | Auto-generate CORINT RDL (Rules, Rulesets, Pipelines) | Syntax accuracy 100%, semantic accuracy ≥ 90% |
+| **Iterative Workflow** | Support multi-turn conversation and iterative optimization | Single session supports ≥ 20 conversation turns |
+| **Production-Ready** | Generated code can be deployed directly to production | Pass CI validation without manual modification |
+| **Extensibility** | Support new data sources and tool extensions | Add new data source < 1 person-day |
+| **Observability** | Full-chain traceability | Each request traceable to complete execution path |
 
 ---
 
@@ -108,68 +108,68 @@
 
 ### 5.1 Core Capabilities
 
-> Priority: **P0** = MVP必须, **P1** = 重要但可延后, **P2** = 未来增强
+> Priority: **P0** = MVP required, **P1** = Important but deferrable, **P2** = Future enhancement
 
 #### 5.1.1 Risk Analysis
 | Feature | Priority | Description |
 |---------|----------|-------------|
-| Query historical decision results | P0 | 通过率、拒绝率、审核率查询 |
-| Analyze rule performance | P0 | 触发率、精准率、误报率分析 |
-| Root cause investigation | P0 | 为什么某条规则突然触发增多 |
-| Detect anomalies in features/metrics | P1 | 异常用户、异常交易检测 |
-| Pattern discovery | P2 | 发现潜在欺诈模式 |
+| Query historical decision results | P0 | Approval rate, rejection rate, review rate queries |
+| Analyze rule performance | P0 | Trigger rate, precision, false positive rate analysis |
+| Root cause investigation | P0 | Why did a certain rule suddenly trigger more |
+| Detect anomalies in features/metrics | P1 | Anomalous user, anomalous transaction detection |
+| Pattern discovery | P2 | Discover potential fraud patterns |
 
 #### 5.1.2 Strategy Generation & Optimization
 
-> **模型不是终点，策略才是。**
+> **Models are not the end goal, strategies are.**
 
 | Feature | Priority | Description |
 |---------|----------|-------------|
-| Generate rules in RDL syntax | P0 | 根据自然语言生成规则代码 |
-| Create rulesets and pipelines | P0 | 组合规则为完整策略 |
-| Strategy simulation | P0 | 模拟不同阈值下的通过率/逾期/收益 |
-| Strategy comparison | P0 | 多策略方案对比，推荐最优方案 |
-| Optimize thresholds and weights | P1 | 自动调优规则参数 |
-| Generate feature definitions | P1 | 生成特征定义代码 |
+| Generate rules in RDL syntax | P0 | Generate rule code from natural language |
+| Create rulesets and pipelines | P0 | Combine rules into complete strategies |
+| Strategy simulation | P0 | Simulate approval rate/overdue/revenue under different thresholds |
+| Strategy comparison | P0 | Compare multiple strategy options, recommend optimal |
+| Optimize thresholds and weights | P1 | Auto-tune rule parameters |
+| Generate feature definitions | P1 | Generate feature definition code |
 
 #### 5.1.3 Testing & Validation
 | Feature | Priority | Description |
 |---------|----------|-------------|
-| Syntax validation | P0 | RDL 语法检查 |
-| Semantic validation | P0 | 规则逻辑校验 |
-| Backtest on historical data | P0 | 回测策略表现 |
-| A/B test framework | P1 | 策略对比实验 |
+| Syntax validation | P0 | RDL syntax check |
+| Semantic validation | P0 | Rule logic validation |
+| Backtest on historical data | P0 | Backtest strategy performance |
+| A/B test framework | P1 | Strategy comparison experiments |
 
 #### 5.1.4 Deployment & Monitoring
 | Feature | Priority | Description |
 |---------|----------|-------------|
-| Deploy rules/rulesets to repository | P0 | 部署到规则仓库 |
-| Version control integration | P0 | Git 版本管理 |
-| Real-time performance monitoring | P1 | 实时性能监控 |
-| Alert on anomalies | P2 | 异常告警 |
+| Deploy rules/rulesets to repository | P0 | Deploy to rule repository |
+| Version control integration | P0 | Git version management |
+| Real-time performance monitoring | P1 | Real-time performance monitoring |
+| Alert on anomalies | P2 | Anomaly alerts |
 
 #### 5.1.5 Reporting & BI
 
 | Feature | Priority | Description |
 |---------|----------|-------------|
-| Daily report generation | P0 | 自动生成日报（放款金额、通过率、DPD 分布等） |
-| Business metrics dashboard | P0 | 核心经营指标看板 |
-| Vintage analysis | P1 | 账龄分析、逾期趋势 |
-| Channel ROI analysis | P1 | 渠道效果对比 |
-| Strategy before/after comparison | P1 | 策略上线前后效果对比 |
+| Daily report generation | P0 | Auto-generate daily reports (loan amount, approval rate, DPD distribution, etc.) |
+| Business metrics dashboard | P0 | Core business metrics dashboard |
+| Vintage analysis | P1 | Aging analysis, overdue trends |
+| Channel ROI analysis | P1 | Channel effectiveness comparison |
+| Strategy before/after comparison | P1 | Strategy pre/post launch effect comparison |
 
 ### 5.2 Data Source Support
 
-Agent 需要支持多种数据源进行分析、特征工程和规则生成。
+Agent needs to support multiple data sources for analysis, feature engineering, and rule generation.
 
 | Category | Supported | Primary Use Cases |
 |----------|-----------|-------------------|
-| **Relational DB** | PostgreSQL, MySQL, MariaDB | 历史决策查询、用户行为分析、规则回测 |
-| **OLAP** | ClickHouse | 大规模聚合分析、时序特征、实时监控 |
-| **Big Data** | Apache Spark (PySpark, Spark SQL) | TB级数据处理、复杂特征工程、分布式回测 |
-| **Local Files** | Excel, CSV, TXT | 外部数据导入、测试数据验证 |
-| **API** | REST, GraphQL, gRPC (optional) | 外部风控服务、第三方数据源、实时特征 |
-| **Cloud Platform** | Snowflake, Databricks | 云数仓查询、跨平台分析 |
+| **Relational DB** | PostgreSQL, MySQL, MariaDB | Historical decision queries, user behavior analysis, rule backtesting |
+| **OLAP** | ClickHouse | Large-scale aggregation analysis, time-series features, real-time monitoring |
+| **Big Data** | Apache Spark (PySpark, Spark SQL) | TB-level data processing, complex feature engineering, distributed backtesting |
+| **Local Files** | Excel, CSV, TXT | External data import, test data validation |
+| **API** | REST, GraphQL, gRPC (optional) | External risk services, third-party data sources, real-time features |
+| **Cloud Platform** | Snowflake, Databricks | Cloud data warehouse queries, cross-platform analysis |
 
 **Common Capabilities:**
 - Schema introspection & auto-discovery
@@ -179,15 +179,15 @@ Agent 需要支持多种数据源进行分析、特征工程和规则生成。
 
 ### 5.3 Data Quality Management
 
-Agent 能够根据数据规范自动识别问题数据并进行清洗，确保分析和策略基于干净可靠的数据。
+Agent can automatically identify problematic data based on data specifications and perform cleaning, ensuring analysis and strategies are based on clean, reliable data.
 
 | Feature | Priority | Description |
 |---------|----------|-------------|
-| Schema understanding | P0 | 理解数据表结构、字段类型、业务含义 |
-| Anomaly detection | P0 | 自动识别异常值、缺失值、格式错误、逻辑冲突 |
-| Data cleaning suggestion | P0 | 针对问题数据提出清洗建议（删除/填充/修正） |
-| Cleaning execution | P1 | 执行清洗操作，生成干净数据集 |
-| Quality report | P1 | 生成数据质量报告（问题分布、清洗统计） |
+| Schema understanding | P0 | Understand table structure, field types, business meaning |
+| Anomaly detection | P0 | Auto-identify outliers, missing values, format errors, logical conflicts |
+| Data cleaning suggestion | P0 | Propose cleaning suggestions for problematic data (delete/fill/correct) |
+| Cleaning execution | P1 | Execute cleaning operations, generate clean datasets |
+| Quality report | P1 | Generate data quality reports (issue distribution, cleaning statistics) |
 
 
 ---
@@ -218,16 +218,16 @@ Agent 能够根据数据规范自动识别问题数据并进行清洗，确保�
 
 | Metric | Target | Measurement Method |
 |--------|--------|-------------------|
-| Result Acceptance Rate | ≥ 80% | 用户对生成结果的 👍/👎 反馈统计 |
-| Task Completion Rate | ≥ 95% | 任务状态跟踪（成功/失败/超时） |
-| First-time Success Rate | ≥ 70% | 无需用户修正即可使用的比例 |
-| Average Task Duration | < 30s (simple) / < 5min (complex) | 任务计时器 |
+| Result Acceptance Rate | ≥ 80% | User thumbs up/down feedback statistics |
+| Task Completion Rate | ≥ 95% | Task status tracking (success/failure/timeout) |
+| First-time Success Rate | ≥ 70% | Percentage usable without user correction |
+| Average Task Duration | < 30s (simple) / < 5min (complex) | Task timer |
 
 **Error Handling:**
-- Error Recovery: 遇到错误时优雅降级或提示用户干预
-- Timeout Handling: 长时间任务需要进度反馈，避免卡死假象（>10s 显示进度）
-- Operation Atomicity: 部署操作要么全部成功要么全部回滚
-- Retry Strategy: 可重试错误自动重试（最多 3 次，指数退避）
+- Error Recovery: Graceful degradation or prompt user intervention on errors
+- Timeout Handling: Long-running tasks need progress feedback to avoid appearing stuck (show progress after >10s)
+- Operation Atomicity: Deployment operations either fully succeed or fully rollback
+- Retry Strategy: Auto-retry retriable errors (max 3 times, exponential backoff)
 
 ### 7.2 Security
 - Authentication & Authorization (Role-based access control)
@@ -236,17 +236,17 @@ Agent 能够根据数据规范自动识别问题数据并进行清洗，确保�
 - No credential exposure in generated code
 
 ### 7.3 Explainability
-- **Reasoning Trace**: 展示中间推理步骤和决策依据
-- **Data Provenance**: 标注数据来源（哪个表、哪个时间段）
-- **Confidence Score**: 对生成结果标注置信度（高/中/低）
-- **Alternative Options**: 低置信度时提供备选方案
-- **Query Preview**: 执行查询前展示 SQL/代码，允许用户确认
+- **Reasoning Trace**: Show intermediate reasoning steps and decision basis
+- **Data Provenance**: Annotate data sources (which table, which time period)
+- **Confidence Score**: Annotate confidence level (high/medium/low) for generated results
+- **Alternative Options**: Provide alternatives when confidence is low
+- **Query Preview**: Show SQL/code before execution, allow user confirmation
 
 ### 7.4 Maintainability
-- **Skills Support**: 支持用户自定义 Skills（参考 Claude Skills）
-- **Plugin Architecture**: 工具和数据源可插拔扩展
-- **Configuration Management**: 支持多环境配置（dev/staging/prod）
-- **Logging & Debugging**: 详细的执行日志，支持问题排查
+- **Skills Support**: Support user-defined Skills (reference Claude Skills)
+- **Plugin Architecture**: Pluggable tool and data source extensions
+- **Configuration Management**: Support multi-environment configuration (dev/staging/prod)
+- **Logging & Debugging**: Detailed execution logs for troubleshooting
 
 ---
 
@@ -264,40 +264,40 @@ Agent 能够根据数据规范自动识别问题数据并进行清洗，确保�
 - Deployment requires human approval
 
 ### 8.3 Out of Scope (Phase 1)
-以下功能不在 MVP 范围内：
-- **Model Training**: 不涉及机器学习模型训练，仅支持规则策略
-- **Real-time Streaming**: 不支持实时流处理，仅支持批量查询
-- **Multi-tenancy**: 初版不支持多租户隔离
-- **Mobile App**: 仅支持 Web UI 和 CLI，不提供移动端
-- **Automated Deployment**: 部署需人工审批，不支持全自动上线
-- **External Integrations**: 不集成外部 BI 工具（如 Tableau、Metabase）
+The following features are not in MVP scope:
+- **Model Training**: No machine learning model training, only rule strategies
+- **Real-time Streaming**: No real-time stream processing, only batch queries
+- **Multi-tenancy**: Initial version does not support multi-tenant isolation
+- **Mobile App**: Only Web UI and CLI, no mobile app
+- **Automated Deployment**: Deployment requires human approval, no fully automated deployment
+- **External Integrations**: No integration with external BI tools (e.g., Tableau, Metabase)
 
 ---
 
 ## 9. Agent Runtime Requirements
 
 ### 9.1 Context & Memory Management
-- **Session Context**: 单次会话内保持完整对话历史
-- **Working Memory**: 当前任务相关的中间状态（查询结果、生成的代码等）
-- **Long-term Memory**: 跨会话的用户偏好、常用规则模板（可选，P2）
+- **Session Context**: Maintain complete conversation history within a single session
+- **Working Memory**: Intermediate state related to current task (query results, generated code, etc.)
+- **Long-term Memory**: Cross-session user preferences, commonly used rule templates (optional, P2)
 
 ### 9.2 Human-in-the-Loop
 | Scenario | Behavior |
 |----------|----------|
-| 歧义输入 | 主动询问澄清，提供选项 |
-| 高风险操作（部署、删除） | 必须用户确认后执行 |
-| 低置信度结果 | 标注置信度，建议人工复核 |
-| 长时间任务 | 定期同步进度，允许用户中断或修改目标 |
+| Ambiguous input | Proactively ask for clarification, provide options |
+| High-risk operations (deploy, delete) | Must confirm with user before execution |
+| Low-confidence results | Annotate confidence, suggest human review |
+| Long-running tasks | Periodically sync progress, allow user to interrupt or modify goals |
 
 ### 9.3 Tool Invocation Transparency
-- 显示当前正在调用的工具名称和参数
-- 展示工具执行结果摘要
-- 支持展开查看完整输入输出（可折叠）
+- Display currently invoked tool name and parameters
+- Show tool execution result summary
+- Support expanding to view complete input/output (collapsible)
 
 ### 9.4 Cost Control
-- **Token Budget**: 单次对话 token 上限（默认 100K，可配置）
-- **Query Limit**: 单次任务数据库查询次数上限（默认 50 次）
-- **Timeout**: 单个工具调用超时（默认 180s），整体任务超时（默认 60min）
+- **Token Budget**: Single conversation token limit (default 100K, configurable)
+- **Query Limit**: Single task database query limit (default 50 queries)
+- **Timeout**: Single tool call timeout (default 180s), overall task timeout (default 60min)
 
 ---
 
@@ -305,7 +305,6 @@ Agent 能够根据数据规范自动识别问题数据并进行清洗，确保�
 
 | Metric | Definition | Target (6 months) |
 |--------|------------|-------------------|
-| Task Success Rate | 任务完成且用户满意的比例 | ≥ 75% |
-| Time Saved | 对比人工操作节省的时间 | ≥ 90% |
-| Rule Quality Score | 生成规则的精准率/召回率 | 与人工持平 | 
-
+| Task Success Rate | Percentage of tasks completed with user satisfaction | ≥ 75% |
+| Time Saved | Time saved compared to manual operations | ≥ 90% |
+| Rule Quality Score | Precision/recall of generated rules | On par with manual |

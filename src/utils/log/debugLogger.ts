@@ -60,13 +60,13 @@ const USER_FRIENDLY_LEVELS = new Set([
 const STARTUP_TIMESTAMP = new Date().toISOString().replace(/[:.]/g, '-')
 const REQUEST_START_TIME = Date.now()
 
-const KODE_DIR = join(homedir(), '.kode')
+const CORINT_DIR = join(homedir(), '.corint')
 function getProjectDir(cwd: string): string {
   return cwd.replace(/[^a-zA-Z0-9]/g, '-')
 }
 
 const DEBUG_PATHS = {
-  base: () => join(KODE_DIR, getProjectDir(process.cwd()), 'debug'),
+  base: () => join(CORINT_DIR, getProjectDir(process.cwd()), 'debug'),
   detailed: () => join(DEBUG_PATHS.base(), `${STARTUP_TIMESTAMP}-detailed.log`),
   flow: () => join(DEBUG_PATHS.base(), `${STARTUP_TIMESTAMP}-flow.log`),
   api: () => join(DEBUG_PATHS.base(), `${STARTUP_TIMESTAMP}-api.log`),
@@ -138,8 +138,7 @@ function writeToFile(filePath: string, entry: LogEntry) {
       ) + ',\n'
 
     appendFileSync(filePath, logLine)
-  } catch (error) {
-  }
+  } catch (error) {}
 }
 
 const recentLogs = new Map<string, number>()
@@ -208,8 +207,7 @@ function formatMessages(messages: any): string {
       if (Array.isArray(parsed)) {
         return formatMessages(parsed)
       }
-    } catch {
-    }
+    } catch {}
   }
 
   if (typeof messages === 'string' && messages.length > 200) {
@@ -434,7 +432,7 @@ export function logAPIError(context: {
   response?: any
   provider?: string
 }) {
-  const errorDir = join(KODE_DIR, 'logs', 'error', 'api')
+  const errorDir = join(CORINT_DIR, 'logs', 'error', 'api')
 
   if (!existsSync(errorDir)) {
     try {
@@ -563,7 +561,7 @@ export function logLLMInteraction(context: {
   terminalLog(chalk.cyan(`\n💬 Real API Messages${apiLabel} (last 10):`))
 
   const recentMessages = context.messages.slice(-10)
-    recentMessages.forEach((msg, index) => {
+  recentMessages.forEach((msg, index) => {
     const globalIndex = context.messages.length - recentMessages.length + index
     const roleColor =
       msg.role === 'user'
@@ -800,9 +798,10 @@ function writeLLMLogToFile(context: {
           } else if (block.type === 'tool_use') {
             logContent += `  [tool_use] ${block.name}: ${JSON.stringify(block.input, null, 2)}\n`
           } else if (block.type === 'tool_result') {
-            const resultContent = typeof block.content === 'string'
-              ? block.content
-              : JSON.stringify(block.content, null, 2)
+            const resultContent =
+              typeof block.content === 'string'
+                ? block.content
+                : JSON.stringify(block.content, null, 2)
             logContent += `  [tool_result] tool_use_id=${block.tool_use_id}:\n${resultContent}\n`
           } else {
             logContent += `  [${block.type || 'unknown'}] ${JSON.stringify(block, null, 2)}\n`
@@ -1026,16 +1025,16 @@ export function diagnoseError(error: any, context?: any): ErrorDiagnosis {
       description:
         'Request was aborted, often due to user cancellation or timeout',
       suggestions: [
-        '检查是否按下了 ESC 键取消请求',
-        '检查网络连接是否稳定',
-        '验证 AbortController 状态: isActive 和 signal.aborted 应该一致',
-        '查看是否有重复的请求导致冲突',
+        'Check if ESC key was pressed to cancel the request',
+        'Verify network connection stability',
+        'Validate AbortController state: isActive and signal.aborted should be consistent',
+        'Check for duplicate requests causing conflicts',
       ],
       debugSteps: [
-        '使用 --debug-verbose 模式查看详细的请求流程',
-        '检查 debug 日志中的 BINARY_FEEDBACK_* 事件',
-        '验证 REQUEST_START 和 REQUEST_END 日志配对',
-        '查看 QUERY_ABORTED 事件的触发原因',
+        'Use --debug-verbose mode to view detailed request flow',
+        'Check debug logs for BINARY_FEEDBACK_* events',
+        'Verify REQUEST_START and REQUEST_END log pairing',
+        'Review QUERY_ABORTED event trigger reasons',
       ],
     }
   }
@@ -1051,16 +1050,16 @@ export function diagnoseError(error: any, context?: any): ErrorDiagnosis {
       severity: 'HIGH',
       description: 'API authentication failed - invalid or missing API key',
       suggestions: [
-        '运行 /login 重新设置 API 密钥',
-        '检查 ~/.kode/ 配置文件中的 API 密钥',
-        '验证 API 密钥是否已过期或被撤销',
-        '确认使用的 provider 设置正确 (anthropic/opendev/bigdream)',
+        'Run /login to reset API key',
+        'Check API key in ~/.corint/ configuration files',
+        'Verify API key has not expired or been revoked',
+        'Confirm the provider setting is correct (anthropic/opendev/bigdream)',
       ],
       debugSteps: [
-        '检查 CONFIG_LOAD 日志中的 provider 和 API 密钥状态',
-        '运行 kode doctor 检查系统健康状态',
-        '查看 API_ERROR 日志了解详细错误信息',
-        '使用 kode config 命令查看当前配置',
+        'Check CONFIG_LOAD logs for provider and API key status',
+        'Run corint doctor to check system health',
+        'Review API_ERROR logs for detailed error information',
+        'Use corint config command to view current configuration',
       ],
     }
   }
@@ -1076,17 +1075,17 @@ export function diagnoseError(error: any, context?: any): ErrorDiagnosis {
       severity: 'HIGH',
       description: 'Network connection failed - unable to reach API endpoint',
       suggestions: [
-        '检查网络连接是否正常',
-        '确认防火墙没有阻止相关端口',
-        '检查 proxy 设置是否正确',
-        '尝试切换到不同的网络环境',
-        '验证 baseURL 配置是否正确',
+        'Check if network connection is normal',
+        'Confirm firewall is not blocking relevant ports',
+        'Verify proxy settings are correct',
+        'Try switching to a different network environment',
+        'Validate baseURL configuration is correct',
       ],
       debugSteps: [
-        '检查 API_REQUEST_START 和相关网络日志',
-        '查看 LLM_REQUEST_ERROR 中的详细错误信息',
-        '使用 ping 或 curl 测试 API 端点连通性',
-        '检查企业网络是否需要代理设置',
+        'Check API_REQUEST_START and related network logs',
+        'Review detailed error information in LLM_REQUEST_ERROR',
+        'Test API endpoint connectivity with ping or curl',
+        'Check if enterprise network requires proxy settings',
       ],
     }
   }
@@ -1102,16 +1101,16 @@ export function diagnoseError(error: any, context?: any): ErrorDiagnosis {
       severity: 'MEDIUM',
       description: 'Permission denied - insufficient access rights',
       suggestions: [
-        '检查文件和目录的读写权限',
-        '确认当前用户有足够的系统权限',
-        '查看是否需要管理员权限运行',
-        '检查工具权限设置是否正确配置',
+        'Check file and directory read/write permissions',
+        'Confirm current user has sufficient system permissions',
+        'Check if administrator privileges are required',
+        'Verify tool permission settings are correctly configured',
       ],
       debugSteps: [
-        '查看 PERMISSION_* 日志了解权限检查过程',
-        '检查文件系统权限: ls -la',
-        '验证工具审批状态',
-        '查看 TOOL_* 相关的调试日志',
+        'Review PERMISSION_* logs to understand permission checking process',
+        'Check filesystem permissions: ls -la',
+        'Verify tool approval status',
+        'Review TOOL_* related debug logs',
       ],
     }
   }
@@ -1126,16 +1125,16 @@ export function diagnoseError(error: any, context?: any): ErrorDiagnosis {
       severity: 'MEDIUM',
       description: 'LLM response format mismatch between different providers',
       suggestions: [
-        '检查当前使用的 provider 是否与期望一致',
-        '验证响应格式处理逻辑',
-        '确认不同 provider 的响应格式差异',
-        '检查是否需要更新响应解析代码',
+        'Check if current provider matches expectations',
+        'Verify response format handling logic',
+        'Confirm response format differences between providers',
+        'Check if response parsing code needs updating',
       ],
       debugSteps: [
-        '查看 LLM_CALL_DEBUG 中的响应格式',
-        '检查 provider 配置和实际使用的 API',
-        '对比 Anthropic 和 OpenAI 响应格式差异',
-        '验证 logLLMInteraction 函数的格式处理',
+        'Review response format in LLM_CALL_DEBUG',
+        'Check provider configuration and actual API used',
+        'Compare response format differences between Anthropic and OpenAI',
+        'Verify logLLMInteraction function format handling',
       ],
     }
   }
@@ -1151,16 +1150,16 @@ export function diagnoseError(error: any, context?: any): ErrorDiagnosis {
       severity: 'MEDIUM',
       description: 'Context window exceeded - conversation too long',
       suggestions: [
-        '运行 /compact 手动压缩对话历史',
-        '检查自动压缩设置是否正确配置',
-        '减少单次输入的内容长度',
-        '清理不必要的上下文信息',
+        'Run /compact to manually compress conversation history',
+        'Check if auto-compression settings are correctly configured',
+        'Reduce content length of single inputs',
+        'Clean up unnecessary context information',
       ],
       debugSteps: [
-        '查看 AUTO_COMPACT_* 日志检查压缩触发',
-        '检查 token 使用量和阈值',
-        '查看 CONTEXT_COMPRESSION 相关日志',
-        '验证模型的最大 token 限制',
+        'Review AUTO_COMPACT_* logs to check compression triggers',
+        'Check token usage and thresholds',
+        'Review CONTEXT_COMPRESSION related logs',
+        'Verify model maximum token limits',
       ],
     }
   }
@@ -1175,16 +1174,16 @@ export function diagnoseError(error: any, context?: any): ErrorDiagnosis {
       severity: 'MEDIUM',
       description: 'Configuration error - missing or invalid settings',
       suggestions: [
-        '运行 kode config 检查配置设置',
-        '删除损坏的配置文件重新初始化',
-        '检查 JSON 配置文件语法是否正确',
-        '验证环境变量设置',
+        'Run corint config to check configuration settings',
+        'Delete corrupted configuration files and reinitialize',
+        'Check if JSON configuration file syntax is correct',
+        'Verify environment variable settings',
       ],
       debugSteps: [
-        '查看 CONFIG_LOAD 和 CONFIG_SAVE 日志',
-        '检查配置文件路径和权限',
-        '验证 JSON 格式: cat ~/.kode/config.json | jq',
-        '查看配置缓存相关的调试信息',
+        'Review CONFIG_LOAD and CONFIG_SAVE logs',
+        'Check configuration file paths and permissions',
+        'Verify JSON format: cat ~/.corint/config.json | jq',
+        'Review debug information related to configuration caching',
       ],
     }
   }
@@ -1195,16 +1194,16 @@ export function diagnoseError(error: any, context?: any): ErrorDiagnosis {
     severity: 'MEDIUM',
     description: `Unexpected error: ${errorMessage}`,
     suggestions: [
-      '重新启动应用程序',
-      '检查系统资源是否充足',
-      '查看完整的错误日志获取更多信息',
-      '如果问题持续，请报告此错误',
+      'Restart the application',
+      'Check if system resources are sufficient',
+      'Review complete error logs for more information',
+      'If the problem persists, please report this error',
     ],
     debugSteps: [
-      '使用 --debug-verbose 获取详细日志',
-      '检查 error.log 中的完整错误信息',
-      '查看系统资源使用情况',
-      '收集重现步骤和环境信息',
+      'Use --debug-verbose to get detailed logs',
+      'Check complete error information in error.log',
+      'Review system resource usage',
+      'Collect reproduction steps and environment information',
     ],
     relatedLogs: errorStack ? [errorStack] : undefined,
   }

@@ -2,7 +2,10 @@ import type { Tool, ToolUseContext } from '@tool'
 import { FileEditTool } from '@tools/FileEditTool/FileEditTool'
 import { FileWriteTool } from '@tools/FileWriteTool/FileWriteTool'
 import { NotebookEditTool } from '@tools/NotebookEditTool/NotebookEditTool'
-import { getCurrentProjectConfig, saveCurrentProjectConfig } from '@utils/config'
+import {
+  getCurrentProjectConfig,
+  saveCurrentProjectConfig,
+} from '@utils/config'
 import { logError } from '@utils/log'
 import { grantWritePermissionForPath } from '@utils/permissions/filesystem'
 import { persistToolPermissionUpdateToDisk } from '@utils/permissions/toolPermissionSettings'
@@ -52,11 +55,14 @@ export async function savePermission(
       const nextToolPermissionContext =
         applyToolPermissionContextUpdateForConversationKey({
           conversationKey,
-          isBypassPermissionsModeAvailable: !(context?.options?.safeMode ?? false),
+          isBypassPermissionsModeAvailable: !(
+            context?.options?.safeMode ?? false
+          ),
           update,
         })
       if (context?.options) {
-        ;(context.options as any).toolPermissionContext = nextToolPermissionContext
+        ;(context.options as any).toolPermissionContext =
+          nextToolPermissionContext
       }
     }
   } catch (error) {

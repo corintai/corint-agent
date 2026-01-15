@@ -6,7 +6,10 @@ import {
   getMCPTools,
   type WrappedClient,
 } from '@services/mcpClient'
-import { getCurrentProjectConfig, saveCurrentProjectConfig } from '@utils/config'
+import {
+  getCurrentProjectConfig,
+  saveCurrentProjectConfig,
+} from '@utils/config'
 
 describe('MCP stdio integration (SDK)', () => {
   const originalTimeout = process.env.MCP_CONNECTION_TIMEOUT_MS
@@ -24,7 +27,9 @@ describe('MCP stdio integration (SDK)', () => {
   let createdClients: WrappedClient[] | null = null
 
   beforeEach(() => {
-    originalProjectConfig = JSON.parse(JSON.stringify(getCurrentProjectConfig()))
+    originalProjectConfig = JSON.parse(
+      JSON.stringify(getCurrentProjectConfig()),
+    )
     process.env.MCP_CONNECTION_TIMEOUT_MS = '3000'
     process.env.MCP_TOOL_TIMEOUT = '3000'
 
@@ -39,7 +44,6 @@ describe('MCP stdio integration (SDK)', () => {
         },
       },
     })
-
     ;(getClients as any).cache?.clear?.()
     ;(getMCPTools as any).cache?.clear?.()
     ;(getMCPCommands as any).cache?.clear?.()
@@ -62,7 +66,8 @@ describe('MCP stdio integration (SDK)', () => {
 
     saveCurrentProjectConfig(originalProjectConfig)
 
-    if (originalTimeout === undefined) delete process.env.MCP_CONNECTION_TIMEOUT_MS
+    if (originalTimeout === undefined)
+      delete process.env.MCP_CONNECTION_TIMEOUT_MS
     else process.env.MCP_CONNECTION_TIMEOUT_MS = originalTimeout
 
     if (originalToolTimeout === undefined) delete process.env.MCP_TOOL_TIMEOUT
@@ -82,7 +87,10 @@ describe('MCP stdio integration (SDK)', () => {
     expect(echoTool).toBeDefined()
     expect((echoTool as any).inputJSONSchema).toBeTruthy()
 
-    const ctx = { abortController: new AbortController(), toolUseId: 't1' } as any
+    const ctx = {
+      abortController: new AbortController(),
+      toolUseId: 't1',
+    } as any
     const gen = (echoTool as any).call({ message: 'hi' }, ctx)
     const first = await gen.next()
     expect((first.value as any)?.type).toBe('result')
@@ -97,4 +105,3 @@ describe('MCP stdio integration (SDK)', () => {
     expect(promptMessages[0]?.content?.[0]?.text).toContain('Hello, Alice!')
   })
 })
-

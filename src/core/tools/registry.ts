@@ -14,4 +14,3 @@ export function getToolByName(
 ): Tool | undefined {
   return registry.tools.find(t => t.name === name)
 }
-

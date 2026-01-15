@@ -28,8 +28,7 @@ function pathToPermissionDirectory(path: string): string {
   try {
     const stats = statSync(path)
     if (stats.isDirectory()) return path
-  } catch {
-  }
+  } catch {}
   return dirname(path)
 }
 

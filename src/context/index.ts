@@ -102,9 +102,7 @@ export async function getProjectDocsForCwd(
     if (existsSync(legacyPath)) {
       try {
         const content = await readFile(legacyPath, 'utf-8')
-        docs.push(
-          `# Legacy instructions (CLAUDE.md)\n\n${content}`,
-        )
+        docs.push(`# Legacy instructions (CLAUDE.md)\n\n${content}`)
       } catch (e) {
         logError(e)
       }

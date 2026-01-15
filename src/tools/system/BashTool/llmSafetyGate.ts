@@ -297,8 +297,7 @@ function writeGateFailureDump(args: {
       .filter(Boolean)
       .join('\n')
     writeFileSync(path, body, 'utf8')
-  } catch {
-  }
+  } catch {}
 }
 
 type GateAttemptOutput = {

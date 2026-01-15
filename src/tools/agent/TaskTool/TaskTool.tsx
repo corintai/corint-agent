@@ -211,7 +211,11 @@ function buildForkContextForAgent(options: {
     }
   }
 
-  const mainPath = getMessagesPath(options.messageLogName, options.forkNumber, 0)
+  const mainPath = getMessagesPath(
+    options.messageLogName,
+    options.forkNumber,
+    0,
+  )
   const mainMessages = readJsonArrayFile(mainPath) as MessageType[] | null
   if (!mainMessages || mainMessages.length === 0) {
     return {
@@ -247,10 +251,8 @@ function buildForkContextForAgent(options: {
     }
   }
 
-  const forkContextMessages = (mainMessages.slice(
-    0,
-    toolUseMessageIndex,
-  ) ?? []) as MessageType[]
+  const forkContextMessages = (mainMessages.slice(0, toolUseMessageIndex) ??
+    []) as MessageType[]
 
   const toolUseOnlyAssistant: MessageType = {
     ...toolUseMessage,
@@ -281,7 +283,11 @@ function buildForkContextForAgent(options: {
 
   return {
     forkContextMessages,
-    promptMessages: [toolUseOnlyAssistant, forkContextToolResult, userPromptMessage],
+    promptMessages: [
+      toolUseOnlyAssistant,
+      forkContextToolResult,
+      userPromptMessage,
+    ],
   }
 }
 
@@ -476,7 +482,7 @@ export const TaskTool = {
     const normalizedAgentModel = normalizeAgentModelName(agentConfig.model)
     const defaultSubagentModel = 'task'
     const envSubagentModel =
-      process.env.KODE_SUBAGENT_MODEL ??
+      process.env.CORINT_SUBAGENT_MODEL ??
       process.env.CLAUDE_CODE_SUBAGENT_MODEL
     const modelToUse: string =
       (typeof envSubagentModel === 'string' && envSubagentModel.trim()

@@ -82,7 +82,7 @@ function getSandboxDefaultWriteAllowPaths(homeDir: string): string[] {
     '/tmp/kode',
     '/private/tmp/kode',
     join(homeDir, '.npm', '_logs'),
-    join(homeDir, '.kode', 'debug'),
+    join(homeDir, '.corint', 'debug'),
   ]
 }
 

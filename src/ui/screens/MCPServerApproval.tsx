@@ -47,4 +47,3 @@ export async function handleMcprcServerApprovals(): Promise<void> {
     }
   })
 }
-

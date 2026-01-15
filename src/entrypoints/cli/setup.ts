@@ -50,5 +50,4 @@ export async function setup(cwd: string, safeMode?: boolean): Promise<void> {
     projectConfig.lastDuration !== undefined
   ) {
   }
-
 }

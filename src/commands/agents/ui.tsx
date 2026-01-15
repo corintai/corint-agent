@@ -133,10 +133,15 @@ function parseMcpToolName(
   if (!name.startsWith('mcp__')) return null
   const parts = name.split('__')
   if (parts.length < 3) return null
-  return { serverName: parts[1] || 'unknown', toolName: parts.slice(2).join('__') }
+  return {
+    serverName: parts[1] || 'unknown',
+    toolName: parts.slice(2).join('__'),
+  }
 }
 
-function toSelectableToolNames(toolSpecs: string[] | '*'): string[] | undefined {
+function toSelectableToolNames(
+  toolSpecs: string[] | '*',
+): string[] | undefined {
   if (toolSpecs === '*') return undefined
   const names = toolSpecs.map(getToolNameFromSpec).filter(Boolean)
   if (names.includes('*')) return undefined
@@ -192,7 +197,8 @@ function computeOverrides(args: {
   activeAgents: AgentConfig[]
 }): AgentWithOverride[] {
   const activeByType = new Map<string, AgentConfig>()
-  for (const agent of args.activeAgents) activeByType.set(agent.agentType, agent)
+  for (const agent of args.activeAgents)
+    activeByType.set(agent.agentType, agent)
   return args.allAgents.map(agent => {
     const active = activeByType.get(agent.agentType)
     const overriddenBy =
@@ -264,7 +270,9 @@ function AgentsListView(props: {
       if (hasCreate && onCreateOption) return 0
       if (!selectedAgent) return hasCreate ? 0 : 0
       const idx = selectableAgents.findIndex(
-        a => a.agentType === selectedAgent.agentType && a.source === selectedAgent.source,
+        a =>
+          a.agentType === selectedAgent.agentType &&
+          a.source === selectedAgent.source,
       )
       if (idx < 0) return hasCreate ? 0 : 0
       return hasCreate ? idx + 1 : idx
@@ -328,7 +336,10 @@ function AgentsListView(props: {
           {formatModelShort(agent.model)}
         </Text>
         {agent.overriddenBy ? (
-          <Text dimColor={!isSelected} color={isSelected ? theme.warning : undefined}>
+          <Text
+            dimColor={!isSelected}
+            color={isSelected ? theme.warning : undefined}
+          >
             {' '}
             {figures.warning} overridden by {agent.overriddenBy}
           </Text>
@@ -346,12 +357,7 @@ function AgentsListView(props: {
           <Text bold dimColor>
             {label}
           </Text>
-          {baseDir ? (
-            <Text dimColor>
-              {' '}
-              ({baseDir})
-            </Text>
-          ) : null}
+          {baseDir ? <Text dimColor> ({baseDir})</Text> : null}
         </Box>
         {agents.map(renderAgentRow)}
       </Box>
@@ -376,22 +382,29 @@ function AgentsListView(props: {
 
   if (
     props.agents.length === 0 ||
-    (props.source !== 'built-in' && !props.agents.some(a => a.source !== 'built-in'))
+    (props.source !== 'built-in' &&
+      !props.agents.some(a => a.source !== 'built-in'))
   ) {
     return (
       <>
         <Panel title={title} subtitle="No agents found">
-          {props.onCreateNew ? <Box marginY={1}>{renderCreateNew()}</Box> : null}
+          {props.onCreateNew ? (
+            <Box marginY={1}>{renderCreateNew()}</Box>
+          ) : null}
           <Text dimColor>
-            No agents found. Create specialized subagents that Claude can delegate to.
+            No agents found. Create specialized subagents that Claude can
+            delegate to.
           </Text>
           <Text dimColor>
-            Each subagent has its own context window, custom system prompt, and specific tools.
+            Each subagent has its own context window, custom system prompt, and
+            specific tools.
           </Text>
           <Text dimColor>
-            Try creating: Code Reviewer, Code Simplifier, Security Reviewer, Tech Lead, or UX Reviewer.
+            Try creating: Code Reviewer, Code Simplifier, Security Reviewer,
+            Tech Lead, or UX Reviewer.
           </Text>
-          {props.source !== 'built-in' && props.agents.some(a => a.source === 'built-in') ? (
+          {props.source !== 'built-in' &&
+          props.agents.some(a => a.source === 'built-in') ? (
             <>
               <Box marginTop={1}>
                 <Text dimColor>{'─'.repeat(40)}</Text>
@@ -407,10 +420,7 @@ function AgentsListView(props: {
 
   return (
     <>
-      <Panel
-        title={title}
-        subtitle={`${notOverriddenCount} agents`}
-      >
+      <Panel title={title} subtitle={`${notOverriddenCount} agents`}>
         {props.changes.length > 0 ? (
           <Box marginTop={1}>
             <Text dimColor>{props.changes[props.changes.length - 1]}</Text>
@@ -457,7 +467,9 @@ function AgentsListView(props: {
             </>
           ) : (
             <Box flexDirection="column">
-              {props.agents.filter(a => a.source !== 'built-in').map(renderAgentRow)}
+              {props.agents
+                .filter(a => a.source !== 'built-in')
+                .map(renderAgentRow)}
             </Box>
           )}
         </Box>
@@ -495,7 +507,9 @@ type WizardData = {
   finalAgent?: WizardFinalAgent
 }
 
-function wizardLocationToStorageLocation(location: WizardLocation): 'project' | 'user' {
+function wizardLocationToStorageLocation(
+  location: WizardLocation,
+): 'project' | 'user' {
   return location === 'projectSettings' ? 'project' : 'user'
 }
 
@@ -537,7 +551,10 @@ function modelOptions(): (OptionSubtree | { label: string; value: string })[] {
 
   return [
     { header: 'Compatibility aliases', options: base },
-    { header: 'Model profiles', options: extras.sort((a, b) => a.label.localeCompare(b.label)) },
+    {
+      header: 'Model profiles',
+      options: extras.sort((a, b) => a.label.localeCompare(b.label)),
+    },
   ]
 }
 
@@ -645,7 +662,10 @@ function StepChooseLocation({ ctx }: { ctx: WizardContextValue }) {
   })
 
   return (
-    <WizardPanel subtitle="Choose location" footerText="Press ↑↓ to navigate · Enter to select · Esc to cancel">
+    <WizardPanel
+      subtitle="Choose location"
+      footerText="Press ↑↓ to navigate · Enter to select · Esc to cancel"
+    >
       <Box marginTop={1}>
         <Select
           options={[
@@ -680,7 +700,10 @@ function StepChooseMethod({ ctx }: { ctx: WizardContextValue }) {
           onChange={value => {
             const method: WizardMethod =
               value === 'manual' ? 'manual' : 'generate'
-            ctx.updateWizardData({ method, wasGenerated: method === 'generate' })
+            ctx.updateWizardData({
+              method,
+              wasGenerated: method === 'generate',
+            })
             if (method === 'generate') ctx.goNext()
             else ctx.goToStep(3)
           }}
@@ -773,7 +796,8 @@ function StepGenerationPrompt(props: {
       <Box flexDirection="column" marginTop={1} gap={1}>
         <Text>What should this agent do?</Text>
         <Text dimColor>
-          Describe a role like “code reviewer”, “security auditor”, or “tech lead”.
+          Describe a role like “code reviewer”, “security auditor”, or “tech
+          lead”.
         </Text>
         <TextInput
           value={value}
@@ -791,7 +815,9 @@ function StepGenerationPrompt(props: {
   )
 }
 
-function themeColor(kind: 'error' | 'warning' | 'success' | 'suggestion'): string {
+function themeColor(
+  kind: 'error' | 'warning' | 'success' | 'suggestion',
+): string {
   const theme = getTheme()
   switch (kind) {
     case 'error':
@@ -806,7 +832,10 @@ function themeColor(kind: 'error' | 'warning' | 'success' | 'suggestion'): strin
   }
 }
 
-function StepAgentType(props: { ctx: WizardContextValue; existingAgents: AgentConfig[] }) {
+function StepAgentType(props: {
+  ctx: WizardContextValue
+  existingAgents: AgentConfig[]
+}) {
   const { ctx } = props
   const [value, setValue] = useState(ctx.wizardData.agentType ?? '')
   const [cursorOffset, setCursorOffset] = useState(value.length)
@@ -950,7 +979,9 @@ function ToolPicker(props: {
       if (!tool?.name) continue
       unique.set(tool.name, tool)
     }
-    return Array.from(unique.values()).sort((a, b) => a.name.localeCompare(b.name))
+    return Array.from(unique.values()).sort((a, b) =>
+      a.name.localeCompare(b.name),
+    )
   }, [props.tools])
 
   const allToolNames = useMemo(
@@ -970,7 +1001,8 @@ function ToolPicker(props: {
   const [showAdvanced, setShowAdvanced] = useState(false)
 
   const selectedSet = useMemo(() => new Set(selected), [selected])
-  const isAllSelected = selected.length === allToolNames.length && allToolNames.length > 0
+  const isAllSelected =
+    selected.length === allToolNames.length && allToolNames.length > 0
 
   const toggleOne = (name: string) => {
     setSelected(prev =>
@@ -1056,9 +1088,17 @@ function ToolPicker(props: {
       label: string
       names: string[]
     }> = [
-      { id: 'bucket-readonly', label: 'Read-only tools', names: categorized.readOnly },
+      {
+        id: 'bucket-readonly',
+        label: 'Read-only tools',
+        names: categorized.readOnly,
+      },
       { id: 'bucket-edit', label: 'Edit tools', names: categorized.edit },
-      { id: 'bucket-execution', label: 'Execution tools', names: categorized.execution },
+      {
+        id: 'bucket-execution',
+        label: 'Execution tools',
+        names: categorized.execution,
+      },
       { id: 'bucket-mcp', label: 'MCP tools', names: categorized.mcp },
       { id: 'bucket-other', label: 'Other tools', names: categorized.other },
     ]
@@ -1083,7 +1123,12 @@ function ToolPicker(props: {
     if (!showAdvanced) return out
 
     if (mcpServers.length > 0) {
-      out.push({ id: 'mcp-servers-header', label: 'MCP Servers:', isHeader: true, action: () => {} })
+      out.push({
+        id: 'mcp-servers-header',
+        label: 'MCP Servers:',
+        isHeader: true,
+        action: () => {},
+      })
       for (const server of mcpServers) {
         const allServer = server.toolNames.every(n => selectedSet.has(n))
         out.push({
@@ -1094,7 +1139,12 @@ function ToolPicker(props: {
       }
     }
 
-    out.push({ id: 'tools-header', label: 'Individual Tools:', isHeader: true, action: () => {} })
+    out.push({
+      id: 'tools-header',
+      label: 'Individual Tools:',
+      isHeader: true,
+      action: () => {},
+    })
     for (const name of allToolNames) {
       let labelName = name
       const parsed = parseMcpToolName(name)
@@ -1146,23 +1196,34 @@ function ToolPicker(props: {
 
   return (
     <Box flexDirection="column" marginTop={1}>
-      <Text color={cursorIndex === 0 ? themeColor('suggestion') : undefined} bold={cursorIndex === 0}>
+      <Text
+        color={cursorIndex === 0 ? themeColor('suggestion') : undefined}
+        bold={cursorIndex === 0}
+      >
         {cursorIndex === 0 ? `${figures.pointer} ` : '  '}[ Continue ]
       </Text>
       <Text dimColor>{'─'.repeat(40)}</Text>
       {items.slice(1).map((item, idx) => {
         const index = idx + 1
         const focused = index === cursorIndex
-        const prefix = item.isHeader ? '' : focused ? `${figures.pointer} ` : '  '
+        const prefix = item.isHeader
+          ? ''
+          : focused
+            ? `${figures.pointer} `
+            : '  '
         return (
           <React.Fragment key={item.id}>
             {item.isToggle ? <Text dimColor>{'─'.repeat(40)}</Text> : null}
             <Text
               dimColor={item.isHeader}
-              color={!item.isHeader && focused ? themeColor('suggestion') : undefined}
+              color={
+                !item.isHeader && focused ? themeColor('suggestion') : undefined
+              }
               bold={item.isToggle && focused}
             >
-              {item.isToggle ? `${prefix}[ ${item.label} ]` : `${prefix}${item.label}`}
+              {item.isToggle
+                ? `${prefix}[ ${item.label} ]`
+                : `${prefix}${item.label}`}
             </Text>
           </React.Fragment>
         )
@@ -1178,10 +1239,7 @@ function ToolPicker(props: {
   )
 }
 
-function StepSelectTools(props: {
-  ctx: WizardContextValue
-  tools: Tool[]
-}) {
+function StepSelectTools(props: { ctx: WizardContextValue; tools: Tool[] }) {
   const { ctx } = props
   const initialTools = ctx.wizardData.selectedTools
   return (
@@ -1211,7 +1269,10 @@ function StepSelectModel({ ctx }: { ctx: WizardContextValue }) {
   const defaultValue = ctx.wizardData.selectedModel ?? DEFAULT_AGENT_MODEL
 
   return (
-    <WizardPanel subtitle="Select model" footerText="Press ↑↓ to navigate · Enter to select · Esc to go back">
+    <WizardPanel
+      subtitle="Select model"
+      footerText="Press ↑↓ to navigate · Enter to select · Esc to go back"
+    >
       <Box flexDirection="column" marginTop={1} gap={1}>
         <Text dimColor>
           Model determines the agent&apos;s reasoning capabilities and speed.
@@ -1235,12 +1296,16 @@ function ColorPicker(props: {
   onConfirm: (color: AgentColor) => void
 }) {
   const [index, setIndex] = useState(
-    Math.max(0, COLOR_OPTIONS.findIndex(c => c === props.currentColor)),
+    Math.max(
+      0,
+      COLOR_OPTIONS.findIndex(c => c === props.currentColor),
+    ),
   )
 
   useInput((_input, key) => {
     if (key.upArrow) setIndex(i => (i > 0 ? i - 1 : COLOR_OPTIONS.length - 1))
-    else if (key.downArrow) setIndex(i => (i < COLOR_OPTIONS.length - 1 ? i + 1 : 0))
+    else if (key.downArrow)
+      setIndex(i => (i < COLOR_OPTIONS.length - 1 ? i + 1 : 0))
     else if (key.return) props.onConfirm(COLOR_OPTIONS[index] ?? 'automatic')
   })
 
@@ -1294,9 +1359,16 @@ function StepChooseColor({ ctx }: { ctx: WizardContextValue }) {
   }
 
   return (
-    <WizardPanel subtitle="Choose background color" footerText="Press ↑↓ to navigate · Enter to select · Esc to go back">
+    <WizardPanel
+      subtitle="Choose background color"
+      footerText="Press ↑↓ to navigate · Enter to select · Esc to go back"
+    >
       <Box marginTop={1}>
-        <ColorPicker agentName={agentType} currentColor="automatic" onConfirm={onConfirm} />
+        <ColorPicker
+          agentName={agentType}
+          currentColor="automatic"
+          onConfirm={onConfirm}
+        />
       </Box>
     </WizardPanel>
   )
@@ -1310,7 +1382,10 @@ function validateFinalAgent(args: {
   const errors: string[] = []
   const warnings: string[] = []
 
-  const typeValidation = validateAgentType(args.finalAgent.agentType, args.existingAgents)
+  const typeValidation = validateAgentType(
+    args.finalAgent.agentType,
+    args.existingAgents,
+  )
   errors.push(...typeValidation.errors)
   warnings.push(...typeValidation.warnings)
 
@@ -1327,7 +1402,8 @@ function validateFinalAgent(args: {
   const selectedTools = args.finalAgent.tools ?? undefined
   if (selectedTools && selectedTools.length > 0) {
     const unknown = selectedTools.filter(t => !availableToolNames.has(t))
-    if (unknown.length > 0) warnings.push(`Unrecognized tools: ${unknown.join(', ')}`)
+    if (unknown.length > 0)
+      warnings.push(`Unrecognized tools: ${unknown.join(', ')}`)
   }
 
   return { errors, warnings }
@@ -1433,10 +1509,7 @@ function StepConfirm(props: {
             <Text color={themeColor('warning')}>Warnings:</Text>
             {validation.warnings.map((w, i) => (
               <React.Fragment key={i}>
-                <Text dimColor>
-                  {' '}
-                  • {w}
-                </Text>
+                <Text dimColor> • {w}</Text>
               </React.Fragment>
             ))}
           </Box>
@@ -1447,10 +1520,7 @@ function StepConfirm(props: {
             <Text color={themeColor('error')}>Errors:</Text>
             {validation.errors.map((e, i) => (
               <React.Fragment key={i}>
-                <Text color={themeColor('error')}>
-                  {' '}
-                  • {e}
-                </Text>
+                <Text color={themeColor('error')}> • {e}</Text>
               </React.Fragment>
             ))}
           </Box>
@@ -1509,7 +1579,10 @@ function CreateAgentWizard(props: {
             )
 
             if (openEditor) {
-              const path = getPrimaryAgentFilePath(location, finalAgent.agentType)
+              const path = getPrimaryAgentFilePath(
+                location,
+                finalAgent.agentType,
+              )
               await openInEditor(path)
               props.onComplete(
                 `Created agent: ${chalk.bold(finalAgent.agentType)} and opened in editor. If you made edits, restart to load the latest version.`,
@@ -1517,20 +1590,16 @@ function CreateAgentWizard(props: {
               return
             }
 
-            props.onComplete(`Created agent: ${chalk.bold(finalAgent.agentType)}`)
+            props.onComplete(
+              `Created agent: ${chalk.bold(finalAgent.agentType)}`,
+            )
           }}
         />
       ),
     ]
   }, [props])
 
-  return (
-    <Wizard
-      steps={steps}
-      onCancel={props.onCancel}
-      onDone={() => {}}
-    />
-  )
+  return <Wizard steps={steps} onCancel={props.onCancel} onDone={() => {}} />
 }
 
 function AgentMenu(props: {
@@ -1581,13 +1650,18 @@ function ViewAgent(props: {
   const toolNames = new Set(props.tools.map(t => t.name))
   const parsedTools = (() => {
     const toolSpec = props.agent.tools
-    if (toolSpec === '*') return { hasWildcard: true, valid: [], invalid: [] as string[] }
-    if (!toolSpec || toolSpec.length === 0) return { hasWildcard: false, valid: [], invalid: [] as string[] }
+    if (toolSpec === '*')
+      return { hasWildcard: true, valid: [], invalid: [] as string[] }
+    if (!toolSpec || toolSpec.length === 0)
+      return { hasWildcard: false, valid: [], invalid: [] as string[] }
     const names = toolSpec.map(getToolNameFromSpec).filter(Boolean)
     const valid: string[] = []
     const invalid: string[] = []
     for (const name of names) {
-      if (name.includes('*') && Array.from(toolNames).some(t => t.startsWith(name.replace(/\*+$/, '')))) {
+      if (
+        name.includes('*') &&
+        Array.from(toolNames).some(t => t.startsWith(name.replace(/\*+$/, '')))
+      ) {
         valid.push(name)
         continue
       }
@@ -1599,17 +1673,24 @@ function ViewAgent(props: {
 
   const sourceLine = (() => {
     if (props.agent.source === 'built-in') return 'Built-in'
-    if (props.agent.source === 'plugin') return `Plugin: ${props.agent.baseDir ?? 'Unknown'}`
+    if (props.agent.source === 'plugin')
+      return `Plugin: ${props.agent.baseDir ?? 'Unknown'}`
     const baseDir = props.agent.baseDir
     const file = `${props.agent.filename ?? props.agent.agentType}.md`
-    if (props.agent.source === 'projectSettings') return join('.claude', 'agents', file)
+    if (props.agent.source === 'projectSettings')
+      return join('.claude', 'agents', file)
     if (baseDir) return join(baseDir, file)
     return props.agent.source
   })()
 
   const toolsSummary = () => {
     if (parsedTools.hasWildcard) return 'All tools'
-    if (!props.agent.tools || props.agent.tools === '*' || props.agent.tools.length === 0) return 'None'
+    if (
+      !props.agent.tools ||
+      props.agent.tools === '*' ||
+      props.agent.tools.length === 0
+    )
+      return 'None'
     return (
       <>
         {parsedTools.valid.length > 0 ? parsedTools.valid.join(', ') : null}
@@ -1632,7 +1713,8 @@ function ViewAgent(props: {
           <Text dimColor>{sourceLine}</Text>
           <Box flexDirection="column">
             <Text>
-              <Text bold>Description</Text> (tells Claude when to use this agent):
+              <Text bold>Description</Text> (tells Claude when to use this
+              agent):
             </Text>
             <Box marginLeft={2}>
               <Text>{props.agent.whenToUse}</Text>
@@ -1672,7 +1754,9 @@ function EditAgent(props: {
   onSaved: (message: string) => void
   onBack: () => void
 }) {
-  const [mode, setMode] = useState<'menu' | 'edit-tools' | 'edit-model' | 'edit-color'>('menu')
+  const [mode, setMode] = useState<
+    'menu' | 'edit-tools' | 'edit-model' | 'edit-color'
+  >('menu')
   const [selectedIndex, setSelectedIndex] = useState(0)
   const [error, setError] = useState<string | null>(null)
 
@@ -1694,7 +1778,8 @@ function EditAgent(props: {
           : props.agent.source === 'userSettings'
             ? 'user'
             : null
-      if (!location) throw new Error(`Cannot open ${props.agent.source} agent in editor`)
+      if (!location)
+        throw new Error(`Cannot open ${props.agent.source} agent in editor`)
       const filePath = getPrimaryAgentFilePath(location, props.agent.agentType)
       await openInEditor(filePath)
       props.onSaved(
@@ -1705,7 +1790,11 @@ function EditAgent(props: {
     }
   }
 
-  const doUpdate = async (patch: { tools?: string[] | '*'; model?: string; color?: string }) => {
+  const doUpdate = async (patch: {
+    tools?: string[] | '*'
+    model?: string
+    color?: string
+  }) => {
     try {
       await updateAgent(
         props.agent,
@@ -1731,7 +1820,8 @@ function EditAgent(props: {
     if (mode !== 'menu') return
 
     if (key.upArrow) setSelectedIndex(i => Math.max(0, i - 1))
-    else if (key.downArrow) setSelectedIndex(i => Math.min(menuItems.length - 1, i + 1))
+    else if (key.downArrow)
+      setSelectedIndex(i => Math.min(menuItems.length - 1, i + 1))
     else if (key.return) {
       const item = menuItems[selectedIndex]
       if (!item) return
@@ -1775,7 +1865,8 @@ function EditAgent(props: {
         <Panel title={`Edit agent: ${props.agent.agentType}`}>
           <Box flexDirection="column" gap={1} marginTop={1}>
             <Text dimColor>
-              Model determines the agent&apos;s reasoning capabilities and speed.
+              Model determines the agent&apos;s reasoning capabilities and
+              speed.
             </Text>
             <Select
               options={modelOptions() as any}
@@ -1806,7 +1897,9 @@ function EditAgent(props: {
               agentName={props.agent.agentType}
               currentColor={(props.agent.color as AgentColor) ?? 'automatic'}
               onConfirm={color => {
-                void doUpdate({ color: color === 'automatic' ? undefined : color })
+                void doUpdate({
+                  color: color === 'automatic' ? undefined : color,
+                })
                 setMode('menu')
               }}
             />
@@ -1826,12 +1919,16 @@ function EditAgent(props: {
     <>
       <Panel title={`Edit agent: ${props.agent.agentType}`}>
         <Box flexDirection="column">
-          <Text dimColor>Source: {titleForSource(props.agent.source as any)}</Text>
+          <Text dimColor>
+            Source: {titleForSource(props.agent.source as any)}
+          </Text>
           <Box marginTop={1} flexDirection="column">
             {menuItems.map((item, idx) => (
               <React.Fragment key={item.label}>
                 <Text
-                  color={idx === selectedIndex ? themeColor('suggestion') : undefined}
+                  color={
+                    idx === selectedIndex ? themeColor('suggestion') : undefined
+                  }
                 >
                   {idx === selectedIndex ? `${figures.pointer} ` : '  '}
                   {item.label}
@@ -1869,7 +1966,8 @@ function DeleteConfirm(props: {
       >
         <Box flexDirection="column" gap={1}>
           <Text>
-            Are you sure you want to delete the agent <Text bold>{props.agent.agentType}</Text>?
+            Are you sure you want to delete the agent{' '}
+            <Text bold>{props.agent.agentType}</Text>?
           </Text>
           <Box marginTop={1}>
             <Text dimColor>Source: {props.agent.source}</Text>
@@ -1895,14 +1993,48 @@ function DeleteConfirm(props: {
 
 type ModeState =
   | { mode: 'list-agents'; source: AgentSourceFilter }
-  | { mode: 'create-agent'; previousMode: { mode: 'list-agents'; source: AgentSourceFilter } }
-  | { mode: 'agent-menu'; agent: AgentWithOverride; previousMode: { mode: 'list-agents'; source: AgentSourceFilter } }
-  | { mode: 'view-agent'; agent: AgentWithOverride; previousMode: { mode: 'agent-menu'; agent: AgentWithOverride; previousMode: { mode: 'list-agents'; source: AgentSourceFilter } } }
-  | { mode: 'edit-agent'; agent: AgentWithOverride; previousMode: { mode: 'agent-menu'; agent: AgentWithOverride; previousMode: { mode: 'list-agents'; source: AgentSourceFilter } } }
-  | { mode: 'delete-confirm'; agent: AgentWithOverride; previousMode: { mode: 'agent-menu'; agent: AgentWithOverride; previousMode: { mode: 'list-agents'; source: AgentSourceFilter } } }
+  | {
+      mode: 'create-agent'
+      previousMode: { mode: 'list-agents'; source: AgentSourceFilter }
+    }
+  | {
+      mode: 'agent-menu'
+      agent: AgentWithOverride
+      previousMode: { mode: 'list-agents'; source: AgentSourceFilter }
+    }
+  | {
+      mode: 'view-agent'
+      agent: AgentWithOverride
+      previousMode: {
+        mode: 'agent-menu'
+        agent: AgentWithOverride
+        previousMode: { mode: 'list-agents'; source: AgentSourceFilter }
+      }
+    }
+  | {
+      mode: 'edit-agent'
+      agent: AgentWithOverride
+      previousMode: {
+        mode: 'agent-menu'
+        agent: AgentWithOverride
+        previousMode: { mode: 'list-agents'; source: AgentSourceFilter }
+      }
+    }
+  | {
+      mode: 'delete-confirm'
+      agent: AgentWithOverride
+      previousMode: {
+        mode: 'agent-menu'
+        agent: AgentWithOverride
+        previousMode: { mode: 'list-agents'; source: AgentSourceFilter }
+      }
+    }
 
 export function AgentsUI({ onExit }: { onExit: (message?: string) => void }) {
-  const [mode, setMode] = useState<ModeState>({ mode: 'list-agents', source: 'all' })
+  const [mode, setMode] = useState<ModeState>({
+    mode: 'list-agents',
+    source: 'all',
+  })
   const [loading, setLoading] = useState(true)
   const [allAgents, setAllAgents] = useState<AgentConfig[]>([])
   const [activeAgents, setActiveAgents] = useState<AgentConfig[]>([])
@@ -1941,8 +2073,12 @@ export function AgentsUI({ onExit }: { onExit: (message?: string) => void }) {
     const bySource = {
       'built-in': agentsWithOverride.filter(a => a.source === 'built-in'),
       userSettings: agentsWithOverride.filter(a => a.source === 'userSettings'),
-      projectSettings: agentsWithOverride.filter(a => a.source === 'projectSettings'),
-      policySettings: agentsWithOverride.filter(a => a.source === 'policySettings'),
+      projectSettings: agentsWithOverride.filter(
+        a => a.source === 'projectSettings',
+      ),
+      policySettings: agentsWithOverride.filter(
+        a => a.source === 'policySettings',
+      ),
       flagSettings: agentsWithOverride.filter(a => a.source === 'flagSettings'),
       plugin: agentsWithOverride.filter(a => a.source === 'plugin'),
     }
@@ -1993,7 +2129,9 @@ export function AgentsUI({ onExit }: { onExit: (message?: string) => void }) {
         source={mode.source}
         agents={listAgentsForSource}
         changes={changes}
-        onCreateNew={() => setMode({ mode: 'create-agent', previousMode: mode })}
+        onCreateNew={() =>
+          setMode({ mode: 'create-agent', previousMode: mode })
+        }
         onSelect={agent =>
           setMode({ mode: 'agent-menu', agent, previousMode: mode })
         }
@@ -2024,9 +2162,24 @@ export function AgentsUI({ onExit }: { onExit: (message?: string) => void }) {
         onCancel={() => setMode(mode.previousMode)}
         onChoose={value => {
           if (value === 'back') setMode(mode.previousMode)
-          else if (value === 'view') setMode({ mode: 'view-agent', agent: mode.agent, previousMode: mode })
-          else if (value === 'edit') setMode({ mode: 'edit-agent', agent: mode.agent, previousMode: mode })
-          else if (value === 'delete') setMode({ mode: 'delete-confirm', agent: mode.agent, previousMode: mode })
+          else if (value === 'view')
+            setMode({
+              mode: 'view-agent',
+              agent: mode.agent,
+              previousMode: mode,
+            })
+          else if (value === 'edit')
+            setMode({
+              mode: 'edit-agent',
+              agent: mode.agent,
+              previousMode: mode,
+            })
+          else if (value === 'delete')
+            setMode({
+              mode: 'delete-confirm',
+              agent: mode.agent,
+              previousMode: mode,
+            })
         }}
       />
     )
@@ -2064,7 +2217,10 @@ export function AgentsUI({ onExit }: { onExit: (message?: string) => void }) {
         onCancel={() => setMode(mode.previousMode)}
         onConfirm={async () => {
           await deleteAgent(mode.agent)
-          setChanges(prev => [...prev, `Deleted agent: ${chalk.bold(mode.agent.agentType)}`])
+          setChanges(prev => [
+            ...prev,
+            `Deleted agent: ${chalk.bold(mode.agent.agentType)}`,
+          ])
           await refresh()
           setMode({ mode: 'list-agents', source: 'all' })
         }}

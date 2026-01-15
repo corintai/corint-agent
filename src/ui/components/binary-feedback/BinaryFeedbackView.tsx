@@ -9,7 +9,10 @@ import type { Tool } from '@tool'
 import type { NormalizedMessage } from '@utils/messages'
 import { BinaryFeedbackOption } from './BinaryFeedbackOption'
 import type { AssistantMessage } from '@query'
-import type { BinaryFeedbackChoose, BinaryFeedbackChoice } from '@app/binaryFeedback'
+import type {
+  BinaryFeedbackChoose,
+  BinaryFeedbackChoice,
+} from '@app/binaryFeedback'
 import { useExitOnCtrlCD } from '@hooks/useExitOnCtrlCD'
 import { PRODUCT_NAME } from '@constants/product'
 

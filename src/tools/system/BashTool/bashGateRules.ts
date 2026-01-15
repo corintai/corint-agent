@@ -312,21 +312,21 @@ const SIMPLE_RULES: SimpleRule[] = [
     title: 'modifies cron jobs',
     patterns: [/\bcrontab\b/i, /\/etc\/cron\./i, /cron\.d/i],
   },
-	  {
-	    code: 'PERSIST_SYSTEMD',
-	    severity: 'high',
-	    category: 'persistence',
-	    title: 'modifies systemd units',
-	    patterns: [/\/etc\/systemd\/system\//i, /\bsystemctl\b[^\n]*\benable\b/i],
-	  },
+  {
+    code: 'PERSIST_SYSTEMD',
+    severity: 'high',
+    category: 'persistence',
+    title: 'modifies systemd units',
+    patterns: [/\/etc\/systemd\/system\//i, /\bsystemctl\b[^\n]*\benable\b/i],
+  },
 
-	  {
-	    code: 'CRED_SSH',
-	    severity: 'high',
-	    category: 'credentials',
-	    title: 'SSH key material access',
-	    patterns: [/~\/\.ssh\//i, /\/etc\/ssh\//i],
-	  },
+  {
+    code: 'CRED_SSH',
+    severity: 'high',
+    category: 'credentials',
+    title: 'SSH key material access',
+    patterns: [/~\/\.ssh\//i, /\/etc\/ssh\//i],
+  },
   {
     code: 'CRED_SHADOW',
     severity: 'high',

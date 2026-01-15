@@ -378,16 +378,13 @@ function PromptInput({
 
         if (messages.length) {
           await onQuery(messages)
-
         }
 
         return
       } catch (e) {
         logError(e)
       }
-    }
-
-    else if (mode === 'koding' || input.startsWith('#')) {
+    } else if (mode === 'koding' || input.startsWith('#')) {
       try {
         const contentToInterpret =
           mode === 'koding' && !input.startsWith('#')
@@ -614,7 +611,6 @@ function PromptInput({
         }
         return true
       }
-
 
       if (action === 'externalEditor') {
         void handleExternalEdit()

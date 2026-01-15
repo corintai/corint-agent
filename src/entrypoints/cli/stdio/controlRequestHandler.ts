@@ -39,7 +39,11 @@ export function createPrintModeControlRequestHandler(args: {
       const value = (msg.request as any)?.max_thinking_tokens
       if (value === null) {
         args.printOptions.maxThinkingTokens = 0
-      } else if (typeof value === 'number' && Number.isFinite(value) && value >= 0) {
+      } else if (
+        typeof value === 'number' &&
+        Number.isFinite(value) &&
+        value >= 0
+      ) {
         args.printOptions.maxThinkingTokens = value
       }
       return
@@ -83,4 +87,3 @@ export function createPrintModeControlRequestHandler(args: {
     throw new Error(`Unsupported control request subtype: ${String(subtype)}`)
   }
 }
-

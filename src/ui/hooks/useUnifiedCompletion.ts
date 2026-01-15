@@ -139,25 +139,23 @@ export function useUnifiedCompletion({
                 if (stats.isFile() && (stats.mode & 0o111) !== 0) {
                   commandSet.add(entry)
                 }
-              } catch {
-              }
+              } catch {}
             }
           }
-        } catch {
-        }
+        } catch {}
       }
 
       const commands = Array.from(commandSet).sort()
       setSystemCommands(commands)
-	    } catch (error) {
-	      logError(error)
-	      debugLogger.warn('UNIFIED_COMPLETION_SYSTEM_COMMANDS_LOAD_FAILED', {
-	        error: error instanceof Error ? error.message : String(error),
-	      })
-	      setSystemCommands(getMinimalFallbackCommands())
-	    } finally {
-	      setIsLoadingCommands(false)
-	    }
+    } catch (error) {
+      logError(error)
+      debugLogger.warn('UNIFIED_COMPLETION_SYSTEM_COMMANDS_LOAD_FAILED', {
+        error: error instanceof Error ? error.message : String(error),
+      })
+      setSystemCommands(getMinimalFallbackCommands())
+    } finally {
+      setIsLoadingCommands(false)
+    }
   }, [systemCommands.length, isLoadingCommands])
 
   useEffect(() => {
@@ -188,14 +186,14 @@ export function useUnifiedCompletion({
       })
 
       setModelSuggestions(suggestions)
-	    } catch (error) {
-	      logError(error)
-	      debugLogger.warn('UNIFIED_COMPLETION_MODELS_LOAD_FAILED', {
-	        error: error instanceof Error ? error.message : String(error),
-	      })
-	      setModelSuggestions([])
-	    }
-	  }, [])
+    } catch (error) {
+      logError(error)
+      debugLogger.warn('UNIFIED_COMPLETION_MODELS_LOAD_FAILED', {
+        error: error instanceof Error ? error.message : String(error),
+      })
+      setModelSuggestions([])
+    }
+  }, [])
 
   useEffect(() => {
     getActiveAgents()
@@ -268,14 +266,14 @@ export function useUnifiedCompletion({
         })
         setAgentSuggestions(suggestions)
       })
-	      .catch(error => {
-	        logError(error)
-	        debugLogger.warn('UNIFIED_COMPLETION_AGENTS_LOAD_FAILED', {
-	          error: error instanceof Error ? error.message : String(error),
-	        })
-	        setAgentSuggestions([])
-	      })
-	  }, [])
+      .catch(error => {
+        logError(error)
+        debugLogger.warn('UNIFIED_COMPLETION_AGENTS_LOAD_FAILED', {
+          error: error instanceof Error ? error.message : String(error),
+        })
+        setAgentSuggestions([])
+      })
+  }, [])
 
   const generateSuggestions = useCallback(
     (context: CompletionContext): UnifiedSuggestion[] =>
@@ -352,8 +350,6 @@ export function useUnifiedCompletion({
         input.slice(actualEndPos)
       onInputChange(newInput)
       setCursorOffset(context.startPos + completion.length)
-
-
     },
     [input, onInputChange, setCursorOffset, onSubmit, commands],
   )

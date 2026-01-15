@@ -27,7 +27,7 @@ export function CostThresholdDialog({ onDone }: Props): React.ReactNode {
           You&apos;ve spent $5 on AI model API calls this session.
         </Text>
         <Text>Learn more about monitoring your AI usage costs:</Text>
-        <Link url="https://github.com/shareAI-lab/kode/blob/main/README.md" />
+        <Link url="https://github.com/corintai/corint-agent/blob/main/README.md" />
       </Box>
       <Box>
         <Select

@@ -1,6 +1,5 @@
 import type { PermissionMode } from './permissionMode'
 
-
 export type ToolPermissionUpdateDestination =
   | 'session'
   | 'localSettings'

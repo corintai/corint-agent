@@ -65,9 +65,11 @@ function getUserConfigRoots(): string[] {
   const kodeOverride = normalizeOverride(process.env.KODE_CONFIG_DIR)
   const hasAnyOverride = Boolean(claudeOverride || kodeOverride)
   if (hasAnyOverride) {
-    return Array.from(new Set([claudeOverride, kodeOverride].filter(Boolean))) as string[]
+    return Array.from(
+      new Set([claudeOverride, kodeOverride].filter(Boolean)),
+    ) as string[]
   }
-  return [join(homedir(), '.claude'), join(homedir(), '.kode')]
+  return [join(homedir(), '.claude'), join(homedir(), '.corint')]
 }
 
 function findProjectAgentDirs(cwd: string): string[] {
@@ -79,8 +81,8 @@ function findProjectAgentDirs(cwd: string): string[] {
     const claudeDir = join(current, '.claude', 'agents')
     if (existsSync(claudeDir)) result.push(claudeDir)
 
-    const kodeDir = join(current, '.kode', 'agents')
-    if (existsSync(kodeDir)) result.push(kodeDir)
+    const corintDir = join(current, '.corint', 'agents')
+    if (existsSync(corintDir)) result.push(corintDir)
 
     const parent = dirname(current)
     if (parent === current) break
@@ -153,9 +155,9 @@ function listMarkdownFilesRecursively(rootDir: string): string[] {
   return files
 }
 
-function readMarkdownFile(filePath: string):
-  | { frontmatter: any; content: string }
-  | { error: string } {
+function readMarkdownFile(
+  filePath: string,
+): { frontmatter: any; content: string } | { error: string } {
   try {
     const raw = readFileSync(filePath, 'utf8')
     const yamlSchema = (yaml as any).JSON_SCHEMA
@@ -168,7 +170,10 @@ function readMarkdownFile(filePath: string):
         },
       },
     })
-    return { frontmatter: (parsed.data as any) ?? {}, content: String(parsed.content ?? '') }
+    return {
+      frontmatter: (parsed.data as any) ?? {},
+      content: String(parsed.content ?? ''),
+    }
   } catch (err) {
     return { error: err instanceof Error ? err.message : String(err) }
   }
@@ -262,7 +267,10 @@ function validateOneAgentFile(args: {
   const issues: AgentValidateIssue[] = []
   const read = readMarkdownFile(args.filePath)
   if ('error' in read) {
-    issues.push({ level: 'error', message: `Failed to parse file: ${read.error}` })
+    issues.push({
+      level: 'error',
+      message: `Failed to parse file: ${read.error}`,
+    })
     return { filePath: args.filePath, agentType: null, issues }
   }
 
@@ -271,10 +279,16 @@ function validateOneAgentFile(args: {
   const description = normalizeString(fm.description)
 
   if (!agentType) {
-    issues.push({ level: 'error', message: `Missing required frontmatter field 'name'` })
+    issues.push({
+      level: 'error',
+      message: `Missing required frontmatter field 'name'`,
+    })
   }
   if (!description) {
-    issues.push({ level: 'error', message: `Missing required frontmatter field 'description'` })
+    issues.push({
+      level: 'error',
+      message: `Missing required frontmatter field 'description'`,
+    })
   }
 
   const toolsList = z2A(fm.tools)
@@ -283,8 +297,10 @@ function validateOneAgentFile(args: {
     issues.push({ level: 'warning', message: `No tools selected (tools: [])` })
   }
 
-  const disallowedRaw = fm.disallowedTools ?? fm['disallowed-tools'] ?? fm['disallowed_tools']
-  const disallowed = disallowedRaw !== undefined ? z2A(disallowedRaw) : undefined
+  const disallowedRaw =
+    fm.disallowedTools ?? fm['disallowed-tools'] ?? fm['disallowed_tools']
+  const disallowed =
+    disallowedRaw !== undefined ? z2A(disallowedRaw) : undefined
   if (disallowedRaw !== undefined && disallowed === undefined) {
     issues.push({
       level: 'warning',
@@ -301,7 +317,11 @@ function validateOneAgentFile(args: {
           message: `Tool '${toolName}' is not available to subagents and will be ignored`,
         })
       }
-      if (args.knownToolNames && toolName && !args.knownToolNames.has(toolName)) {
+      if (
+        args.knownToolNames &&
+        toolName &&
+        !args.knownToolNames.has(toolName)
+      ) {
         issues.push({
           level: 'warning',
           message: `Unknown tool '${toolName}' (from '${spec}')`,
@@ -405,7 +425,8 @@ export async function validateAgentTemplates(args: {
   warningCount: number
   results: AgentValidateFileResult[]
 }> {
-  const inputPaths = args.paths.length > 0 ? args.paths : defaultValidationPaths(args.cwd)
+  const inputPaths =
+    args.paths.length > 0 ? args.paths : defaultValidationPaths(args.cwd)
   const markdownFiles = new Set<string>()
   for (const inputPath of inputPaths) {
     const resolved = resolve(args.cwd, inputPath)
@@ -421,7 +442,8 @@ export async function validateAgentTemplates(args: {
       continue
     }
     if (st.isDirectory()) {
-      for (const f of listMarkdownFilesRecursively(resolved)) markdownFiles.add(f)
+      for (const f of listMarkdownFilesRecursively(resolved))
+        markdownFiles.add(f)
     }
   }
 
@@ -430,7 +452,9 @@ export async function validateAgentTemplates(args: {
     try {
       const { getTools } = await import('@tools')
       const { getCurrentProjectConfig } = await import('@utils/config')
-      const allTools = await getTools(getCurrentProjectConfig().enableArchitectTool)
+      const allTools = await getTools(
+        getCurrentProjectConfig().enableArchitectTool,
+      )
       knownToolNames = new Set(allTools.map(t => t.name))
     } catch {
       knownToolNames = undefined

@@ -15,8 +15,7 @@ export const getCodeStyle = memoize((): string => {
       styles.push(
         `Contents of ${file.absolutePath}:\n\n${readFileSync(file.absolutePath, 'utf-8')}`,
       )
-    } catch {
-    }
+    } catch {}
   }
 
   if (styles.length === 0) {
