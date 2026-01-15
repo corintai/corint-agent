@@ -264,7 +264,7 @@ export function WelcomeBox(): React.ReactNode {
     >
       <Text>
         <Text color={theme.kode}>✻</Text> Welcome to{' '}
-        <Text bold>{PRODUCT_NAME}</Text> research preview!
+        <Text bold>{PRODUCT_NAME}</Text> <Text>Risk Agent!</Text>
       </Text>
     </Box>
   )

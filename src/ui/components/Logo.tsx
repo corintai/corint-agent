@@ -71,15 +71,12 @@ export function Logo({
         ) : null}
         <Text>
           <Text color={theme.kode}>✻</Text> Welcome to{' '}
-          <Text bold>{PRODUCT_NAME}</Text> <Text>research preview!</Text>
+          <Text bold>{PRODUCT_NAME}</Text> <Text>Risk Agent!</Text>
         </Text>
         {}
 
         <>
           <Box paddingLeft={2} flexDirection="column" gap={1}>
-            <Text color={theme.secondaryText} italic>
-              /help for help
-            </Text>
             <Text color={theme.secondaryText}>cwd: {getCwd()}</Text>
           </Box>
 
@@ -154,6 +151,16 @@ export function Logo({
             ))}
           </Box>
         ) : null}
+      </Box>
+
+      <Box paddingLeft={1} flexDirection="column" marginTop={1}>
+        <Text dimColor>Try these examples:</Text>
+        <Text dimColor> • Analyze approval rate trends for last 30 days</Text>
+        <Text dimColor>
+          {' '}
+          • Optimize rule R001 threshold to reduce false positives
+        </Text>
+        <Text dimColor> • Generate daily risk report with key metrics</Text>
       </Box>
     </Box>
   )

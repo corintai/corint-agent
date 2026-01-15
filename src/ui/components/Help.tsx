@@ -55,10 +55,10 @@ export function Help({
 
       <Box marginTop={1} flexDirection="column">
         <Text>
-          {PRODUCT_NAME} is a beta research preview. Always review{' '}
-          {PRODUCT_NAME}&apos;s responses, especially when running code.{' '}
-          {PRODUCT_NAME} has read access to files in the current directory and
-          can run commands and edit files with your permission.
+          {PRODUCT_NAME} is in beta. Always review {PRODUCT_NAME}&apos;s
+          responses, especially when running code. {PRODUCT_NAME} has read
+          access to files in the current directory and can run commands and edit
+          files with your permission.
         </Text>
       </Box>
 
