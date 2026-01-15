@@ -1,0 +1,15 @@
+datasource:
+  # ============================================================================
+  # Repository Storage Datasources
+  # ============================================================================
+
+  # PostgreSQL datasource for repository storage (rules, pipelines, etc.)
+  postgres_main:
+    provider: postgresql
+    connection_string: "postgresql://user:password@localhost:5432/corint_rules"
+    options:
+      max_connections: "5"
+  
+  sqlite_rules: 
+    provider: sqlite
+    connection_string: "sqlite://./corint_agent.db"
