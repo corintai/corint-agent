@@ -24,7 +24,34 @@ export const inputSchema = z.strictObject({
     .string()
     .optional()
     .describe('Database schema/namespace to explore (optional, defaults to public/default)'),
+  timeout: z
+    .number()
+    .optional()
+    .default(30000)
+    .describe('Timeout in milliseconds (default: 30000, max: 300000)'),
 })
+
+const DEFAULT_TIMEOUT = 30000
+const MAX_TIMEOUT = 300000
+
+async function withTimeout<T>(
+  promise: Promise<T>,
+  ms: number,
+): Promise<T> {
+  const timeoutMs = Math.min(Math.max(ms, 1000), MAX_TIMEOUT)
+  let timeoutId: ReturnType<typeof setTimeout>
+  const timeoutPromise = new Promise<never>((_, reject) => {
+    timeoutId = setTimeout(
+      () => reject(new Error(`Operation timed out after ${timeoutMs}ms`)),
+      timeoutMs,
+    )
+  })
+  try {
+    return await Promise.race([promise, timeoutPromise])
+  } finally {
+    clearTimeout(timeoutId!)
+  }
+}
 
 type Input = z.infer<typeof inputSchema>
 type Output = SchemaInfo
@@ -367,7 +394,7 @@ This tool helps you understand the database structure before writing queries.`
     return <FallbackToolUseRejectedMessage />
   },
 
-  async *call({ datasource, table, schema }: Input, { abortController }) {
+  async *call({ datasource, table, schema, timeout }: Input, { abortController }) {
     try {
       if (abortController.signal.aborted) {
         yield {
@@ -378,7 +405,11 @@ This tool helps you understand the database structure before writing queries.`
         return
       }
 
-      const result = await exploreSchema(datasource, table, schema)
+      const timeoutMs = timeout || DEFAULT_TIMEOUT
+      const result = await withTimeout(
+        exploreSchema(datasource, table, schema),
+        timeoutMs,
+      )
 
       yield {
         type: 'result' as const,

@@ -24,7 +24,34 @@ export const inputSchema = z.strictObject({
     .optional()
     .default(100)
     .describe('Maximum number of rows to return (default: 100, max: 1000)'),
+  timeout: z
+    .number()
+    .optional()
+    .default(30000)
+    .describe('Timeout in milliseconds (default: 30000, max: 300000)'),
 })
+
+const DEFAULT_TIMEOUT = 30000
+const MAX_TIMEOUT = 300000
+
+async function withTimeout<T>(
+  promise: Promise<T>,
+  ms: number,
+): Promise<T> {
+  const timeoutMs = Math.min(Math.max(ms, 1000), MAX_TIMEOUT)
+  let timeoutId: ReturnType<typeof setTimeout>
+  const timeoutPromise = new Promise<never>((_, reject) => {
+    timeoutId = setTimeout(
+      () => reject(new Error(`Query timed out after ${timeoutMs}ms`)),
+      timeoutMs,
+    )
+  })
+  try {
+    return await Promise.race([promise, timeoutPromise])
+  } finally {
+    clearTimeout(timeoutId!)
+  }
+}
 
 type Input = z.infer<typeof inputSchema>
 type Output = QueryResult
@@ -234,7 +261,7 @@ Example usage:
     return <FallbackToolUseRejectedMessage />
   },
 
-  async *call({ datasource, sql, limit }: Input, { abortController }) {
+  async *call({ datasource, sql, limit, timeout }: Input, { abortController }) {
     try {
       if (abortController.signal.aborted) {
         yield {
@@ -250,7 +277,11 @@ Example usage:
         return
       }
 
-      const result = await executeQuery(datasource, sql, limit || 100)
+      const timeoutMs = timeout || DEFAULT_TIMEOUT
+      const result = await withTimeout(
+        executeQuery(datasource, sql, limit || 100),
+        timeoutMs,
+      )
 
       yield {
         type: 'result' as const,
