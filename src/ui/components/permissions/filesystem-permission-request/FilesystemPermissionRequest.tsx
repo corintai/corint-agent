@@ -6,6 +6,7 @@ import {
   PermissionRequestTitle,
   textColorForRiskScore,
 } from '@components/permissions/PermissionRequestTitle'
+import { ToolUseSummary } from '@components/permissions/ToolUseSummary'
 import { logUnaryEvent } from '@utils/log/unaryLogging'
 import { env } from '@utils/config/env'
 import {
@@ -256,14 +257,13 @@ function FilesystemPermissionRequestImpl({
         riskScore={toolUseConfirm.riskScore}
       />
       <Box flexDirection="column" paddingX={2} paddingY={1}>
-        <Text>
-          {userFacingName}(
-          {toolUseConfirm.tool.renderToolUseMessage(
+        <ToolUseSummary
+          toolName={userFacingName}
+          toolMessage={toolUseConfirm.tool.renderToolUseMessage(
             toolUseConfirm.input as never,
             { verbose },
           )}
-          )
-        </Text>
+        />
       </Box>
 
       <Box flexDirection="column">

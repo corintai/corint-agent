@@ -13,6 +13,7 @@ import {
 import { PermissionRequestTitle } from '@components/permissions/PermissionRequestTitle'
 import { logUnaryEvent } from '@utils/log/unaryLogging'
 import { env } from '@utils/config/env'
+import { ToolUseSummary } from '@components/permissions/ToolUseSummary'
 
 export function SkillPermissionRequest({
   toolUseConfirm,
@@ -45,16 +46,15 @@ export function SkillPermissionRequest({
     >
       <PermissionRequestTitle title="Skill" riskScore={null} />
       <Box flexDirection="column" paddingX={2} paddingY={1}>
-        <Text>
-          {toolUseConfirm.tool.userFacingName?.() || 'Skill'}(
-          {toolUseConfirm.tool.renderToolUseMessage(
+        <ToolUseSummary
+          toolName={toolUseConfirm.tool.userFacingName?.() || 'Skill'}
+          toolMessage={toolUseConfirm.tool.renderToolUseMessage(
             toolUseConfirm.input as any,
             {
               verbose,
             },
           )}
-          )
-        </Text>
+        />
         <Text color={theme.secondaryText}>{toolUseConfirm.description}</Text>
       </Box>
 

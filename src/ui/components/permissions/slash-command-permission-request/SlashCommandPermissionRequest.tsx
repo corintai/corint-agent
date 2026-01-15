@@ -16,6 +16,7 @@ import {
 import { PermissionRequestTitle } from '@components/permissions/PermissionRequestTitle'
 import { logUnaryEvent } from '@utils/log/unaryLogging'
 import { env } from '@utils/config/env'
+import { ToolUseSummary } from '@components/permissions/ToolUseSummary'
 
 function parsePrefix(command: string): string | null {
   const trimmed = command.trim()
@@ -60,16 +61,15 @@ export function SlashCommandPermissionRequest({
     >
       <PermissionRequestTitle title="Slash command" riskScore={null} />
       <Box flexDirection="column" paddingX={2} paddingY={1}>
-        <Text>
-          {toolUseConfirm.tool.userFacingName?.() || 'SlashCommand'}(
-          {toolUseConfirm.tool.renderToolUseMessage(
+        <ToolUseSummary
+          toolName={toolUseConfirm.tool.userFacingName?.() || 'SlashCommand'}
+          toolMessage={toolUseConfirm.tool.renderToolUseMessage(
             toolUseConfirm.input as any,
             {
               verbose,
             },
           )}
-          )
-        </Text>
+        />
         <Text color={theme.secondaryText}>{toolUseConfirm.description}</Text>
       </Box>
 

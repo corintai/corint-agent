@@ -6,6 +6,7 @@ import {
   PermissionRequestTitle,
   textColorForRiskScore,
 } from './PermissionRequestTitle'
+import { ToolUseSummary } from './ToolUseSummary'
 import { logUnaryEvent } from '@utils/log/unaryLogging'
 import { env } from '@utils/config/env'
 import { getCwd } from '@utils/state'
@@ -63,19 +64,18 @@ export function FallbackPermissionRequest({
         riskScore={toolUseConfirm.riskScore}
       />
       <Box flexDirection="column" paddingX={2} paddingY={1}>
-        <Text>
-          {userFacingName}(
-          {toolUseConfirm.tool.renderToolUseMessage(
+        <ToolUseSummary
+          toolName={userFacingName}
+          toolMessage={toolUseConfirm.tool.renderToolUseMessage(
             toolUseConfirm.input as never,
             { verbose },
           )}
-          )
-          {originalUserFacingName.endsWith(' (MCP)') ? (
-            <Text color={theme.secondaryText}> (MCP)</Text>
-          ) : (
-            ''
-          )}
-        </Text>
+          suffix={
+            originalUserFacingName.endsWith(' (MCP)') ? (
+              <Text color={theme.secondaryText}> (MCP)</Text>
+            ) : null
+          }
+        />
         <Text color={theme.secondaryText}>{toolUseConfirm.description}</Text>
       </Box>
 
