@@ -189,7 +189,26 @@ function getRetryDelay(
   return Math.min(BASE_DELAY_MS * Math.pow(2, attempt - 1), 32000)
 }
 
+function isContextLimitError(error: APIError): boolean {
+  if (!error.message) return false
+
+  const contextErrorPatterns = [
+    /context.*window/i,
+    /context.*length/i,
+    /tokens.*exceed/i,
+    /maximum.*context/i,
+    /context.*limit/i,
+    /prompt.*too.*long/i,
+  ]
+
+  return contextErrorPatterns.some(pattern => pattern.test(error.message))
+}
+
 function shouldRetry(error: APIError): boolean {
+  if (isContextLimitError(error)) {
+    return false
+  }
+
   if (error.message?.includes('"type":"overloaded_error"')) {
     return process.env.USER_TYPE === 'SWE_BENCH'
   }

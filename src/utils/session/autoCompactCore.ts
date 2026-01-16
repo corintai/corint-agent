@@ -20,13 +20,27 @@ async function getMainConversationContextLimit(): Promise<number> {
     const resolution = modelManager.resolveModelWithInfo('main')
     const modelProfile = resolution.success ? resolution.profile : null
 
-    if (modelProfile?.contextLength) {
+    if (modelProfile?.contextLength && modelProfile.contextLength > 0) {
+      debugLogger.info('CONTEXT_LIMIT_FROM_PROFILE', {
+        modelName: modelProfile.name,
+        contextLength: modelProfile.contextLength,
+      })
       return modelProfile.contextLength
     }
 
-    return 200_000
+    const conservativeDefault = 128_000
+    debugLogger.warn('CONTEXT_LIMIT_FALLBACK', {
+      reason: resolution.error || 'No valid context length in profile',
+      usingDefault: conservativeDefault,
+    })
+    return conservativeDefault
   } catch (error) {
-    return 200_000
+    const conservativeDefault = 128_000
+    debugLogger.error('CONTEXT_LIMIT_ERROR', {
+      error: error instanceof Error ? error.message : String(error),
+      usingDefault: conservativeDefault,
+    })
+    return conservativeDefault
   }
 }
 
@@ -72,10 +86,70 @@ async function shouldAutoCompact(messages: Message[]): Promise<boolean> {
   return isAboveAutoCompactThreshold
 }
 
+export async function checkContextLimit(
+  messages: Message[],
+): Promise<{
+  withinLimit: boolean
+  currentTokens: number
+  modelLimit: number
+  usagePercent: number
+  recommendation: 'ok' | 'warning' | 'critical'
+}> {
+  const currentTokens = countTokens(messages)
+  const modelLimit = await getMainConversationContextLimit()
+  const safeLimit = Math.floor(modelLimit * 0.9)
+  const usagePercent = (currentTokens / modelLimit) * 100
+
+  let recommendation: 'ok' | 'warning' | 'critical'
+  if (currentTokens <= safeLimit) {
+    recommendation = 'ok'
+  } else if (currentTokens <= modelLimit) {
+    recommendation = 'warning'
+  } else {
+    recommendation = 'critical'
+  }
+
+  debugLogger.info('CONTEXT_LIMIT_CHECK', {
+    currentTokens,
+    modelLimit,
+    safeLimit,
+    usagePercent: usagePercent.toFixed(1),
+    recommendation,
+  })
+
+  return {
+    withinLimit: currentTokens <= safeLimit,
+    currentTokens,
+    modelLimit,
+    usagePercent,
+    recommendation,
+  }
+}
+
 export async function checkAutoCompact(
   messages: Message[],
   toolUseContext: any,
 ): Promise<{ messages: Message[]; wasCompacted: boolean }> {
+  const limitCheck = await checkContextLimit(messages)
+
+  if (limitCheck.recommendation === 'critical') {
+    debugLogger.warn('CONTEXT_CRITICAL_FORCING_COMPACT', {
+      currentTokens: limitCheck.currentTokens,
+      modelLimit: limitCheck.modelLimit,
+      usagePercent: limitCheck.usagePercent.toFixed(1),
+    })
+
+    try {
+      const compactedMessages = await executeAutoCompact(messages, toolUseContext)
+      return { messages: compactedMessages, wasCompacted: true }
+    } catch (error) {
+      logError(error)
+      throw new Error(
+        `Context limit exceeded (${limitCheck.currentTokens}/${limitCheck.modelLimit} tokens) and auto-compact failed. Please manually reduce context or switch to a model with larger context window.`,
+      )
+    }
+  }
+
   if (!(await shouldAutoCompact(messages))) {
     return { messages, wasCompacted: false }
   }

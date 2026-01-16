@@ -439,7 +439,7 @@ export default {
     {
       model: 'deepseek-reasoner',
       max_tokens: 8192,
-      max_input_tokens: 65536,
+      max_input_tokens: 131072,
       max_output_tokens: 8192,
       input_cost_per_token: 5.5e-7,
       input_cost_per_token_cache_hit: 1.4e-7,

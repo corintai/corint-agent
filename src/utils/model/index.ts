@@ -161,16 +161,31 @@ export class ModelManager {
     } => {
       const contextLength = Number(model.contextLength)
       if (!Number.isFinite(contextLength) || contextLength <= 0) {
+        debugLogger.warn('MODEL_INVALID_CONTEXT_LENGTH', {
+          modelName: model.name,
+          contextLength: model.contextLength,
+        })
         return { budgetTokens: null, usagePercentage: 0, compatible: true }
       }
       const budgetTokens = Math.floor(contextLength * 0.9)
       const usagePercentage =
         budgetTokens > 0 ? (currentContextTokens / budgetTokens) * 100 : 0
+      const compatible =
+        budgetTokens > 0 ? currentContextTokens <= budgetTokens : true
+
+      debugLogger.info('MODEL_CONTEXT_BUDGET_CHECK', {
+        modelName: model.name,
+        contextLength,
+        budgetTokens,
+        currentContextTokens,
+        usagePercentage: usagePercentage.toFixed(1),
+        compatible,
+      })
+
       return {
         budgetTokens,
         usagePercentage,
-        compatible:
-          budgetTokens > 0 ? currentContextTokens <= budgetTokens : true,
+        compatible,
       }
     }
 
