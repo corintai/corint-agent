@@ -4,6 +4,7 @@ import { Pool } from 'pg'
 import * as mysql from 'mysql2/promise'
 import { createClient } from '@clickhouse/client'
 import type { ClickHouseClient } from '@clickhouse/client'
+import { Database } from 'bun:sqlite'
 import yaml from 'yaml'
 import type {
   DataSourceType,
@@ -82,6 +83,13 @@ export async function getDataSourceClient(
         type: 'clickhouse',
         config,
         client: createClient(buildClickHouseConfig(config)),
+      }
+      break
+    case 'sqlite':
+      client = {
+        type: 'sqlite',
+        config,
+        client: buildSQLiteClient(config),
       }
       break
     default:
@@ -458,6 +466,25 @@ function buildClickHouseConfig(config: DataSourceConfig): {
   }
 }
 
+function buildSQLiteClient(config: DataSourceConfig): Database {
+  let dbPath = config.url || config.database
+  if (!dbPath) {
+    throw new Error('SQLite requires url or database path')
+  }
+
+  // Remove sqlite:// protocol prefix if present
+  if (dbPath.startsWith('sqlite://')) {
+    dbPath = dbPath.substring('sqlite://'.length)
+  }
+
+  // Resolve relative paths
+  if (!path.isAbsolute(dbPath)) {
+    dbPath = path.resolve(process.cwd(), dbPath)
+  }
+
+  return new Database(dbPath, { readonly: true })
+}
+
 function normalizeName(name: string): string {
   return name.toUpperCase().replace(/[^A-Z0-9]/g, '_')
 }
@@ -535,6 +562,9 @@ function resolveProviderType(input: Record<string, unknown>): DataSourceType {
   if (raw === 'clickhouse') {
     return 'clickhouse'
   }
+  if (raw === 'sqlite' || raw === 'sqlite3') {
+    return 'sqlite'
+  }
   return raw as DataSourceType
 }
 
@@ -554,6 +584,8 @@ export async function closeAllConnections(): Promise<void> {
         await client.client.end()
       } else if (client.type === 'clickhouse') {
         await client.client.close()
+      } else if (client.type === 'sqlite') {
+        client.client.close()
       }
     } catch (error) {
       console.error(`Failed to close connection for ${name}:`, error)

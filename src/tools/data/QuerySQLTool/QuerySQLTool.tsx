@@ -88,6 +88,15 @@ async function executeQuery(
     if (rows.length > 0) {
       columns = Object.keys(rows[0])
     }
+  } else if (client.type === 'sqlite') {
+    const queryRows = client.client.prepare(limitedSql).all() as Record<
+      string,
+      unknown
+    >[]
+    rows = queryRows
+    if (rows.length > 0) {
+      columns = Object.keys(rows[0])
+    }
   }
 
   return {

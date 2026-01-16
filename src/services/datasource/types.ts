@@ -1,8 +1,9 @@
 import type { Pool } from 'pg'
 import type { Pool as MySQLPool } from 'mysql2/promise'
 import type { ClickHouseClient } from '@clickhouse/client'
+import type { Database } from 'bun:sqlite'
 
-export type DataSourceType = 'postgres' | 'mysql' | 'clickhouse'
+export type DataSourceType = 'postgres' | 'mysql' | 'clickhouse' | 'sqlite'
 
 export interface DataSourceConfig {
   type: DataSourceType
@@ -20,6 +21,7 @@ export type DataSourceClient =
   | { type: 'postgres'; client: Pool; config: DataSourceConfig }
   | { type: 'mysql'; client: MySQLPool; config: DataSourceConfig }
   | { type: 'clickhouse'; client: ClickHouseClient; config: DataSourceConfig }
+  | { type: 'sqlite'; client: Database; config: DataSourceConfig }
 
 export interface DataSourceSummary {
   name: string

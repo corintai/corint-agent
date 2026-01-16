@@ -213,6 +213,38 @@ async function exploreSchema(
         })
       }
     }
+  } else if (client.type === 'sqlite') {
+    if (tableName) {
+      const columnsRows = client.client
+        .prepare(`PRAGMA table_info(${tableName})`)
+        .all() as any[]
+
+      const columns: ColumnInfo[] = columnsRows.map((row: any) => ({
+        name: row.name,
+        type: row.type,
+        nullable: row.notnull === 0,
+        isPrimaryKey: row.pk === 1,
+        defaultValue: row.dflt_value,
+      }))
+
+      tables.push({
+        name: tableName,
+        columns,
+      })
+    } else {
+      const tablesRows = client.client
+        .prepare(
+          `SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' ORDER BY name`,
+        )
+        .all() as { name: string }[]
+
+      for (const row of tablesRows) {
+        tables.push({
+          name: row.name,
+          columns: [],
+        })
+      }
+    }
   }
 
   return { tables }
