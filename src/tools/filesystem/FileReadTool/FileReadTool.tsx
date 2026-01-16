@@ -8,6 +8,7 @@ import * as path from 'node:path'
 import { extname, relative } from 'node:path'
 import * as React from 'react'
 import { z } from 'zod'
+import * as XLSX from 'xlsx'
 import { FallbackToolUseRejectedMessage } from '@components/FallbackToolUseRejectedMessage'
 import { HighlightedCode } from '@components/HighlightedCode'
 import type { Tool } from '@tool'
@@ -87,8 +88,6 @@ const BINARY_EXTENSIONS = new Set([
   '.idx',
   '.doc',
   '.docx',
-  '.xls',
-  '.xlsx',
   '.ppt',
   '.pptx',
   '.odt',
@@ -345,6 +344,24 @@ export const FileReadTool = {
       return
     }
 
+    if (ext === '.xlsx' || ext === '.xls') {
+      const excelData = await readExcelFile(fullFilePath, limit)
+      const data = {
+        type: 'excel' as const,
+        file: {
+          filePath: file_path,
+          sheets: excelData.sheets,
+          totalRows: excelData.totalRows,
+        },
+      }
+      yield {
+        type: 'result',
+        data,
+        resultForAssistant: this.renderResultForAssistant(data),
+      }
+      return
+    }
+
     const startLine = offset
     const zeroBasedOffset = startLine === 0 ? 0 : startLine - 1
     const { content, lineCount, totalLines } = readTextContent(
@@ -409,6 +426,14 @@ export const FileReadTool = {
         ]
       case 'notebook':
         return JSON.stringify(data.file, null, 2)
+      case 'excel':
+        let result = `Excel file: ${data.file.filePath}\n`
+        result += `Total rows across all sheets: ${data.file.totalRows}\n\n`
+        for (const sheet of data.file.sheets) {
+          result += `Sheet: ${sheet.name} (${sheet.totalRows} rows)\n`
+          result += JSON.stringify(sheet.rows, null, 2) + '\n\n'
+        }
+        return result
       case 'text':
         return addLineNumbers({
           content: data.file.content,
@@ -440,6 +465,18 @@ export const FileReadTool = {
   | {
       type: 'pdf'
       file: { filePath: string; base64: string; originalSize: number }
+    }
+  | {
+      type: 'excel'
+      file: {
+        filePath: string
+        sheets: Array<{
+          name: string
+          rows: any[]
+          totalRows: number
+        }>
+        totalRows: number
+      }
     }
 >
 
@@ -576,4 +613,48 @@ async function readImage(
       stats.size,
     )
   }
+}
+
+async function readExcelFile(
+  filePath: string,
+  maxRows: number = 100,
+): Promise<{
+  sheets: Array<{
+    name: string
+    rows: any[]
+    totalRows: number
+  }>
+  totalRows: number
+}> {
+  const fileReadResult = secureFileService.safeReadFile(filePath, {
+    encoding: 'buffer' as BufferEncoding,
+    maxFileSize: 10 * 1024 * 1024,
+    checkFileExtension: false,
+  })
+
+  if (!fileReadResult.success) {
+    throw new Error(fileReadResult.error || 'Failed to read Excel file')
+  }
+
+  const buffer = fileReadResult.content as Buffer
+  const workbook = XLSX.read(buffer, { type: 'buffer' })
+
+  const sheets = []
+  let totalRows = 0
+
+  for (const sheetName of workbook.SheetNames) {
+    const worksheet = workbook.Sheets[sheetName]
+    const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 })
+
+    const limitedRows = jsonData.slice(0, maxRows)
+    totalRows += jsonData.length
+
+    sheets.push({
+      name: sheetName,
+      rows: limitedRows,
+      totalRows: jsonData.length,
+    })
+  }
+
+  return { sheets, totalRows }
 }
