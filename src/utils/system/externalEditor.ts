@@ -1,7 +1,10 @@
 import { spawn, spawnSync } from 'child_process'
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'fs'
-import { tmpdir } from 'os'
 import { join } from 'path'
+import {
+  ensureSessionTempDirExists,
+  getSessionTempDir,
+} from '@utils/session/sessionTempDir'
 
 type EditorCommand = {
   command: string
@@ -103,7 +106,8 @@ export async function launchExternalEditor(
     }
   }
 
-  const dir = mkdtempSync(join(tmpdir(), 'kode-edit-'))
+  ensureSessionTempDirExists()
+  const dir = mkdtempSync(join(getSessionTempDir(), 'kode-edit-'))
   const filePath = join(dir, 'message.txt')
   writeFileSync(filePath, initialText, 'utf-8')
 

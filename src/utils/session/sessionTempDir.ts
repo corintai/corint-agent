@@ -1,4 +1,5 @@
 import { existsSync, mkdirSync } from 'fs'
+import { tmpdir } from 'os'
 import { join } from 'path'
 
 function pad2(value: number): string {
@@ -16,23 +17,20 @@ function formatSessionTimestamp(date: Date): string {
 }
 
 const SESSION_DIRNAME = `session_${formatSessionTimestamp(new Date())}`
-let sessionWorkspaceRoot: string | null = null
 let sessionOutputDir: string | null = null
+let sessionTempDir: string | null = null
 
-export function setSessionWorkspaceRoot(root: string): void {
-  sessionWorkspaceRoot = root
-}
-
-function getSessionWorkspaceRoot(): string {
-  return sessionWorkspaceRoot ?? process.cwd()
+function getSessionBaseDir(): string {
+  if (process.platform === 'win32') {
+    return join(tmpdir(), '.corint')
+  }
+  return join('/tmp', '.corint')
 }
 
 export function getSessionOutputDir(): string {
   if (!sessionOutputDir) {
     sessionOutputDir = join(
-      getSessionWorkspaceRoot(),
-      '.corint',
-      'workspace',
+      getSessionBaseDir(),
       SESSION_DIRNAME,
     )
   }
@@ -43,4 +41,18 @@ export function ensureSessionOutputDirExists(): void {
   const outputDir = getSessionOutputDir()
   if (existsSync(outputDir)) return
   mkdirSync(outputDir, { recursive: true })
+}
+
+export function getSessionTempDir(): string {
+  if (!sessionTempDir) {
+    sessionTempDir = join(getSessionOutputDir(), 'tmp')
+  }
+  return sessionTempDir
+}
+
+export function ensureSessionTempDirExists(): void {
+  ensureSessionOutputDirExists()
+  const tempDir = getSessionTempDir()
+  if (existsSync(tempDir)) return
+  mkdirSync(tempDir, { recursive: true })
 }

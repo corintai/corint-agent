@@ -9,6 +9,7 @@ import {
   type SandboxRuntimeConfig,
 } from './sandboxConfig'
 import { getCwd } from '@utils/state'
+import { getSessionTempDir } from '@utils/session/sessionTempDir'
 
 type SandboxIoOverrides = {
   projectDir?: string
@@ -79,8 +80,7 @@ function getSandboxDefaultWriteAllowPaths(homeDir: string): string[] {
     '/dev/tty',
     '/dev/dtracehelper',
     '/dev/autofs_nowait',
-    '/tmp/kode',
-    '/private/tmp/kode',
+    getSessionTempDir(),
     join(homeDir, '.npm', '_logs'),
     join(homeDir, '.corint', 'debug'),
   ]

@@ -8,13 +8,17 @@ import {
   statSync,
   writeFileSync,
 } from 'fs'
-import { tmpdir } from 'os'
 import { join } from 'path'
 import { BunShell, buildLinuxBwrapCommand } from '@utils/bun/shell'
+import {
+  ensureSessionTempDirExists,
+  getSessionTempDir,
+} from '@utils/session/sessionTempDir'
 
 describe('BunShell Linux bwrap sandbox (Reference CLI parity)', () => {
   test('buildLinuxBwrapCommand generates expected bwrap args (read deny + write allow + denyWithinAllow + unshare-net)', () => {
-    const root = mkdtempSync(join(tmpdir(), 'kode-bwrap-'))
+    ensureSessionTempDirExists()
+    const root = mkdtempSync(join(getSessionTempDir(), 'kode-bwrap-'))
     try {
       const allowDir = join(root, 'allow')
       const denyWithinAllow = join(allowDir, 'deny')
@@ -25,7 +29,6 @@ describe('BunShell Linux bwrap sandbox (Reference CLI parity)', () => {
       mkdirSync(denyWithinAllow, { recursive: true })
       mkdirSync(denyReadDir, { recursive: true })
       writeFileSync(denyReadFile, 'secret', 'utf-8')
-      mkdirSync('/tmp/kode', { recursive: true })
 
       const cmd = buildLinuxBwrapCommand({
         bwrapPath: '/usr/bin/bwrap',
@@ -52,9 +55,6 @@ describe('BunShell Linux bwrap sandbox (Reference CLI parity)', () => {
         '--ro-bind',
         '/',
         '/',
-        '--bind',
-        '/tmp/kode',
-        '/tmp/kode',
         '--bind',
         realpathSync(allowDir),
         realpathSync(allowDir),
@@ -83,7 +83,7 @@ describe('BunShell Linux bwrap sandbox (Reference CLI parity)', () => {
         '1',
         '--setenv',
         'TMPDIR',
-        '/tmp/kode',
+        getSessionTempDir(),
         '--proc',
         '/proc',
         '--',
@@ -99,7 +99,8 @@ describe('BunShell Linux bwrap sandbox (Reference CLI parity)', () => {
   })
 
   test('falls back consistently when bwrap is unavailable (require vs non-require)', async () => {
-    const root = mkdtempSync(join(tmpdir(), 'kode-bwrap-fallback-'))
+    ensureSessionTempDirExists()
+    const root = mkdtempSync(join(getSessionTempDir(), 'kode-bwrap-fallback-'))
     try {
       const shell = new BunShell(root)
 
@@ -138,7 +139,10 @@ describe('BunShell Linux bwrap sandbox (Reference CLI parity)', () => {
   })
 
   test('falls back consistently when bwrap fails to start (require=false)', async () => {
-    const root = mkdtempSync(join(tmpdir(), 'kode-bwrap-failed-start-'))
+    ensureSessionTempDirExists()
+    const root = mkdtempSync(
+      join(getSessionTempDir(), 'kode-bwrap-failed-start-'),
+    )
     try {
       const shell = new BunShell(root)
       const fakeBwrap = join(root, 'fake-bwrap.sh')

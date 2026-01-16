@@ -115,9 +115,9 @@ ${mcpCliException}    - Set \`dangerouslyDisableSandbox: true\` if:
   return `- Commands run in a sandbox by default with the following restrictions:
 ${sections.join('\n')}
 ${overridePolicy}
-  - IMPORTANT: For temporary files, rely on the sandbox temp directory via \`TMPDIR\`
-    - In sandbox mode, \`TMPDIR\` is set to a dedicated temp directory
-    - Prefer using \`TMPDIR\` over writing directly to \`/tmp\`
+  - IMPORTANT: For temporary files, rely on the session temp directory via \`TMPDIR\`
+    - \`TMPDIR\` is set to a per-session directory under \`/tmp/.corint\`
+    - Prefer using \`TMPDIR\` over writing directly to \`/tmp\` or \`/var/tmp\`
     - Most programs that respect \`TMPDIR\` will automatically use it`
 }
 

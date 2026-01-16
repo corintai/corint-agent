@@ -1,5 +1,5 @@
 import { spawn, type ChildProcess } from 'child_process'
-import { existsSync, mkdirSync, realpathSync, statSync } from 'fs'
+import { existsSync, realpathSync, statSync } from 'fs'
 import { randomUUID } from 'crypto'
 import { homedir } from 'os'
 import { dirname, isAbsolute, resolve } from 'path'
@@ -10,6 +10,10 @@ import {
   getTaskOutputFilePath,
   touchTaskOutputFile,
 } from '@utils/log/taskOutputStore'
+import {
+  ensureSessionTempDirExists,
+  getSessionTempDir,
+} from '@utils/session/sessionTempDir'
 
 type ShellChildProcess = ChildProcess & { exited: Promise<void> }
 
@@ -30,9 +34,14 @@ function spawnWithExited(options: {
   cwd: string
   env?: NodeJS.ProcessEnv
 }): ShellChildProcess {
+  ensureSessionTempDirExists()
+  const mergedEnv = {
+    ...(options.env ?? process.env),
+    TMPDIR: getSessionTempDir(),
+  }
   const child = spawn(options.cmd[0], options.cmd.slice(1), {
     cwd: options.cwd,
-    env: options.env ?? process.env,
+    env: mergedEnv,
     stdio: ['inherit', 'pipe', 'pipe'],
     windowsHide: true,
   }) as ShellChildProcess
@@ -165,10 +174,6 @@ export function buildLinuxBwrapFilesystemArgs(options: {
 
     const allowedRoots: string[] = []
 
-    if (existsSync('/tmp/kode')) {
-      args.push('--bind', '/tmp/kode', '/tmp/kode')
-      allowedRoots.push('/tmp/kode')
-    }
     for (const raw of writeConfig.allowOnly ?? []) {
       const resolved = normalizeLinuxSandboxPath(raw, { cwd, homeDir })
       if (resolved.startsWith('/dev/')) continue
@@ -218,6 +223,7 @@ export function buildLinuxBwrapCommand(options: {
   writeConfig?: BunShellSandboxWriteConfig
   enableWeakerNestedSandbox?: boolean
   binShellPath: string
+  tmpDir?: string
   cwd?: string
   homeDir?: string
 }): string[] {
@@ -249,7 +255,7 @@ export function buildLinuxBwrapCommand(options: {
     '1',
     '--setenv',
     'TMPDIR',
-    '/tmp/kode',
+    options.tmpDir ?? getSessionTempDir(),
   )
   if (!options.enableWeakerNestedSandbox) args.push('--proc', '/proc')
 
@@ -262,12 +268,15 @@ function buildSandboxEnvAssignments(options?: {
   httpProxyPort?: number
   socksProxyPort?: number
   platform?: NodeJS.Platform
+  tmpDir?: string
 }): string[] {
   const httpProxyPort = options?.httpProxyPort
   const socksProxyPort = options?.socksProxyPort
   const platform = options?.platform ?? process.platform
 
-  const env: string[] = ['SANDBOX_RUNTIME=1', 'TMPDIR=/tmp/kode']
+  ensureSessionTempDirExists()
+  const tmpDir = options?.tmpDir ?? getSessionTempDir()
+  const env: string[] = ['SANDBOX_RUNTIME=1', `TMPDIR=${tmpDir}`]
   if (!httpProxyPort && !socksProxyPort) return env
 
   const noProxy = [
@@ -497,6 +506,7 @@ export function buildMacosSandboxExecCommand(options: {
   allowLocalBinding?: boolean
   readConfig?: BunShellSandboxReadConfig
   writeConfig?: BunShellSandboxWriteConfig
+  tmpDir?: string
 }): string[] {
   const logTag = 'CORINT_SANDBOX'
 
@@ -572,6 +582,7 @@ export function buildMacosSandboxExecCommand(options: {
     httpProxyPort: options.httpProxyPort,
     socksProxyPort: options.socksProxyPort,
     platform: 'darwin',
+    tmpDir: options.tmpDir,
   })
   const envPrefix = envAssignments.length
     ? `export ${envAssignments.join(' ')} && `
@@ -798,9 +809,8 @@ export class BunShell {
         return null
       }
 
-      try {
-        mkdirSync('/tmp/kode', { recursive: true })
-      } catch {}
+      ensureSessionTempDirExists()
+      const tmpDir = getSessionTempDir()
 
       const cmd = buildLinuxBwrapCommand({
         bwrapPath,
@@ -810,6 +820,7 @@ export class BunShell {
         writeConfig,
         enableWeakerNestedSandbox: sandbox.enableWeakerNestedSandbox,
         binShellPath,
+        tmpDir,
         cwd,
       })
 
@@ -827,12 +838,8 @@ export class BunShell {
         return null
       }
 
-      try {
-        mkdirSync('/tmp/kode', { recursive: true })
-      } catch {}
-      try {
-        mkdirSync('/private/tmp/kode', { recursive: true })
-      } catch {}
+      ensureSessionTempDirExists()
+      const tmpDir = getSessionTempDir()
 
       return {
         cmd: buildMacosSandboxExecCommand({
@@ -847,6 +854,7 @@ export class BunShell {
           allowLocalBinding: sandbox.allowLocalBinding,
           readConfig,
           writeConfig,
+          tmpDir,
         }),
       }
     }

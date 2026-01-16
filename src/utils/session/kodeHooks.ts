@@ -9,8 +9,9 @@ import { getKodeAgentSessionId } from '@utils/protocol/kodeAgentSessionId'
 import { getSessionPlugins } from '@utils/session/sessionPlugins'
 import { loadSettingsWithLegacyFallback } from '@utils/config/settingsFiles'
 import {
-  ensureSessionOutputDirExists,
   getSessionOutputDir,
+  ensureSessionTempDirExists,
+  getSessionTempDir,
 } from '@utils/session/sessionTempDir'
 
 type HookEventName =
@@ -968,8 +969,8 @@ export async function getSessionStartAdditionalContext(args?: {
     return ''
   }
 
-  ensureSessionOutputDirExists()
-  const envFileDir = mkdtempSync(join(getSessionOutputDir(), 'kode-env-'))
+  ensureSessionTempDirExists()
+  const envFileDir = mkdtempSync(join(getSessionTempDir(), 'kode-env-'))
   const envFilePath = join(envFileDir, `${sessionId}.env`)
   try {
     writeFileSync(envFilePath, '', 'utf8')

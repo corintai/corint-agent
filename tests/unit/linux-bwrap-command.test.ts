@@ -1,13 +1,13 @@
 import { describe, expect, test } from 'bun:test'
-import { mkdirSync } from 'fs'
 import { buildLinuxBwrapCommand } from '@utils/bun/shell'
+import {
+  ensureSessionTempDirExists,
+  getSessionTempDir,
+} from '@utils/session/sessionTempDir'
 
 describe('Linux bwrap command construction', () => {
-  test('includes /tmp/kode bind + TMPDIR env when write-restricted', () => {
-    try {
-      mkdirSync('/tmp/kode', { recursive: true })
-    } catch {}
-
+  test('includes TMPDIR env when write-restricted', () => {
+    ensureSessionTempDirExists()
     const cmd = buildLinuxBwrapCommand({
       bwrapPath: '/usr/bin/bwrap',
       command: 'echo hi',
@@ -24,8 +24,6 @@ describe('Linux bwrap command construction', () => {
     expect(cmd).toContain('--unshare-net')
     expect(cmd).toContain('--die-with-parent')
     expect(cmd).toContain('--unshare-ipc')
-    expect(cmd).toContain('--bind')
-    expect(cmd.join(' ')).toContain('/tmp/kode')
-    expect(cmd.join(' ')).toContain('--setenv TMPDIR /tmp/kode')
+    expect(cmd.join(' ')).toContain(`--setenv TMPDIR ${getSessionTempDir()}`)
   })
 })
