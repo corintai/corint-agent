@@ -7,16 +7,10 @@ import {
   writeFileSync,
 } from 'fs'
 import { dirname, join } from 'path'
-import { getCorintBaseDir } from '@utils/config/env'
-
-function getProjectDir(cwd: string): string {
-  return cwd.replace(/[^a-zA-Z0-9]/g, '-')
-}
-
-const PROJECT_ROOT = process.cwd()
+import { getSessionOutputDir } from '@utils/session/sessionTempDir'
 
 export function getTaskOutputsDir(): string {
-  return join(getCorintBaseDir(), getProjectDir(PROJECT_ROOT), 'tasks')
+  return join(getSessionOutputDir(), 'tasks')
 }
 
 export function getTaskOutputFilePath(taskId: string): string {

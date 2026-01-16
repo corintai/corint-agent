@@ -1,7 +1,6 @@
 import { spawn } from 'child_process'
 import { existsSync, readFileSync, statSync } from 'fs'
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'fs'
-import { tmpdir } from 'os'
 import { join } from 'path'
 import { minimatch } from 'minimatch'
 import { logError } from '@utils/log'
@@ -9,6 +8,10 @@ import { getCwd } from '@utils/state'
 import { getKodeAgentSessionId } from '@utils/protocol/kodeAgentSessionId'
 import { getSessionPlugins } from '@utils/session/sessionPlugins'
 import { loadSettingsWithLegacyFallback } from '@utils/config/settingsFiles'
+import {
+  ensureSessionOutputDirExists,
+  getSessionOutputDir,
+} from '@utils/session/sessionTempDir'
 
 type HookEventName =
   | 'PreToolUse'
@@ -116,7 +119,7 @@ export function updateHookTranscriptForMessages(
   const state = getHookRuntimeState(toolUseContext)
   const sessionId = getKodeAgentSessionId()
 
-  const dir = join(tmpdir(), 'kode-hooks-transcripts')
+  const dir = join(getSessionOutputDir(), 'kode-hooks-transcripts')
   try {
     mkdirSync(dir, { recursive: true })
   } catch {}
@@ -965,7 +968,8 @@ export async function getSessionStartAdditionalContext(args?: {
     return ''
   }
 
-  const envFileDir = mkdtempSync(join(tmpdir(), 'kode-env-'))
+  ensureSessionOutputDirExists()
+  const envFileDir = mkdtempSync(join(getSessionOutputDir(), 'kode-env-'))
   const envFilePath = join(envFileDir, `${sessionId}.env`)
   try {
     writeFileSync(envFilePath, '', 'utf8')

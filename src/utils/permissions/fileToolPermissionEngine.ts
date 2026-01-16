@@ -14,6 +14,7 @@ import { getPlanConversationKey, getPlanFilePath } from '@utils/plan/planMode'
 import { getSettingsFileCandidates } from '@utils/config/settingsFiles'
 import { PRODUCT_NAME } from '@constants/product'
 import { getCorintBaseDir } from '@utils/config/env'
+import { getTaskOutputsDir } from '@utils/log/taskOutputStore'
 
 type ToolRuleValue = {
   toolName: string
@@ -637,10 +638,7 @@ export function getSpecialAllowedReadReason(args: {
     return 'Tool result files are allowed for reading'
   }
 
-  const projectDir = process.cwd().replace(/[^a-zA-Z0-9]/g, '-')
-  const tasksDir = resolveLikeCliPath(
-    path.join(baseDirResolved, projectDir, 'tasks'),
-  )
+  const tasksDir = resolveLikeCliPath(getTaskOutputsDir())
   const tasksDirPosix = toPosixPath(tasksDir)
   if (
     absPosix === tasksDirPosix ||

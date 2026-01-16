@@ -2795,12 +2795,14 @@ async function gracefulExit(code = 0) {
     const { runSessionEndHooks } = await import('@utils/session/kodeHooks')
     const { getKodeAgentSessionId } =
       await import('@utils/protocol/kodeAgentSessionId')
-    const { tmpdir } = await import('os')
     const { join } = await import('path')
+    const { getSessionOutputDir } = await import(
+      '@utils/session/sessionTempDir'
+    )
 
     const sessionId = getKodeAgentSessionId()
     const transcriptPath = join(
-      tmpdir(),
+      getSessionOutputDir(),
       'kode-hooks-transcripts',
       `${sessionId}.transcript.txt`,
     )

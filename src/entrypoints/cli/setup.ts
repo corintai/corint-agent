@@ -1,11 +1,13 @@
 import { getContext } from '@context'
 import { getCurrentProjectConfig } from '@utils/config'
 import { cleanupOldMessageFilesInBackground } from '@utils/session/cleanup'
+import { setSessionWorkspaceRoot } from '@utils/session/sessionTempDir'
 import { grantReadPermissionForOriginalDir } from '@utils/permissions/filesystem'
 import { setCwd, setOriginalCwd } from '@utils/state'
 import { debug as debugLogger } from '@utils/log/debugLogger'
 
 export async function setup(cwd: string, safeMode?: boolean): Promise<void> {
+  setSessionWorkspaceRoot(cwd)
   if (cwd !== process.cwd()) {
     setOriginalCwd(cwd)
   }
