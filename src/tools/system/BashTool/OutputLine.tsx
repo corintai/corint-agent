@@ -3,6 +3,7 @@ import * as React from 'react'
 import { getTheme } from '@utils/theme'
 import { MAX_RENDERED_LINES } from './prompt'
 import chalk from 'chalk'
+import { sanitizeTerminalOutput } from '@utils/terminal/sanitize'
 
 function renderTruncatedContent(content: string, totalLines: number): string {
   const allLines = content.split('\n')
@@ -31,6 +32,7 @@ export function OutputLine({
   isError?: boolean
   key?: React.Key
 }) {
+  const sanitized = sanitizeTerminalOutput(content)
   return (
     <Box justifyContent="space-between" width="100%">
       <Box flexDirection="row">
@@ -38,8 +40,8 @@ export function OutputLine({
         <Box flexDirection="column">
           <Text color={isError ? getTheme().error : undefined}>
             {verbose
-              ? content.trim()
-              : renderTruncatedContent(content.trim(), lines)}
+              ? sanitized.trim()
+              : renderTruncatedContent(sanitized.trim(), lines)}
           </Text>
         </Box>
       </Box>

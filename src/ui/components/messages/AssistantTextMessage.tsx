@@ -22,6 +22,7 @@ import {
 import { BLACK_CIRCLE } from '@constants/figures'
 import { applyMarkdown } from '@utils/text/markdown'
 import { useTerminalSize } from '@hooks/useTerminalSize'
+import { sanitizeTerminalOutput } from '@utils/terminal/sanitize'
 
 type Props = {
   param: TextBlockParam
@@ -50,8 +51,9 @@ export function AssistantTextMessage({
 
   if (text.startsWith('<tool-progress>')) {
     const raw = extractTag(text, 'tool-progress') ?? ''
-    if (raw.trim().length === 0) return null
-    return <Text color={getTheme().secondaryText}>{raw}</Text>
+    const sanitized = sanitizeTerminalOutput(raw)
+    if (sanitized.trim().length === 0) return null
+    return <Text color={getTheme().secondaryText}>{sanitized}</Text>
   }
 
   if (text.startsWith('<bash-notification>')) {
