@@ -5,6 +5,7 @@ import { PassThrough } from 'stream'
 import stripAnsi from 'strip-ansi'
 import { AssistantToolUseMessage } from '@components/messages/AssistantToolUseMessage'
 import { TodoWriteTool } from '@tools/interaction/TodoWriteTool/TodoWriteTool'
+import { decorateToolsForCli } from '@cli/tools/decorateTools'
 
 async function renderToText(element: React.ReactElement): Promise<string> {
   const stdin = new PassThrough()
@@ -37,6 +38,8 @@ async function renderToText(element: React.ReactElement): Promise<string> {
 }
 
 describe('TodoWriteTool UI parity (Reference CLI)', () => {
+  decorateToolsForCli()
+
   test('tool_use line is hidden (renderToolUseMessage=null, userFacingName="")', async () => {
     const out = await renderToText(
       <AssistantToolUseMessage

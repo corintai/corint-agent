@@ -25,9 +25,9 @@ describe('--plugin-dir runtime: commands & skills discovery', () => {
     await setCwd(projectDir)
 
     pluginDir = join(projectDir, 'hookify')
-    mkdirSync(join(pluginDir, '.kode-plugin'), { recursive: true })
+    mkdirSync(join(pluginDir, '.corint-plugin'), { recursive: true })
     writeFileSync(
-      join(pluginDir, '.kode-plugin', 'plugin.json'),
+      join(pluginDir, '.corint-plugin', 'plugin.json'),
       JSON.stringify(
         { name: 'hookify', version: '0.1.0', commands: './extra-command.md' },
         null,

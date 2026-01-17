@@ -19,7 +19,7 @@ import { setCwd } from '@utils/state'
 
 describe('plugin pack install/runtime (marketplace → full plugin dir)', () => {
   const runnerCwd = process.cwd()
-  const originalConfigDir = process.env.KODE_CONFIG_DIR
+  const originalConfigDir = process.env.CORINT_CONFIG_DIR
 
   let projectDir: string
   let homeDir: string
@@ -28,7 +28,7 @@ describe('plugin pack install/runtime (marketplace → full plugin dir)', () => 
   beforeEach(async () => {
     projectDir = mkdtempSync(join(tmpdir(), 'kode-plugin-pack-proj-'))
     homeDir = mkdtempSync(join(tmpdir(), 'kode-plugin-pack-home-'))
-    process.env.KODE_CONFIG_DIR = join(homeDir, '.kode')
+    process.env.CORINT_CONFIG_DIR = join(homeDir, '.corint')
     await setCwd(projectDir)
 
     repoDir = join(projectDir, 'plugins-repo')
@@ -73,8 +73,8 @@ describe('plugin pack install/runtime (marketplace → full plugin dir)', () => 
     __resetSessionPluginsForTests()
     reloadCustomCommands()
     await setCwd(runnerCwd)
-    if (originalConfigDir === undefined) delete process.env.KODE_CONFIG_DIR
-    else process.env.KODE_CONFIG_DIR = originalConfigDir
+    if (originalConfigDir === undefined) delete process.env.CORINT_CONFIG_DIR
+    else process.env.CORINT_CONFIG_DIR = originalConfigDir
     rmSync(projectDir, { recursive: true, force: true })
     rmSync(homeDir, { recursive: true, force: true })
   })

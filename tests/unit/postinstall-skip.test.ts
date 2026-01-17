@@ -16,6 +16,6 @@ describe('postinstall (binary download)', () => {
     })
 
     expect(res.status).toBe(0)
-    expect(res.stdout).toContain('@shareai-lab/kode installed')
+    expect(res.stdout).toContain('@corint/risk-agent installed')
   })
 })

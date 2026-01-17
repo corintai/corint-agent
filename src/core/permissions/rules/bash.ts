@@ -4,7 +4,7 @@ import { getCommandSubcommandPrefix, splitCommand } from '@utils/commands'
 import { AbortError } from '@utils/text/errors'
 import { getCwd } from '@utils/state'
 import { PRODUCT_NAME } from '@constants/product'
-import type { PermissionResult } from '../ui-helpers'
+import type { PermissionResult } from '@core/permissions/ui-helpers'
 
 const SAFE_COMMANDS = new Set([
   'git status',

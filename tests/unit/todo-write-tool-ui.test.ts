@@ -1,5 +1,6 @@
 import { describe, expect, test } from 'bun:test'
 import { TodoWriteTool } from '@tools/interaction/TodoWriteTool/TodoWriteTool'
+import { decorateToolsForCli } from '@cli/tools/decorateTools'
 
 const makeContext = () => ({
   abortController: new AbortController(),
@@ -8,6 +9,8 @@ const makeContext = () => ({
 })
 
 describe('TodoWriteTool UI parity (Reference CLI)', () => {
+  decorateToolsForCli()
+
   test('renderToolUseMessage returns null (suppressed tool-use line)', () => {
     const msg = TodoWriteTool.renderToolUseMessage(
       {

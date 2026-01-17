@@ -10,7 +10,7 @@ import PromptInput from '@components/PromptInput'
 import { PermissionProvider } from '@context/PermissionContext'
 import { AskUserQuestionPermissionRequest } from '@components/permissions/ask-user-question-permission-request/AskUserQuestionPermissionRequest'
 import { AskUserQuestionTool } from '@tools/interaction/AskUserQuestionTool/AskUserQuestionTool'
-import { BashToolRunInBackgroundOverlay } from '@tools/BashTool/BashToolRunInBackgroundOverlay'
+import { BashToolRunInBackgroundOverlay } from '@cli/tools/system/BashTool/BashToolRunInBackgroundOverlay'
 import {
   createAssistantMessage,
   createProgressMessage,
@@ -451,19 +451,19 @@ describe('TUI E2E regression (Ink render)', () => {
   test('statusline renders when configured', async () => {
     const originalHome = process.env.HOME
     const originalUserProfile = process.env.USERPROFILE
-    const originalEnabled = process.env.KODE_STATUSLINE_ENABLED
-    const originalConfigDir = process.env.KODE_CONFIG_DIR
+    const originalEnabled = process.env.CORINT_STATUSLINE_ENABLED
+    const originalConfigDir = process.env.CORINT_CONFIG_DIR
 
     const homeDir = mkdtempSync(join(tmpdir(), 'kode-statusline-home-'))
     process.env.HOME = homeDir
     process.env.USERPROFILE = homeDir
-    process.env.KODE_STATUSLINE_ENABLED = '1'
-    process.env.KODE_CONFIG_DIR = join(homeDir, '.kode')
+    process.env.CORINT_STATUSLINE_ENABLED = '1'
+    process.env.CORINT_CONFIG_DIR = join(homeDir, '.corint')
 
-    mkdirSync(join(homeDir, '.kode'), { recursive: true })
+    mkdirSync(join(homeDir, '.corint'), { recursive: true })
     const cmd = `${process.execPath} -e "process.stdout.write('hello-statusline')"`
     writeFileSync(
-      join(homeDir, '.kode', 'settings.json'),
+      join(homeDir, '.corint', 'settings.json'),
       JSON.stringify({ statusLine: cmd }, null, 2) + '\n',
       'utf8',
     )
@@ -485,10 +485,10 @@ describe('TUI E2E regression (Ink render)', () => {
       if (originalUserProfile === undefined) delete process.env.USERPROFILE
       else process.env.USERPROFILE = originalUserProfile
       if (originalEnabled === undefined)
-        delete process.env.KODE_STATUSLINE_ENABLED
-      else process.env.KODE_STATUSLINE_ENABLED = originalEnabled
-      if (originalConfigDir === undefined) delete process.env.KODE_CONFIG_DIR
-      else process.env.KODE_CONFIG_DIR = originalConfigDir
+        delete process.env.CORINT_STATUSLINE_ENABLED
+      else process.env.CORINT_STATUSLINE_ENABLED = originalEnabled
+      if (originalConfigDir === undefined) delete process.env.CORINT_CONFIG_DIR
+      else process.env.CORINT_CONFIG_DIR = originalConfigDir
       rmSync(homeDir, { recursive: true, force: true })
     }
   })

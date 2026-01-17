@@ -1,7 +1,8 @@
 export type {
-  ExtendedToolUseContext,
-  SetToolJSXFn,
   Tool,
+  ToolOverlay,
+  ToolPermissionRequest,
+  ToolUiBridge,
   ToolUseContext,
   ValidationResult,
 } from './tool'
@@ -10,3 +11,4 @@ export { defineTool } from './defineTool'
 export { collectToolResult } from './executor'
 export type { ToolRegistry } from './registry'
 export { createToolRegistry, getToolByName } from './registry'
+export { getAllTools, getTools, getReadOnlyTools } from './tools-index'

@@ -58,13 +58,13 @@ import {
   type ToolPermissionContextUpdate,
 } from '@kode-types/toolPermissionContext'
 import { parseMcpToolName } from '@utils/permissions/ruleString'
-import type { PermissionResult } from '../ui-helpers'
+import type { PermissionResult } from '@core/permissions/ui-helpers'
 import {
   PLAN_MODE_ALLOWED_NON_READONLY_TOOLS,
   bashToolHasPermission,
   getPermissionKey,
   isSafeBashCommand,
-} from '../rules'
+} from '@core/permissions/rules'
 
 function parseBoolLike(value: string | undefined): boolean {
   if (!value) return false

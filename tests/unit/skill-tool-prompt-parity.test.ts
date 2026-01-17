@@ -7,7 +7,7 @@ import { SkillTool } from '@tools/ai/SkillTool/SkillTool'
 import { setCwd } from '@utils/state'
 
 describe('SkillTool prompt parity (official sections)', () => {
-  const originalConfigDir = process.env.KODE_CONFIG_DIR
+  const originalConfigDir = process.env.CORINT_CONFIG_DIR
   const runnerCwd = process.cwd()
 
   let configDir: string
@@ -16,7 +16,7 @@ describe('SkillTool prompt parity (official sections)', () => {
   beforeEach(async () => {
     configDir = mkdtempSync(join(tmpdir(), 'kode-skilltool-prompt-cfg-'))
     projectDir = mkdtempSync(join(tmpdir(), 'kode-skilltool-prompt-proj-'))
-    process.env.KODE_CONFIG_DIR = configDir
+    process.env.CORINT_CONFIG_DIR = configDir
     await setCwd(projectDir)
   })
 
@@ -43,8 +43,8 @@ describe('SkillTool prompt parity (official sections)', () => {
 
   afterEach(async () => {
     await setCwd(runnerCwd)
-    if (originalConfigDir === undefined) delete process.env.KODE_CONFIG_DIR
-    else process.env.KODE_CONFIG_DIR = originalConfigDir
+    if (originalConfigDir === undefined) delete process.env.CORINT_CONFIG_DIR
+    else process.env.CORINT_CONFIG_DIR = originalConfigDir
     rmSync(configDir, { recursive: true, force: true })
     rmSync(projectDir, { recursive: true, force: true })
   })

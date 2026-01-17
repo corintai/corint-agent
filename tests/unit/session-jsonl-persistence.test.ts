@@ -17,7 +17,7 @@ import {
 } from '@utils/protocol/kodeAgentSessionLog'
 
 describe('JSONL session persistence (projects/*.jsonl)', () => {
-  const originalConfigDir = process.env.KODE_CONFIG_DIR
+  const originalConfigDir = process.env.CORINT_CONFIG_DIR
   const runnerCwd = process.cwd()
 
   let configDir: string
@@ -28,7 +28,7 @@ describe('JSONL session persistence (projects/*.jsonl)', () => {
     setKodeAgentSessionId('704b907b-2b0f-478d-a7cb-b9fecf921913')
     configDir = mkdtempSync(join(tmpdir(), 'kode-session-jsonl-config-'))
     projectDir = mkdtempSync(join(tmpdir(), 'kode-session-jsonl-project-'))
-    process.env.KODE_CONFIG_DIR = configDir
+    process.env.CORINT_CONFIG_DIR = configDir
     await setCwd(projectDir)
   })
 
@@ -37,9 +37,9 @@ describe('JSONL session persistence (projects/*.jsonl)', () => {
     resetSessionJsonlStateForTests()
     resetKodeAgentSessionIdForTests()
     if (originalConfigDir === undefined) {
-      delete process.env.KODE_CONFIG_DIR
+      delete process.env.CORINT_CONFIG_DIR
     } else {
-      process.env.KODE_CONFIG_DIR = originalConfigDir
+      process.env.CORINT_CONFIG_DIR = originalConfigDir
     }
     rmSync(configDir, { recursive: true, force: true })
     rmSync(projectDir, { recursive: true, force: true })

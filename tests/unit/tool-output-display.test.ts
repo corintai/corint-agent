@@ -39,8 +39,8 @@ async function withExecPath<T>(
 }
 
 describe('toolOutputDisplay', () => {
-  test('isPackagedRuntime: KODE_PACKAGED=1 forces true', async () => {
-    await withEnv({ KODE_PACKAGED: '1' }, async () => {
+  test('isPackagedRuntime: CORINT_PACKAGED=1 forces true', async () => {
+    await withEnv({ CORINT_PACKAGED: '1' }, async () => {
       await withExecPath('/usr/local/bin/bun', () => {
         expect(isPackagedRuntime()).toBe(true)
       })
@@ -48,7 +48,7 @@ describe('toolOutputDisplay', () => {
   })
 
   test('isPackagedRuntime: heuristic treats bun/node as not packaged', async () => {
-    await withEnv({ KODE_PACKAGED: undefined }, async () => {
+    await withEnv({ CORINT_PACKAGED: undefined }, async () => {
       await withExecPath('/usr/local/bin/bun', () => {
         expect(isPackagedRuntime()).toBe(false)
       })
@@ -62,7 +62,7 @@ describe('toolOutputDisplay', () => {
   })
 
   test('isPackagedRuntime: heuristic treats other execPath as packaged', async () => {
-    await withEnv({ KODE_PACKAGED: undefined }, async () => {
+    await withEnv({ CORINT_PACKAGED: undefined }, async () => {
       await withExecPath('/usr/local/bin/kode', () => {
         expect(isPackagedRuntime()).toBe(true)
       })
@@ -73,7 +73,7 @@ describe('toolOutputDisplay', () => {
   })
 
   test('isPackagedRuntime: empty execPath returns false', async () => {
-    await withEnv({ KODE_PACKAGED: undefined }, async () => {
+    await withEnv({ CORINT_PACKAGED: undefined }, async () => {
       await withExecPath('', () => {
         expect(isPackagedRuntime()).toBe(false)
       })
@@ -81,7 +81,7 @@ describe('toolOutputDisplay', () => {
   })
 
   test('isPackagedRuntime: handles execPath getter throwing', async () => {
-    await withEnv({ KODE_PACKAGED: undefined }, async () => {
+    await withEnv({ CORINT_PACKAGED: undefined }, async () => {
       const original = Object.getOwnPropertyDescriptor(process, 'execPath')
       try {
         Object.defineProperty(process, 'execPath', {
@@ -144,7 +144,7 @@ describe('toolOutputDisplay', () => {
     const longText = Array.from({ length: 200 }, (_, i) => `L${i + 1}`).join(
       '\n',
     )
-    await withEnv({ KODE_PACKAGED: undefined }, async () => {
+    await withEnv({ CORINT_PACKAGED: undefined }, async () => {
       await withExecPath('/usr/local/bin/bun', () => {
         const out = maybeTruncateVerboseToolOutput(longText)
         expect(out.truncated).toBe(false)
@@ -158,7 +158,7 @@ describe('toolOutputDisplay', () => {
       '\n',
     )
     await withEnv(
-      { KODE_PACKAGED: '1', KODE_TOOL_OUTPUT_FULL: undefined },
+      { CORINT_PACKAGED: '1', CORINT_TOOL_OUTPUT_FULL: undefined },
       () => {
         const out = maybeTruncateVerboseToolOutput(longText)
         expect(out.truncated).toBe(true)
@@ -167,11 +167,11 @@ describe('toolOutputDisplay', () => {
     )
   })
 
-  test('maybeTruncateVerboseToolOutput: KODE_TOOL_OUTPUT_FULL disables truncation', async () => {
+  test('maybeTruncateVerboseToolOutput: CORINT_TOOL_OUTPUT_FULL disables truncation', async () => {
     const longText = Array.from({ length: 200 }, (_, i) => `L${i + 1}`).join(
       '\n',
     )
-    await withEnv({ KODE_PACKAGED: '1', KODE_TOOL_OUTPUT_FULL: '1' }, () => {
+    await withEnv({ CORINT_PACKAGED: '1', CORINT_TOOL_OUTPUT_FULL: '1' }, () => {
       const out = maybeTruncateVerboseToolOutput(longText)
       expect(out.truncated).toBe(false)
       expect(out.text).toBe(longText)
@@ -182,10 +182,10 @@ describe('toolOutputDisplay', () => {
     const longText = ['a', 'b', 'c', 'd'].join('\n')
     await withEnv(
       {
-        KODE_PACKAGED: '1',
-        KODE_TOOL_OUTPUT_FULL: undefined,
-        KODE_TOOL_OUTPUT_MAX_LINES: '2',
-        KODE_TOOL_OUTPUT_MAX_CHARS: '3',
+        CORINT_PACKAGED: '1',
+        CORINT_TOOL_OUTPUT_FULL: undefined,
+        CORINT_TOOL_OUTPUT_MAX_LINES: '2',
+        CORINT_TOOL_OUTPUT_MAX_CHARS: '3',
       },
       () => {
         const out = maybeTruncateVerboseToolOutput(longText)
@@ -199,10 +199,10 @@ describe('toolOutputDisplay', () => {
     const longText = ['a', 'b', 'c', 'd'].join('\n')
     await withEnv(
       {
-        KODE_PACKAGED: '1',
-        KODE_TOOL_OUTPUT_FULL: undefined,
-        KODE_TOOL_OUTPUT_MAX_LINES: 'not-a-number',
-        KODE_TOOL_OUTPUT_MAX_CHARS: 'not-a-number',
+        CORINT_PACKAGED: '1',
+        CORINT_TOOL_OUTPUT_FULL: undefined,
+        CORINT_TOOL_OUTPUT_MAX_LINES: 'not-a-number',
+        CORINT_TOOL_OUTPUT_MAX_CHARS: 'not-a-number',
       },
       () => {
         const out = maybeTruncateVerboseToolOutput(longText, {

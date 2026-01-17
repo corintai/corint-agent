@@ -17,9 +17,9 @@ describe('--plugin-dir runtime: agent discovery', () => {
     await setCwd(projectDir)
 
     pluginDir = join(projectDir, 'demo-plugin')
-    mkdirSync(join(pluginDir, '.kode-plugin'), { recursive: true })
+    mkdirSync(join(pluginDir, '.corint-plugin'), { recursive: true })
     writeFileSync(
-      join(pluginDir, '.kode-plugin', 'plugin.json'),
+      join(pluginDir, '.corint-plugin', 'plugin.json'),
       JSON.stringify(
         { name: 'demo-plugin', version: '0.1.0', agents: './extra-agent.md' },
         null,

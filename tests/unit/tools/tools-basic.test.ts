@@ -38,7 +38,7 @@ let configDir = ''
 
 beforeEach(() => {
   configDir = mkdtempSync(join(tmpdir(), 'kode-test-config-'))
-  process.env.KODE_CONFIG_DIR = configDir
+  process.env.CORINT_CONFIG_DIR = configDir
   BunShell.restart()
 })
 

@@ -96,7 +96,7 @@ describe('Bash permission dont-ask-again (prefix) parity', () => {
     }
   })
 
-  test('prefix allow persists to .kode/settings.local.json and reloads on restart', async () => {
+  test('prefix allow persists to .corint/settings.local.json and reloads on restart', async () => {
     if (process.platform === 'win32') return
 
     const originalCwd = getCwd()
@@ -119,7 +119,7 @@ describe('Bash permission dont-ask-again (prefix) parity', () => {
 
       await savePermission(BashTool as any, input as any, 'python3', ctx)
 
-      const settingsPath = join(projectDir, '.kode', 'settings.local.json')
+      const settingsPath = join(projectDir, '.corint', 'settings.local.json')
       const raw = readFileSync(settingsPath, 'utf-8')
       const parsed = JSON.parse(raw)
       expect(parsed.permissions.allow).toContain('Bash(python3:*)')

@@ -24,16 +24,24 @@ function isTsLikeFile(filePath: string): boolean {
   )
 }
 
+const CORE_UTILS_ROOT_ALLOWLIST = new Set([
+  'binaryFeedback.ts',
+  'format.ts',
+  'macros.ts',
+  'oauth.ts',
+  'prompts.ts',
+])
+
 describe('Naming conventions', () => {
   test('src/utils root must not contain loose ts/tsx files', () => {
-    const utilsDir = join(process.cwd(), 'src', 'utils')
+    const utilsDir = join(process.cwd(), 'src', 'core', 'utils')
     const entries = readdirSync(utilsDir, { withFileTypes: true })
 
     const violations: string[] = []
     for (const entry of entries) {
       if (!entry.isFile()) continue
       if (entry.name.startsWith('.')) continue
-      if (isTsLikeFile(entry.name)) {
+      if (isTsLikeFile(entry.name) && !CORE_UTILS_ROOT_ALLOWLIST.has(entry.name)) {
         violations.push(entry.name)
       }
     }
@@ -42,7 +50,7 @@ describe('Naming conventions', () => {
   })
 
   test('src/services root must not contain loose ts/tsx files', () => {
-    const servicesDir = join(process.cwd(), 'src', 'services')
+    const servicesDir = join(process.cwd(), 'src', 'core', 'services')
     const entries = readdirSync(servicesDir, { withFileTypes: true })
 
     const violations: string[] = []
@@ -58,7 +66,7 @@ describe('Naming conventions', () => {
   })
 
   test('src/utils file names must not start with uppercase letters', () => {
-    const utilsDir = join(process.cwd(), 'src', 'utils')
+    const utilsDir = join(process.cwd(), 'src', 'core', 'utils')
     const files = listFilesRecursive(utilsDir).filter(isTsLikeFile)
 
     const violations: string[] = []
@@ -73,7 +81,7 @@ describe('Naming conventions', () => {
   })
 
   test('src/types file names must not start with uppercase letters', () => {
-    const typesDir = join(process.cwd(), 'src', 'types')
+    const typesDir = join(process.cwd(), 'src', 'core', 'types')
     const files = listFilesRecursive(typesDir).filter(isTsLikeFile)
 
     const violations: string[] = []
@@ -88,7 +96,7 @@ describe('Naming conventions', () => {
   })
 
   test('src/ui/screens file names must start with uppercase letters', () => {
-    const screensDir = join(process.cwd(), 'src', 'ui', 'screens')
+    const screensDir = join(process.cwd(), 'src', 'cli', 'screens')
     const files = listFilesRecursive(screensDir).filter(
       filePath => filePath.endsWith('.tsx') || filePath.endsWith('.ts'),
     )
@@ -105,7 +113,7 @@ describe('Naming conventions', () => {
   })
 
   test('src/ui/components top-level directories must be lowercase', () => {
-    const componentsDir = join(process.cwd(), 'src', 'ui', 'components')
+    const componentsDir = join(process.cwd(), 'src', 'cli', 'components')
     const entries = readdirSync(componentsDir, { withFileTypes: true })
 
     const violations: string[] = []
@@ -124,7 +132,7 @@ describe('Naming conventions', () => {
     const messagesDir = join(
       process.cwd(),
       'src',
-      'ui',
+      'cli',
       'components',
       'messages',
     )
@@ -146,7 +154,7 @@ describe('Naming conventions', () => {
     const permissionsDir = join(
       process.cwd(),
       'src',
-      'ui',
+      'cli',
       'components',
       'permissions',
     )

@@ -63,7 +63,7 @@ describe('npm runtime (Node.js)', () => {
         },
       )
       expect(helpRes.status).toBe(0)
-      expect(helpRes.stdout ?? '').toContain('Usage: kode')
+      expect(helpRes.stdout ?? '').toContain('Usage: corint')
     } finally {
       rmSync(root, { recursive: true, force: true })
     }

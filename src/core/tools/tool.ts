@@ -1,14 +1,18 @@
 import { z } from 'zod'
-import type * as React from 'react'
 import type { PermissionMode } from '@kode-types/permissionMode'
 import type { ToolPermissionContext } from '@kode-types/toolPermissionContext'
+import type { AssistantMessage } from '@query'
 
-export type SetToolJSXFn = (
-  jsx: {
-    jsx: React.ReactNode | null
-    shouldHidePromptInput: boolean
-  } | null,
-) => void
+export type ToolOverlay =
+  | {
+      type: 'bash-background'
+      onBackground: () => void
+    }
+  | {
+      type: 'custom'
+      name: string
+      payload: unknown
+    }
 
 export interface ToolUseContext {
   messageId: string | undefined
@@ -17,6 +21,7 @@ export interface ToolUseContext {
   safeMode?: boolean
   abortController: AbortController
   readFileTimestamps: { [filePath: string]: number }
+  ui?: ToolUiBridge
   options?: {
     commands?: any[]
     tools?: any[]
@@ -43,10 +48,6 @@ export interface ToolUseContext {
     previousResponseId?: string
     conversationId?: string
   }
-}
-
-export interface ExtendedToolUseContext extends ToolUseContext {
-  setToolJSX: SetToolJSXFn
 }
 
 export interface ValidationResult {
@@ -80,12 +81,12 @@ export interface Tool<
   renderToolUseMessage: (
     input: z.infer<TInput>,
     options: { verbose: boolean },
-  ) => string | React.ReactElement | null
-  renderToolUseRejectedMessage?: (...args: any[]) => React.ReactElement
+  ) => string | null
+  renderToolUseRejectedMessage?: (...args: any[]) => unknown
   renderToolResultMessage?: (
     output: TOutput,
     options: { verbose: boolean },
-  ) => React.ReactNode
+  ) => unknown
   call: (
     input: z.infer<TInput>,
     context: ToolUseContext,
@@ -108,6 +109,24 @@ export interface Tool<
     void,
     unknown
   >
+}
+
+export interface ToolPermissionRequest {
+  assistantMessage: AssistantMessage
+  tool: Tool
+  description: string
+  input: { [key: string]: unknown }
+  commandPrefix: unknown | null
+  toolUseContext: ToolUseContext
+  suggestions?: unknown
+  riskScore: number | null
+}
+
+export interface ToolUiBridge {
+  showOverlay?: (overlay: ToolOverlay | null) => void
+  requestToolPermission?: (
+    request: ToolPermissionRequest,
+  ) => Promise<boolean>
 }
 
 export function getToolDescription(tool: Tool): string {

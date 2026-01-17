@@ -40,13 +40,13 @@ afterEach(() => {
   resetRipgrepPathCacheForTests()
 })
 
-test('uses KODE_RIPGREP_PATH when set', () => {
+test('uses CORINT_RIPGREP_PATH when set', () => {
   const dir = mkdtempSync(join(tmpdir(), 'kode-rg-path-'))
   try {
     const fakeRg = join(dir, process.platform === 'win32' ? 'rg.exe' : 'rg')
     writeFileSync(fakeRg, '#!/bin/sh\necho rg\n')
 
-    setEnv({ KODE_RIPGREP_PATH: fakeRg })
+    setEnv({ CORINT_RIPGREP_PATH: fakeRg })
     expect(getRipgrepPath()).toBe(fakeRg)
   } finally {
     rmSync(dir, { recursive: true, force: true })
@@ -58,7 +58,7 @@ test('falls back to @vscode/ripgrep when forced', () => {
   try {
     setEnv({
       USE_BUILTIN_RIPGREP: '1',
-      KODE_RIPGREP_PATH: undefined,
+      CORINT_RIPGREP_PATH: undefined,
     })
 
     expect(getRipgrepPath()).toBe(rgPath)
@@ -67,15 +67,15 @@ test('falls back to @vscode/ripgrep when forced', () => {
   }
 })
 
-test('throws a helpful error when KODE_RIPGREP_PATH points to a missing file', () => {
+test('throws a helpful error when CORINT_RIPGREP_PATH points to a missing file', () => {
   const dir = mkdtempSync(join(tmpdir(), 'kode-rg-missing-'))
   try {
     setEnv({
-      KODE_RIPGREP_PATH: join(dir, 'does-not-exist-rg'),
+      CORINT_RIPGREP_PATH: join(dir, 'does-not-exist-rg'),
     })
 
     expect(() => getRipgrepPath()).toThrow(
-      /KODE_RIPGREP_PATH points to a missing file/i,
+      /CORINT_RIPGREP_PATH points to a missing file/i,
     )
   } finally {
     rmSync(dir, { recursive: true, force: true })

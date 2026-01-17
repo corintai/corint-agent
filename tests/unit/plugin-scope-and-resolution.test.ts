@@ -100,20 +100,20 @@ describe('plugin scopes + resolution', () => {
   })
 
   test('install resolves bare plugin name when unique', async () => {
-    await withEnv({ KODE_CONFIG_DIR: join(homeDir, '.kode') }, async () => {
+    await withEnv({ CORINT_CONFIG_DIR: join(homeDir, '.corint') }, async () => {
       writeMarketplaceRepo(repoA, 'mkt-a')
       await addMarketplace(repoA)
 
       const install = installSkillPlugin('document-skills', { scope: 'user' })
       expect(install.pluginSpec).toBe('document-skills@mkt-a')
       expect(install.installedSkills.sort()).toEqual(['pdf', 'xlsx'])
-      expect(existsSync(join(homeDir, '.kode', 'skills', 'pdf'))).toBe(true)
-      expect(existsSync(join(homeDir, '.kode', 'skills', 'xlsx'))).toBe(true)
+      expect(existsSync(join(homeDir, '.corint', 'skills', 'pdf'))).toBe(true)
+      expect(existsSync(join(homeDir, '.corint', 'skills', 'xlsx'))).toBe(true)
     })
   })
 
   test('install rejects bare plugin name when ambiguous across marketplaces', async () => {
-    await withEnv({ KODE_CONFIG_DIR: join(homeDir, '.kode') }, async () => {
+    await withEnv({ CORINT_CONFIG_DIR: join(homeDir, '.corint') }, async () => {
       writeMarketplaceRepo(repoA, 'mkt-a')
       writeMarketplaceRepo(repoB, 'mkt-b')
       await addMarketplace(repoA)
@@ -125,8 +125,8 @@ describe('plugin scopes + resolution', () => {
     })
   })
 
-  test('project scope installs into project ./.kode/skills and records projectPath', async () => {
-    await withEnv({ KODE_CONFIG_DIR: join(homeDir, '.kode') }, async () => {
+  test('project scope installs into project ./.corint/skills and records projectPath', async () => {
+    await withEnv({ CORINT_CONFIG_DIR: join(homeDir, '.corint') }, async () => {
       writeMarketplaceRepo(repoA, 'mkt-a')
       await addMarketplace(repoA)
 
@@ -134,8 +134,8 @@ describe('plugin scopes + resolution', () => {
         scope: 'project',
       })
       expect(install.installedSkills.sort()).toEqual(['pdf', 'xlsx'])
-      expect(existsSync(join(projectDir, '.kode', 'skills', 'pdf'))).toBe(true)
-      expect(existsSync(join(projectDir, '.kode', 'skills', 'xlsx'))).toBe(true)
+      expect(existsSync(join(projectDir, '.corint', 'skills', 'pdf'))).toBe(true)
+      expect(existsSync(join(projectDir, '.corint', 'skills', 'xlsx'))).toBe(true)
 
       const state = listInstalledSkillPlugins()
       const record = state['document-skills@mkt-a'] as any
@@ -145,18 +145,18 @@ describe('plugin scopes + resolution', () => {
   })
 
   test('disable/enable moves installed skills in-place (user scope)', async () => {
-    await withEnv({ KODE_CONFIG_DIR: join(homeDir, '.kode') }, async () => {
+    await withEnv({ CORINT_CONFIG_DIR: join(homeDir, '.corint') }, async () => {
       writeMarketplaceRepo(repoA, 'mkt-a')
       await addMarketplace(repoA)
       installSkillPlugin('document-skills@mkt-a', { scope: 'user' })
 
       disableSkillPlugin('document-skills@mkt-a', { scope: 'user' })
-      expect(existsSync(join(homeDir, '.kode', 'skills', 'pdf'))).toBe(false)
+      expect(existsSync(join(homeDir, '.corint', 'skills', 'pdf'))).toBe(false)
       expect(
         existsSync(
           join(
             homeDir,
-            '.kode',
+            '.corint',
             'skills.disabled',
             'document-skills',
             'mkt-a',
@@ -166,7 +166,7 @@ describe('plugin scopes + resolution', () => {
       ).toBe(true)
 
       enableSkillPlugin('document-skills@mkt-a', { scope: 'user' })
-      expect(existsSync(join(homeDir, '.kode', 'skills', 'pdf'))).toBe(true)
+      expect(existsSync(join(homeDir, '.corint', 'skills', 'pdf'))).toBe(true)
     })
   })
 })

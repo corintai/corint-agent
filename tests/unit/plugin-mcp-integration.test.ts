@@ -13,7 +13,7 @@ import { __resetSessionPluginsForTests } from '@utils/session/sessionPlugins'
 
 describe('Plugin MCP integration (.mcp.json + plugin.json mcpServers)', () => {
   const runnerCwd = process.cwd()
-  const originalConfigDir = process.env.KODE_CONFIG_DIR
+  const originalConfigDir = process.env.CORINT_CONFIG_DIR
   const originalToken = process.env.MY_TOKEN
   const originalExec = process.env.KODE_TEST_EXEC
   const originalTimeout = process.env.MCP_CONNECTION_TIMEOUT_MS
@@ -25,7 +25,7 @@ describe('Plugin MCP integration (.mcp.json + plugin.json mcpServers)', () => {
   beforeEach(async () => {
     projectDir = mkdtempSync(join(tmpdir(), 'kode-plugin-mcp-proj-'))
     homeDir = mkdtempSync(join(tmpdir(), 'kode-plugin-mcp-home-'))
-    process.env.KODE_CONFIG_DIR = join(homeDir, '.kode')
+    process.env.CORINT_CONFIG_DIR = join(homeDir, '.corint')
     process.env.MY_TOKEN = 'shh'
     process.env.KODE_TEST_EXEC = process.execPath
     process.env.MCP_CONNECTION_TIMEOUT_MS = '1500'
@@ -74,8 +74,8 @@ describe('Plugin MCP integration (.mcp.json + plugin.json mcpServers)', () => {
     __resetSessionPluginsForTests()
     ;(getClients as any).cache?.clear?.()
     await setCwd(runnerCwd)
-    if (originalConfigDir === undefined) delete process.env.KODE_CONFIG_DIR
-    else process.env.KODE_CONFIG_DIR = originalConfigDir
+    if (originalConfigDir === undefined) delete process.env.CORINT_CONFIG_DIR
+    else process.env.CORINT_CONFIG_DIR = originalConfigDir
     if (originalToken === undefined) delete process.env.MY_TOKEN
     else process.env.MY_TOKEN = originalToken
     if (originalExec === undefined) delete process.env.KODE_TEST_EXEC

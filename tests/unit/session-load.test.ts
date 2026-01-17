@@ -14,7 +14,7 @@ import {
 import { setKodeAgentSessionId } from '@utils/protocol/kodeAgentSessionId'
 
 describe('session loader (projects/*.jsonl)', () => {
-  const originalConfigDir = process.env.KODE_CONFIG_DIR
+  const originalConfigDir = process.env.CORINT_CONFIG_DIR
 
   let configDir: string
   let projectDir: string
@@ -22,15 +22,15 @@ describe('session loader (projects/*.jsonl)', () => {
   beforeEach(() => {
     configDir = mkdtempSync(join(tmpdir(), 'kode-claude-load-config-'))
     projectDir = mkdtempSync(join(tmpdir(), 'kode-claude-load-project-'))
-    process.env.KODE_CONFIG_DIR = configDir
+    process.env.CORINT_CONFIG_DIR = configDir
     setKodeAgentSessionId('11111111-1111-1111-1111-111111111111')
   })
 
   afterEach(() => {
     if (originalConfigDir === undefined) {
-      delete process.env.KODE_CONFIG_DIR
+      delete process.env.CORINT_CONFIG_DIR
     } else {
-      process.env.KODE_CONFIG_DIR = originalConfigDir
+      process.env.CORINT_CONFIG_DIR = originalConfigDir
     }
     rmSync(configDir, { recursive: true, force: true })
     rmSync(projectDir, { recursive: true, force: true })

@@ -47,14 +47,14 @@ describe('Agent Skills compatibility (discovery + prompt)', () => {
     rmSync(homeDir, { recursive: true, force: true })
   })
 
-  test('loads .kode/skills/<name>/SKILL.md and splits allowed-tools string', async () => {
+  test('loads .corint/skills/<name>/SKILL.md and splits allowed-tools string', async () => {
     await withEnv(
       {
-        KODE_CONFIG_DIR: join(homeDir, '.kode'),
+        CORINT_CONFIG_DIR: join(homeDir, '.corint'),
         KODE_SKILLS_STRICT: undefined,
       },
       async () => {
-        const skillDir = join(projectDir, '.kode', 'skills', 'test-skill')
+        const skillDir = join(projectDir, '.corint', 'skills', 'test-skill')
         mkdirSync(skillDir, { recursive: true })
         writeFileSync(
           join(skillDir, 'SKILL.md'),
@@ -90,11 +90,11 @@ describe('Agent Skills compatibility (discovery + prompt)', () => {
   test('accepts lowercase skill.md when SKILL.md is missing', async () => {
     await withEnv(
       {
-        KODE_CONFIG_DIR: join(homeDir, '.kode'),
+        CORINT_CONFIG_DIR: join(homeDir, '.corint'),
         KODE_SKILLS_STRICT: undefined,
       },
       async () => {
-        const skillDir = join(projectDir, '.kode', 'skills', 'lower-skill')
+        const skillDir = join(projectDir, '.corint', 'skills', 'lower-skill')
         mkdirSync(skillDir, { recursive: true })
         writeFileSync(
           join(skillDir, 'skill.md'),
@@ -120,9 +120,9 @@ describe('Agent Skills compatibility (discovery + prompt)', () => {
 
   test('strict mode skips skills whose frontmatter name mismatches directory', async () => {
     await withEnv(
-      { KODE_CONFIG_DIR: join(homeDir, '.kode'), KODE_SKILLS_STRICT: '1' },
+      { CORINT_CONFIG_DIR: join(homeDir, '.corint'), KODE_SKILLS_STRICT: '1' },
       async () => {
-        const skillDir = join(projectDir, '.kode', 'skills', 'dir-name')
+        const skillDir = join(projectDir, '.corint', 'skills', 'dir-name')
         mkdirSync(skillDir, { recursive: true })
         writeFileSync(
           join(skillDir, 'SKILL.md'),
@@ -148,7 +148,7 @@ describe('Agent Skills compatibility (discovery + prompt)', () => {
   test('SkillTool.prompt includes official guidance/examples even when no skills are available', async () => {
     await withEnv(
       {
-        KODE_CONFIG_DIR: join(homeDir, '.kode'),
+        CORINT_CONFIG_DIR: join(homeDir, '.corint'),
         KODE_SKILLS_STRICT: undefined,
       },
       async () => {
@@ -165,11 +165,11 @@ describe('Agent Skills compatibility (discovery + prompt)', () => {
   test('SkillTool.prompt includes skill location path when available', async () => {
     await withEnv(
       {
-        KODE_CONFIG_DIR: join(homeDir, '.kode'),
+        CORINT_CONFIG_DIR: join(homeDir, '.corint'),
         KODE_SKILLS_STRICT: undefined,
       },
       async () => {
-        const skillDir = join(projectDir, '.kode', 'skills', 'alpha')
+        const skillDir = join(projectDir, '.corint', 'skills', 'alpha')
         mkdirSync(skillDir, { recursive: true })
         const skillFile = join(skillDir, 'SKILL.md')
         writeFileSync(

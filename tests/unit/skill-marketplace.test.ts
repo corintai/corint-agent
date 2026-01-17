@@ -39,7 +39,7 @@ async function withEnv<T>(
   }
 }
 
-describe('skill marketplace (local .kode-plugin/marketplace.json)', () => {
+describe('skill marketplace (local .corint-plugin/marketplace.json)', () => {
   const runnerCwd = process.cwd()
 
   let projectDir: string
@@ -52,12 +52,12 @@ describe('skill marketplace (local .kode-plugin/marketplace.json)', () => {
     await setCwd(projectDir)
 
     repoDir = join(projectDir, 'skills-repo')
-    mkdirSync(join(repoDir, '.kode-plugin'), { recursive: true })
+    mkdirSync(join(repoDir, '.corint-plugin'), { recursive: true })
     mkdirSync(join(repoDir, 'skills', 'pdf'), { recursive: true })
     mkdirSync(join(repoDir, 'skills', 'xlsx'), { recursive: true })
 
     writeFileSync(
-      join(repoDir, '.kode-plugin', 'marketplace.json'),
+      join(repoDir, '.corint-plugin', 'marketplace.json'),
       JSON.stringify(
         {
           name: 'my-marketplace',
@@ -103,7 +103,7 @@ describe('skill marketplace (local .kode-plugin/marketplace.json)', () => {
   })
 
   test('add marketplace + install/uninstall skills into user dir', async () => {
-    await withEnv({ KODE_CONFIG_DIR: join(homeDir, '.kode') }, async () => {
+    await withEnv({ CORINT_CONFIG_DIR: join(homeDir, '.corint') }, async () => {
       const { name } = await addMarketplace(repoDir)
       expect(name).toBe('my-marketplace')
 
@@ -112,40 +112,40 @@ describe('skill marketplace (local .kode-plugin/marketplace.json)', () => {
 
       const install = installSkillPlugin('document-skills@my-marketplace')
       expect(install.installedSkills.sort()).toEqual(['pdf', 'xlsx'])
-      expect(existsSync(join(homeDir, '.kode', 'skills', 'pdf'))).toBe(true)
-      expect(existsSync(join(homeDir, '.kode', 'skills', 'xlsx'))).toBe(true)
+      expect(existsSync(join(homeDir, '.corint', 'skills', 'pdf'))).toBe(true)
+      expect(existsSync(join(homeDir, '.corint', 'skills', 'xlsx'))).toBe(true)
 
       const installed = listInstalledSkillPlugins()
       expect(installed['document-skills@my-marketplace']).toBeTruthy()
 
       const uninstall = uninstallSkillPlugin('document-skills@my-marketplace')
       expect(uninstall.removedSkills.sort()).toEqual(['pdf', 'xlsx'])
-      expect(existsSync(join(homeDir, '.kode', 'skills', 'pdf'))).toBe(false)
-      expect(existsSync(join(homeDir, '.kode', 'skills', 'xlsx'))).toBe(false)
+      expect(existsSync(join(homeDir, '.corint', 'skills', 'pdf'))).toBe(false)
+      expect(existsSync(join(homeDir, '.corint', 'skills', 'xlsx'))).toBe(false)
     })
   })
 
-  test('project install writes to ./.kode/skills based on agent cwd', async () => {
-    await withEnv({ KODE_CONFIG_DIR: join(homeDir, '.kode') }, async () => {
+  test('project install writes to ./.corint/skills based on agent cwd', async () => {
+    await withEnv({ CORINT_CONFIG_DIR: join(homeDir, '.corint') }, async () => {
       await addMarketplace(repoDir)
       const install = installSkillPlugin('document-skills@my-marketplace', {
         project: true,
       })
       expect(install.installedSkills.sort()).toEqual(['pdf', 'xlsx'])
-      expect(existsSync(join(projectDir, '.kode', 'skills', 'pdf'))).toBe(true)
-      expect(existsSync(join(projectDir, '.kode', 'skills', 'xlsx'))).toBe(true)
+      expect(existsSync(join(projectDir, '.corint', 'skills', 'pdf'))).toBe(true)
+      expect(existsSync(join(projectDir, '.corint', 'skills', 'xlsx'))).toBe(true)
     })
   })
 
   test('marketplace update refreshes cached directory from local source', async () => {
-    await withEnv({ KODE_CONFIG_DIR: join(homeDir, '.kode') }, async () => {
+    await withEnv({ CORINT_CONFIG_DIR: join(homeDir, '.corint') }, async () => {
       await addMarketplace(repoDir)
 
       const marketplaces = listMarketplaces()
       const installLocation = marketplaces['my-marketplace']!.installLocation
       const cachedMarketplacePath = join(
         installLocation,
-        '.kode-plugin',
+        '.corint-plugin',
         'marketplace.json',
       )
 
@@ -154,7 +154,7 @@ describe('skill marketplace (local .kode-plugin/marketplace.json)', () => {
       )
 
       writeFileSync(
-        join(repoDir, '.kode-plugin', 'marketplace.json'),
+        join(repoDir, '.corint-plugin', 'marketplace.json'),
         JSON.stringify(
           {
             name: 'my-marketplace',

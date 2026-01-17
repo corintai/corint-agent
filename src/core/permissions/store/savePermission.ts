@@ -10,7 +10,7 @@ import { logError } from '@utils/log'
 import { grantWritePermissionForPath } from '@utils/permissions/filesystem'
 import { persistToolPermissionUpdateToDisk } from '@utils/permissions/toolPermissionSettings'
 import { applyToolPermissionContextUpdateForConversationKey } from '@utils/permissions/toolPermissionContextState'
-import { getPermissionKey } from '../rules'
+import { getPermissionKey } from '@core/permissions/rules'
 
 export async function savePermission(
   tool: Tool,

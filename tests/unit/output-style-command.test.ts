@@ -3,7 +3,7 @@ import { existsSync, mkdtempSync, readFileSync, rmSync } from 'fs'
 import { tmpdir } from 'os'
 import { join } from 'path'
 import outputStyle from '@commands/output-style'
-import { processUserInput } from '@utils/messages'
+import { processUserInput } from '@cli/utils/messages'
 import { setCwd } from '@utils/state'
 import { clearOutputStyleCache } from '@services/outputStyles'
 
@@ -12,7 +12,7 @@ describe('/output-style (menu + direct set + help)', () => {
     (value ?? '').replace(/\x1b\[[0-9;]*m/g, '')
 
   const runnerCwd = process.cwd()
-  const originalConfigDir = process.env.KODE_CONFIG_DIR
+  const originalConfigDir = process.env.CORINT_CONFIG_DIR
 
   let projectDir: string
   let homeDir: string
@@ -21,20 +21,20 @@ describe('/output-style (menu + direct set + help)', () => {
     clearOutputStyleCache()
     projectDir = mkdtempSync(join(tmpdir(), 'kode-output-style-proj-'))
     homeDir = mkdtempSync(join(tmpdir(), 'kode-output-style-home-'))
-    process.env.KODE_CONFIG_DIR = join(homeDir, '.kode')
+    process.env.CORINT_CONFIG_DIR = join(homeDir, '.corint')
     await setCwd(projectDir)
   })
 
   afterEach(async () => {
     clearOutputStyleCache()
     await setCwd(runnerCwd)
-    if (originalConfigDir === undefined) delete process.env.KODE_CONFIG_DIR
-    else process.env.KODE_CONFIG_DIR = originalConfigDir
+    if (originalConfigDir === undefined) delete process.env.CORINT_CONFIG_DIR
+    else process.env.CORINT_CONFIG_DIR = originalConfigDir
     rmSync(projectDir, { recursive: true, force: true })
     rmSync(homeDir, { recursive: true, force: true })
   })
 
-  test('direct set persists outputStyle to .kode/settings.local.json', async () => {
+  test('direct set persists outputStyle to .corint/settings.local.json', async () => {
     let message: string | undefined
     const ctx = {} as any
 
@@ -49,7 +49,7 @@ describe('/output-style (menu + direct set + help)', () => {
     expect(jsx).toBeNull()
     expect(stripAnsi(message)).toBe('Set output style to default')
 
-    const settingsPath = join(projectDir, '.kode', 'settings.local.json')
+    const settingsPath = join(projectDir, '.corint', 'settings.local.json')
     expect(existsSync(settingsPath)).toBe(true)
     const json = JSON.parse(readFileSync(settingsPath, 'utf8'))
     expect(json.outputStyle).toBe('default')
@@ -72,7 +72,7 @@ describe('/output-style (menu + direct set + help)', () => {
     )
     expect(msg2).toBe('Invalid output style: not-a-style')
 
-    const settingsPath = join(projectDir, '.kode', 'settings.local.json')
+    const settingsPath = join(projectDir, '.corint', 'settings.local.json')
     const json = JSON.parse(readFileSync(settingsPath, 'utf8'))
     expect(json.outputStyle).toBe('default')
   })
@@ -125,7 +125,7 @@ describe('/output-style (menu + direct set + help)', () => {
           : ''
     expect(stripAnsi(rendered)).toBe('Set output style to default')
 
-    const settingsPath = join(projectDir, '.kode', 'settings.local.json')
+    const settingsPath = join(projectDir, '.corint', 'settings.local.json')
     const json = JSON.parse(readFileSync(settingsPath, 'utf8'))
     expect(json.outputStyle).toBe('default')
 

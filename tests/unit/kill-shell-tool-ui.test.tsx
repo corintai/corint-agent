@@ -4,8 +4,10 @@ import { PassThrough } from 'stream'
 import stripAnsi from 'strip-ansi'
 import { render } from 'ink'
 import { KillShellTool } from '@tools/KillShellTool/KillShellTool'
+import { decorateToolsForCli } from '@cli/tools/decorateTools'
 
 test('KillShellTool UI strings match reference CLI (uW9/pW9)', async () => {
+  decorateToolsForCli()
   expect(
     KillShellTool.renderToolUseMessage({ shell_id: 'abc123' } as any),
   ).toBe('Kill shell: abc123')

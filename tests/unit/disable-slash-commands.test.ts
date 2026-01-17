@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'bun:test'
 import type { Command } from '@commands'
-import { processUserInput } from '@utils/messages'
+import { processUserInput } from '@cli/utils/messages'
 import { __getCompletionContextForTests } from '@hooks/useUnifiedCompletion'
 
 describe('--disable-slash-commands (Reference CLI parity)', () => {

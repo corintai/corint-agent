@@ -56,7 +56,7 @@ function findForbiddenNeedles(
 
 describe('Layer boundaries', () => {
   test('services layer must not import ui layer', () => {
-    const servicesDir = join(process.cwd(), 'src', 'services')
+    const servicesDir = join(process.cwd(), 'src', 'core', 'services')
     const forbidden = [
       '@components',
       '@screens',

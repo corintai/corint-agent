@@ -33,14 +33,14 @@ describe('tool permission settings (multi-source load/merge/persist)', () => {
     rmSync(homeDir, { recursive: true, force: true })
   })
 
-  test('loads .kode/settings.json + .kode/settings.local.json across sources', () => {
-    writeJson(join(homeDir, '.kode', 'settings.json'), {
+  test('loads .corint/settings.json + .corint/settings.local.json across sources', () => {
+    writeJson(join(homeDir, '.corint', 'settings.json'), {
       permissions: { allow: ['Bash(ls:*)'] },
     })
-    writeJson(join(projectDir, '.kode', 'settings.json'), {
+    writeJson(join(projectDir, '.corint', 'settings.json'), {
       permissions: { allow: ['Bash(git:*)'] },
     })
-    writeJson(join(projectDir, '.kode', 'settings.local.json'), {
+    writeJson(join(projectDir, '.corint', 'settings.local.json'), {
       permissions: { allow: ['Read(~/**)'] },
     })
 
@@ -56,10 +56,10 @@ describe('tool permission settings (multi-source load/merge/persist)', () => {
   })
 
   test('merges same rule across multiple sources without dropping either', () => {
-    writeJson(join(homeDir, '.kode', 'settings.json'), {
+    writeJson(join(homeDir, '.corint', 'settings.json'), {
       permissions: { allow: ['Bash(ls:*)'] },
     })
-    writeJson(join(projectDir, '.kode', 'settings.local.json'), {
+    writeJson(join(projectDir, '.corint', 'settings.local.json'), {
       permissions: { allow: ['Bash(ls:*)'] },
     })
 
@@ -73,7 +73,7 @@ describe('tool permission settings (multi-source load/merge/persist)', () => {
     expect(ctx.alwaysAllowRules.localSettings).toEqual(['Bash(ls:*)'])
   })
 
-  test('migrates legacy .claude settings to .kode when .kode is missing', () => {
+  test('migrates legacy .claude settings to .corint when .corint is missing', () => {
     writeJson(join(projectDir, '.claude', 'settings.local.json'), {
       permissions: { allow: ['Bash(ls:*)'] },
     })
@@ -85,7 +85,7 @@ describe('tool permission settings (multi-source load/merge/persist)', () => {
     })
     expect(ctx.alwaysAllowRules.localSettings).toEqual(['Bash(ls:*)'])
 
-    const migratedPath = join(projectDir, '.kode', 'settings.local.json')
+    const migratedPath = join(projectDir, '.corint', 'settings.local.json')
     expect(existsSync(migratedPath)).toBe(true)
     const migrated = JSON.parse(readFileSync(migratedPath, 'utf-8'))
     expect(migrated.permissions.allow).toEqual(['Bash(ls:*)'])
@@ -103,7 +103,7 @@ describe('tool permission settings (multi-source load/merge/persist)', () => {
       homeDir,
     })
     expect(session.persisted).toBe(false)
-    expect(existsSync(join(projectDir, '.kode', 'settings.local.json'))).toBe(
+    expect(existsSync(join(projectDir, '.corint', 'settings.local.json'))).toBe(
       false,
     )
 
@@ -120,7 +120,7 @@ describe('tool permission settings (multi-source load/merge/persist)', () => {
     expect(policy.persisted).toBe(false)
   })
 
-  test('persists allow rules to localSettings (.kode/settings.local.json)', () => {
+  test('persists allow rules to localSettings (.corint/settings.local.json)', () => {
     const added = persistToolPermissionUpdateToDisk({
       update: {
         type: 'addRules',
@@ -133,7 +133,7 @@ describe('tool permission settings (multi-source load/merge/persist)', () => {
     })
     expect(added.persisted).toBe(true)
 
-    const settingsPath = join(projectDir, '.kode', 'settings.local.json')
+    const settingsPath = join(projectDir, '.corint', 'settings.local.json')
     expect(existsSync(settingsPath)).toBe(true)
     expect(existsSync(join(projectDir, '.claude', 'settings.local.json'))).toBe(
       false,
@@ -169,7 +169,7 @@ describe('tool permission settings (multi-source load/merge/persist)', () => {
     })
     expect(added.persisted).toBe(true)
 
-    const settingsPath = join(projectDir, '.kode', 'settings.local.json')
+    const settingsPath = join(projectDir, '.corint', 'settings.local.json')
     const parsed = JSON.parse(readFileSync(settingsPath, 'utf-8'))
     expect(parsed.permissions.allow).toContain('mcp__srv__*')
   })

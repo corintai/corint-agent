@@ -68,13 +68,13 @@ describe('sandbox config (Reference CLI parity: YC1 + z34)', () => {
     expect(runtime.filesystem.allowWrite).toEqual(['.', 'src/**'])
     expect(runtime.filesystem.denyRead).toEqual(['secrets/**'])
     expect(runtime.filesystem.denyWrite).toContain(
-      join(homeDir, '.kode', 'settings.json'),
+      join(homeDir, '.corint', 'settings.json'),
     )
     expect(runtime.filesystem.denyWrite).toContain(
-      join(projectDir, '.kode', 'settings.json'),
+      join(projectDir, '.corint', 'settings.json'),
     )
     expect(runtime.filesystem.denyWrite).toContain(
-      join(projectDir, '.kode', 'settings.local.json'),
+      join(projectDir, '.corint', 'settings.local.json'),
     )
     expect(runtime.filesystem.denyWrite).toContain(
       join(homeDir, '.claude', 'settings.json'),

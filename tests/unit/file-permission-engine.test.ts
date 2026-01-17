@@ -163,8 +163,8 @@ describe('Reference CLI parity: filesystem permission engine', () => {
 
   test('allows writing to the plan file for the current conversation', async () => {
     const tmpConfig = mkdtempSync(path.join(tmpdir(), 'kode-plan-config-'))
-    const previousConfigDir = process.env.KODE_CONFIG_DIR
-    process.env.KODE_CONFIG_DIR = tmpConfig
+    const previousConfigDir = process.env.CORINT_CONFIG_DIR
+    process.env.CORINT_CONFIG_DIR = tmpConfig
 
     try {
       const toolPermissionContext = createDefaultToolPermissionContext({
@@ -188,7 +188,7 @@ describe('Reference CLI parity: filesystem permission engine', () => {
       )
       expect(result.result).toBe(true)
     } finally {
-      process.env.KODE_CONFIG_DIR = previousConfigDir
+      process.env.CORINT_CONFIG_DIR = previousConfigDir
       rmSync(tmpConfig, { recursive: true, force: true })
     }
   })

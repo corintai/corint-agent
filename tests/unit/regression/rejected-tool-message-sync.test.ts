@@ -1,8 +1,11 @@
 import { describe, expect, test } from 'bun:test'
 import { FileEditTool } from '@tools/FileEditTool/FileEditTool'
 import { FileWriteTool } from '@tools/FileWriteTool/FileWriteTool'
+import { decorateToolsForCli } from '@cli/tools/decorateTools'
 
 describe('Regression: rejected tool messages are sync', () => {
+  decorateToolsForCli()
+
   test('FileWriteTool.renderToolUseRejectedMessage does not return a Promise', () => {
     const result = FileWriteTool.renderToolUseRejectedMessage(
       { file_path: '/tmp/kode-test-nonexistent.txt', content: 'hello' },

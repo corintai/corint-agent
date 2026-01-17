@@ -13,7 +13,7 @@ function writeJson(filePath: string, value: unknown) {
 describe('BashTool sandbox indicator (Reference CLI parity)', () => {
   const originalCwd = process.cwd()
   const originalHome = process.env.HOME
-  const originalIndicator = process.env.KODE_BASH_SANDBOX_SHOW_INDICATOR
+  const originalIndicator = process.env.CORINT_BASH_SANDBOX_SHOW_INDICATOR
 
   let projectDir: string
   let homeDir: string
@@ -24,7 +24,7 @@ describe('BashTool sandbox indicator (Reference CLI parity)', () => {
   })
 
   afterEach(() => {
-    process.env.KODE_BASH_SANDBOX_SHOW_INDICATOR = originalIndicator
+    process.env.CORINT_BASH_SANDBOX_SHOW_INDICATOR = originalIndicator
     if (originalHome === undefined) delete process.env.HOME
     else process.env.HOME = originalHome
     process.chdir(originalCwd)
@@ -35,12 +35,12 @@ describe('BashTool sandbox indicator (Reference CLI parity)', () => {
   })
 
   test('shows SandboxedBash when sandbox enabled and indicator env is set', () => {
-    writeJson(join(projectDir, '.kode', 'settings.json'), {
+    writeJson(join(projectDir, '.corint', 'settings.json'), {
       sandbox: { enabled: true },
     })
 
     process.env.HOME = homeDir
-    process.env.KODE_BASH_SANDBOX_SHOW_INDICATOR = '1'
+    process.env.CORINT_BASH_SANDBOX_SHOW_INDICATOR = '1'
 
     process.chdir(projectDir)
     BunShell.restart()
@@ -54,12 +54,12 @@ describe('BashTool sandbox indicator (Reference CLI parity)', () => {
   })
 
   test('falls back to Bash when indicator env is unset', () => {
-    writeJson(join(projectDir, '.kode', 'settings.json'), {
+    writeJson(join(projectDir, '.corint', 'settings.json'), {
       sandbox: { enabled: true },
     })
 
     process.env.HOME = homeDir
-    delete process.env.KODE_BASH_SANDBOX_SHOW_INDICATOR
+    delete process.env.CORINT_BASH_SANDBOX_SHOW_INDICATOR
 
     process.chdir(projectDir)
     BunShell.restart()
@@ -73,12 +73,12 @@ describe('BashTool sandbox indicator (Reference CLI parity)', () => {
   })
 
   test('falls back to Bash when indicator env is not explicitly truthy', () => {
-    writeJson(join(projectDir, '.kode', 'settings.json'), {
+    writeJson(join(projectDir, '.corint', 'settings.json'), {
       sandbox: { enabled: true },
     })
 
     process.env.HOME = homeDir
-    process.env.KODE_BASH_SANDBOX_SHOW_INDICATOR = '2'
+    process.env.CORINT_BASH_SANDBOX_SHOW_INDICATOR = '2'
 
     process.chdir(projectDir)
     BunShell.restart()

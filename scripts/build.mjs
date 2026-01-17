@@ -66,11 +66,14 @@ async function main() {
   rmSync(OUT_DIR, { recursive: true, force: true })
   mkdirSync(OUT_DIR, { recursive: true })
 
-  // Build the unified entry (src/entrypoints/index.ts -> dist/index.js)
-  // and its dynamic imports (cli/acp/mcp) as split chunks.
+  // Build entrypoints for CLI + ACP + MCP.
   await buildWithEsbuild({
     label: 'npm',
-    entrypoints: ['src/entrypoints/index.ts'],
+    entrypoints: [
+      'src/entrypoints/index.ts',
+      'src/entrypoints/acp.ts',
+      'src/entrypoints/mcp.ts',
+    ],
     outdir: OUT_DIR,
   })
 

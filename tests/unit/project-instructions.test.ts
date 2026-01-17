@@ -84,20 +84,20 @@ describe('projectInstructions (AGENTS.md discovery)', () => {
     expect(Buffer.byteLength(content, 'utf8')).toBeLessThanOrEqual(maxBytes)
   })
 
-  test('getProjectDocMaxBytes respects KODE_PROJECT_DOC_MAX_BYTES with fallback', () => {
-    const original = process.env.KODE_PROJECT_DOC_MAX_BYTES
+  test('getProjectDocMaxBytes respects CORINT_PROJECT_DOC_MAX_BYTES with fallback', () => {
+    const original = process.env.CORINT_PROJECT_DOC_MAX_BYTES
     try {
-      process.env.KODE_PROJECT_DOC_MAX_BYTES = '1234'
+      process.env.CORINT_PROJECT_DOC_MAX_BYTES = '1234'
       expect(getProjectDocMaxBytes()).toBe(1234)
 
-      process.env.KODE_PROJECT_DOC_MAX_BYTES = '0'
+      process.env.CORINT_PROJECT_DOC_MAX_BYTES = '0'
       expect(getProjectDocMaxBytes()).toBeGreaterThan(0)
 
-      process.env.KODE_PROJECT_DOC_MAX_BYTES = 'not-a-number'
+      process.env.CORINT_PROJECT_DOC_MAX_BYTES = 'not-a-number'
       expect(getProjectDocMaxBytes()).toBeGreaterThan(0)
     } finally {
-      if (original === undefined) delete process.env.KODE_PROJECT_DOC_MAX_BYTES
-      else process.env.KODE_PROJECT_DOC_MAX_BYTES = original
+      if (original === undefined) delete process.env.CORINT_PROJECT_DOC_MAX_BYTES
+      else process.env.CORINT_PROJECT_DOC_MAX_BYTES = original
     }
   })
 

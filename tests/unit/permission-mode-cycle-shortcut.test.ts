@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'bun:test'
-import { __getPermissionModeCycleShortcutForTests } from '@utils/terminal/permissionModeCycleShortcut'
+import { __getPermissionModeCycleShortcutForTests } from '@cli/utils/terminal/permissionModeCycleShortcut'
 
 describe('permission mode cycle shortcut', () => {
   test('non-Windows defaults to shift+tab', () => {

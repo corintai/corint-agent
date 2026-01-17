@@ -6,7 +6,7 @@ import plugin from '@commands/plugin'
 import { setCwd } from '@utils/state'
 
 describe('/plugin slash command', () => {
-  const originalConfigDir = process.env.KODE_CONFIG_DIR
+  const originalConfigDir = process.env.CORINT_CONFIG_DIR
   const runnerCwd = process.cwd()
 
   let configDir: string
@@ -16,7 +16,7 @@ describe('/plugin slash command', () => {
   beforeEach(async () => {
     configDir = mkdtempSync(join(tmpdir(), 'kode-plugin-cfg-'))
     projectDir = mkdtempSync(join(tmpdir(), 'kode-plugin-proj-'))
-    process.env.KODE_CONFIG_DIR = configDir
+    process.env.CORINT_CONFIG_DIR = configDir
     await setCwd(projectDir)
 
     repoDir = join(projectDir, 'skills-repo')
@@ -66,8 +66,8 @@ describe('/plugin slash command', () => {
 
   afterEach(async () => {
     await setCwd(runnerCwd)
-    if (originalConfigDir === undefined) delete process.env.KODE_CONFIG_DIR
-    else process.env.KODE_CONFIG_DIR = originalConfigDir
+    if (originalConfigDir === undefined) delete process.env.CORINT_CONFIG_DIR
+    else process.env.CORINT_CONFIG_DIR = originalConfigDir
     rmSync(configDir, { recursive: true, force: true })
     rmSync(projectDir, { recursive: true, force: true })
   })

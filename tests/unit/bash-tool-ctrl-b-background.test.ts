@@ -31,15 +31,17 @@ describe('BashTool ctrl+b backgrounding parity (Reference CLI K41 + gH5)', () =>
   test('shows ctrl+b hint after the initial delay', async () => {
     if (process.platform === 'win32') return
     const configDir = mkdtempSync(join(tmpdir(), 'kode-test-config-'))
-    process.env.KODE_CONFIG_DIR = configDir
+    process.env.CORINT_CONFIG_DIR = configDir
     try {
       BunShell.restart()
 
-      const toolJSXCalls: Array<{ at: number; value: any }> = []
+      const overlayCalls: Array<{ at: number; value: any }> = []
       const startedAt = Date.now()
       const ctx = makeContext({
-        setToolJSX: (value: any) => {
-          toolJSXCalls.push({ at: Date.now(), value })
+        ui: {
+          showOverlay: (value: any) => {
+            overlayCalls.push({ at: Date.now(), value })
+          },
         },
       })
 
@@ -50,9 +52,9 @@ describe('BashTool ctrl+b backgrounding parity (Reference CLI K41 + gH5)', () =>
       for await (const _ev of gen) {
       }
 
-      const firstNonNull = toolJSXCalls.find(c => c.value !== null)
+      const firstNonNull = overlayCalls.find(c => c.value !== null)
       expect(firstNonNull).toBeTruthy()
-      expect(firstNonNull!.value.shouldHidePromptInput).toBe(false)
+      expect(firstNonNull!.value.type).toBe('bash-background')
       expect(firstNonNull!.at - startedAt).toBeGreaterThanOrEqual(1800)
     } finally {
       BunShell.restart()
@@ -63,20 +65,19 @@ describe('BashTool ctrl+b backgrounding parity (Reference CLI K41 + gH5)', () =>
   test('can request background and returns a background id', async () => {
     if (process.platform === 'win32') return
     const configDir = mkdtempSync(join(tmpdir(), 'kode-test-config-'))
-    process.env.KODE_CONFIG_DIR = configDir
+    process.env.CORINT_CONFIG_DIR = configDir
     try {
       BunShell.restart()
 
       let triggered = false
       const ctx = makeContext({
-        setToolJSX: (value: any) => {
-          if (triggered) return
-          if (!value || !value.jsx) return
-          const jsx: any = value.jsx
-          const onBackground = jsx?.props?.onBackground
-          if (typeof onBackground !== 'function') return
-          triggered = true
-          setTimeout(() => onBackground(), 0)
+        ui: {
+          showOverlay: (value: any) => {
+            if (triggered) return
+            if (!value || typeof value.onBackground !== 'function') return
+            triggered = true
+            setTimeout(() => value.onBackground(), 0)
+          },
         },
       })
 
@@ -121,7 +122,7 @@ describe('BashTool ctrl+b backgrounding parity (Reference CLI K41 + gH5)', () =>
 
   test('foreground execution still works when not backgrounded', async () => {
     const configDir = mkdtempSync(join(tmpdir(), 'kode-test-config-'))
-    process.env.KODE_CONFIG_DIR = configDir
+    process.env.CORINT_CONFIG_DIR = configDir
     try {
       BunShell.restart()
       const ctx = makeContext()

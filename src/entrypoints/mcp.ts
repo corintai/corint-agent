@@ -18,7 +18,7 @@ import { getAllTools } from '@tools'
 import { Command } from '@commands'
 import review from '@commands/review'
 import { lastX } from '@utils/text/generators'
-import { MACRO } from '@constants/macros'
+import { MACRO } from '@core/utils/macros'
 type ToolInput = Record<string, unknown>
 
 const state: {

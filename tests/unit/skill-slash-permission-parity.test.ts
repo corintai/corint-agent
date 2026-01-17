@@ -73,7 +73,7 @@ describe('Skill/SlashCommand parity: contextModifier effects', () => {
       type: 'prompt',
       name: 'review-pr',
       disableModelInvocation: false,
-      allowedTools: ['Edit(~/.kode/settings.json)'],
+      allowedTools: ['Edit(~/.corint/settings.json)'],
       model: 'sonnet',
       maxThinkingTokens: 456,
       userFacingName() {
@@ -96,7 +96,7 @@ describe('Skill/SlashCommand parity: contextModifier effects', () => {
     expect(nextCtx.options.model).toBe('task')
     expect(nextCtx.options.maxThinkingTokens).toBe(456)
     expect(nextCtx.options.commandAllowedTools).toContain(
-      'Edit(~/.kode/settings.json)',
+      'Edit(~/.corint/settings.json)',
     )
   })
 })

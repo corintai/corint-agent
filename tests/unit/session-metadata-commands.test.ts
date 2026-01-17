@@ -19,7 +19,7 @@ import { loadKodeAgentSessionLogData } from '@utils/protocol/kodeAgentSessionLoa
 import { setCwd } from '@utils/state'
 
 describe('/rename + /tag (session metadata records)', () => {
-  const originalConfigDir = process.env.KODE_CONFIG_DIR
+  const originalConfigDir = process.env.CORINT_CONFIG_DIR
   const runnerCwd = process.cwd()
 
   let configDir: string
@@ -30,7 +30,7 @@ describe('/rename + /tag (session metadata records)', () => {
     setKodeAgentSessionId('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa')
     configDir = mkdtempSync(join(tmpdir(), 'kode-session-metadata-config-'))
     projectDir = mkdtempSync(join(tmpdir(), 'kode-session-metadata-project-'))
-    process.env.KODE_CONFIG_DIR = configDir
+    process.env.CORINT_CONFIG_DIR = configDir
     await setCwd(projectDir)
   })
 
@@ -39,9 +39,9 @@ describe('/rename + /tag (session metadata records)', () => {
     resetSessionJsonlStateForTests()
     resetKodeAgentSessionIdForTests()
     if (originalConfigDir === undefined) {
-      delete process.env.KODE_CONFIG_DIR
+      delete process.env.CORINT_CONFIG_DIR
     } else {
-      process.env.KODE_CONFIG_DIR = originalConfigDir
+      process.env.CORINT_CONFIG_DIR = originalConfigDir
     }
     rmSync(configDir, { recursive: true, force: true })
     rmSync(projectDir, { recursive: true, force: true })

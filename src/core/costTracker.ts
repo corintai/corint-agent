@@ -1,5 +1,5 @@
 import chalk from 'chalk'
-import { formatDuration } from '@utils/terminal/format'
+import { formatDuration } from '@utils/format'
 
 const STATE: {
   totalCost: number

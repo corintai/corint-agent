@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'bun:test'
-import { __getPermissionModeCycleShortcutForTests } from '@utils/terminal/permissionModeCycleShortcut'
-import { __getPromptInputSpecialKeyActionForTests } from '@utils/terminal/promptInputSpecialKey'
+import { __getPermissionModeCycleShortcutForTests } from '@cli/utils/terminal/permissionModeCycleShortcut'
+import { __getPromptInputSpecialKeyActionForTests } from '@cli/utils/terminal/promptInputSpecialKey'
 import { __shouldHandleUnifiedCompletionTabKeyForTests } from '@hooks/useUnifiedCompletion'
 
 describe('PromptInput mode-cycle intercept', () => {

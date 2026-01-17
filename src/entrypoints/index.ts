@@ -1,4 +1,4 @@
-import { MACRO } from '../constants/macros'
+import { MACRO } from '@core/utils/macros'
 
 function hasFlag(...flags: string[]): boolean {
   return process.argv.some(arg => flags.includes(arg))

@@ -28,7 +28,7 @@ function makeContext(): any {
 describe('BashTool progress parity (Reference CLI gH5)', () => {
   test('yields progress for long-running commands and then yields final result', async () => {
     const configDir = mkdtempSync(join(tmpdir(), 'kode-test-config-'))
-    process.env.KODE_CONFIG_DIR = configDir
+    process.env.CORINT_CONFIG_DIR = configDir
     try {
       const ctx = makeContext()
       const gen = BashTool.call(
@@ -59,7 +59,7 @@ describe('BashTool progress parity (Reference CLI gH5)', () => {
 
   test('abort still produces a final tool result (interrupted=true)', async () => {
     const configDir = mkdtempSync(join(tmpdir(), 'kode-test-config-'))
-    process.env.KODE_CONFIG_DIR = configDir
+    process.env.CORINT_CONFIG_DIR = configDir
     try {
       const ctx = makeContext()
       const gen = BashTool.call(

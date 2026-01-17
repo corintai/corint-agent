@@ -23,7 +23,7 @@ function createAcpHarness(options: { configDir: string }) {
     env: {
       ...process.env,
       NODE_ENV: 'test',
-      KODE_CONFIG_DIR: configDir,
+      CORINT_CONFIG_DIR: configDir,
       KODE_ACP_ECHO: '1',
     },
   })

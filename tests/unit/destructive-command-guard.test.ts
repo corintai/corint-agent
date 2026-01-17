@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, test } from 'bun:test'
 import { getBashDestructiveCommandBlock } from '@utils/sandbox/destructiveCommandGuard'
 
 describe('destructiveCommandGuard (BashTool)', () => {
-  const ENV_ALLOW = 'KODE_ALLOW_DESTRUCTIVE_RM'
+  const ENV_ALLOW = 'CORINT_ALLOW_DESTRUCTIVE_RM'
   const originalEnv = process.env[ENV_ALLOW]
 
   beforeEach(() => {

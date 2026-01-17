@@ -7,7 +7,7 @@ import {
   normalizeMessages,
   reorderMessages,
 } from '@utils/messages'
-import { getReplStaticPrefixLength } from '@utils/terminal/replStaticSplit'
+import { getReplStaticPrefixLength } from '@cli/utils/terminal/replStaticSplit'
 
 function makeToolResult(toolUseID: string, content = 'ok') {
   return createUserMessage([

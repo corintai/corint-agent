@@ -5,7 +5,7 @@ import {
   normalizeLineEndings,
   shouldAggregatePasteChunk,
   shouldTreatAsSpecialPaste,
-} from '@utils/terminal/paste'
+} from '@cli/utils/terminal/paste'
 
 describe('Regression: paste/newline heuristics', () => {
   test('normalizeLineEndings collapses CRLF/CR to LF', () => {

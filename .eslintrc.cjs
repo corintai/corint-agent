@@ -36,6 +36,7 @@ module.exports = {
     'dist/',
     'node_modules/',
     'vendor/',
+    'output/',
     'cli.js',
     'cli-acp.js',
   ],

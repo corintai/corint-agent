@@ -31,7 +31,7 @@ export function setModelPointer(
   }
   saveGlobalConfig(updatedConfig)
 
-  import('../../utils/model').then(({ reloadModelManager }) => {
+  import('@utils/model').then(({ reloadModelManager }) => {
     reloadModelManager()
   })
 }

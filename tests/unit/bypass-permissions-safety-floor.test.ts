@@ -25,8 +25,8 @@ describe('bypassPermissions safety floor', () => {
   })
 
   test('allows bypassing the safety floor via env (non-safe mode)', async () => {
-    const prev = process.env.KODE_BYPASS_SAFETY_FLOOR
-    process.env.KODE_BYPASS_SAFETY_FLOOR = '1'
+    const prev = process.env.CORINT_BYPASS_SAFETY_FLOOR
+    process.env.CORINT_BYPASS_SAFETY_FLOOR = '1'
     try {
       const filePath = resolve(homedir(), '.ssh', 'config')
       const result = await hasPermissionsToUseTool(
@@ -42,8 +42,8 @@ describe('bypassPermissions safety floor', () => {
       )
       expect(result.result).toBe(true)
     } finally {
-      if (prev === undefined) delete process.env.KODE_BYPASS_SAFETY_FLOOR
-      else process.env.KODE_BYPASS_SAFETY_FLOOR = prev
+      if (prev === undefined) delete process.env.CORINT_BYPASS_SAFETY_FLOOR
+      else process.env.CORINT_BYPASS_SAFETY_FLOOR = prev
     }
   })
 })

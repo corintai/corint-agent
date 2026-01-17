@@ -9,7 +9,7 @@ import {
   normalizeMessages,
   reorderMessages,
 } from '@utils/messages'
-import { getReplStaticPrefixLength } from '@utils/terminal/replStaticSplit'
+import { getReplStaticPrefixLength } from '@cli/utils/terminal/replStaticSplit'
 
 function makeToolUseAssistantWithSiblings(toolUseIDs: string[]) {
   const base = createAssistantMessage('ignored') as any

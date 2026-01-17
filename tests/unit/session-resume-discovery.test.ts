@@ -37,7 +37,7 @@ function writeSessionJsonl(args: {
 }
 
 describe('resume session discovery', () => {
-  const originalConfigDir = process.env.KODE_CONFIG_DIR
+  const originalConfigDir = process.env.CORINT_CONFIG_DIR
 
   let configDir: string
   let projectA: string
@@ -47,14 +47,14 @@ describe('resume session discovery', () => {
     configDir = mkdtempSync(join(tmpdir(), 'kode-resume-config-'))
     projectA = mkdtempSync(join(tmpdir(), 'kode-resume-project-a-'))
     projectB = mkdtempSync(join(tmpdir(), 'kode-resume-project-b-'))
-    process.env.KODE_CONFIG_DIR = configDir
+    process.env.CORINT_CONFIG_DIR = configDir
   })
 
   afterEach(() => {
     if (originalConfigDir === undefined) {
-      delete process.env.KODE_CONFIG_DIR
+      delete process.env.CORINT_CONFIG_DIR
     } else {
-      process.env.KODE_CONFIG_DIR = originalConfigDir
+      process.env.CORINT_CONFIG_DIR = originalConfigDir
     }
     rmSync(configDir, { recursive: true, force: true })
     rmSync(projectA, { recursive: true, force: true })

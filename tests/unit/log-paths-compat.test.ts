@@ -15,8 +15,8 @@ function writeJson(filePath: string, value: unknown) {
 }
 
 describe('log paths (messages)', () => {
-  const originalLogRoot = process.env.KODE_LOG_ROOT
-  const originalLegacyCacheRoot = process.env.KODE_LEGACY_CACHE_ROOT
+  const originalLogRoot = process.env.CORINT_LOG_ROOT
+  const originalLegacyCacheRoot = process.env.CORINT_LEGACY_CACHE_ROOT
 
   let newRoot: string
   let legacyRoot: string
@@ -25,28 +25,28 @@ describe('log paths (messages)', () => {
     newRoot = mkdtempSync(join(tmpdir(), 'kode-log-new-'))
     legacyRoot = mkdtempSync(join(tmpdir(), 'kode-log-legacy-'))
 
-    process.env.KODE_LOG_ROOT = newRoot
-    process.env.KODE_LEGACY_CACHE_ROOT = legacyRoot
+    process.env.CORINT_LOG_ROOT = newRoot
+    process.env.CORINT_LEGACY_CACHE_ROOT = legacyRoot
   })
 
   afterEach(() => {
     if (originalLogRoot === undefined) {
-      delete process.env.KODE_LOG_ROOT
+      delete process.env.CORINT_LOG_ROOT
     } else {
-      process.env.KODE_LOG_ROOT = originalLogRoot
+      process.env.CORINT_LOG_ROOT = originalLogRoot
     }
 
     if (originalLegacyCacheRoot === undefined) {
-      delete process.env.KODE_LEGACY_CACHE_ROOT
+      delete process.env.CORINT_LEGACY_CACHE_ROOT
     } else {
-      process.env.KODE_LEGACY_CACHE_ROOT = originalLegacyCacheRoot
+      process.env.CORINT_LEGACY_CACHE_ROOT = originalLegacyCacheRoot
     }
 
     rmSync(newRoot, { recursive: true, force: true })
     rmSync(legacyRoot, { recursive: true, force: true })
   })
 
-  test('getMessagesPath uses the new log root (KODE_LOG_ROOT)', () => {
+  test('getMessagesPath uses the new log root (CORINT_LOG_ROOT)', () => {
     const expectedMessagesDir = join(
       newRoot,
       process.cwd().replace(/[^a-zA-Z0-9]/g, '-'),
