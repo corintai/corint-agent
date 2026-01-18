@@ -111,7 +111,30 @@ bun run build
 
 # Run tests
 bun test
+
+# Type check
+bun run typecheck
+
+# Lint
+bun run lint
 ```
+
+### Project Structure
+
+- `src/entrypoints/` - CLI/MCP/ACP entrypoints
+- `src/core/` - Core logic (must not depend on `src/ui/`)
+- `src/services/` - Integrations (AI, MCP, plugins, system, etc.)
+- `src/tools/` - Tool implementations (Bash, File, Grep, SQL, etc.)
+- `src/ui/` - Ink UI components
+- `src/utils/` - Reusable utilities
+- `tests/` - Unit, integration, and e2e tests
+
+### Documentation
+
+- Build system: `docs/build_system.md`
+- Release process: `docs/release_checklist.md`
+- Architecture: `docs/upgrade_design.md`
+- Bash permissions: `docs/bash-permission-mechanism-investigation-report.md`
 
 ## License
 
