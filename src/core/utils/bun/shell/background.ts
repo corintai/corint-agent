@@ -277,7 +277,9 @@ export function killBackgroundShell(
   }
 }
 
-export function listBackgroundShells(state: BunShellState): BackgroundProcess[] {
+export function listBackgroundShells(
+  state: BunShellState,
+): BackgroundProcess[] {
   return Array.from(state.backgroundProcesses.values())
 }
 

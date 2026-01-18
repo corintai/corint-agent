@@ -16,9 +16,7 @@ export function getMaxTokensFromProfile(modelProfile: any): number {
   return modelProfile?.maxTokens || 8000
 }
 
-export function getAssistantMessageFromError(
-  error: unknown,
-): AssistantMessage {
+export function getAssistantMessageFromError(error: unknown): AssistantMessage {
   if (error instanceof Error && error.message.includes('prompt is too long')) {
     return createAssistantAPIErrorMessage(PROMPT_TOO_LONG_ERROR_MESSAGE)
   }
@@ -28,7 +26,10 @@ export function getAssistantMessageFromError(
   ) {
     return createAssistantAPIErrorMessage(CREDIT_BALANCE_TOO_LOW_ERROR_MESSAGE)
   }
-  if (error instanceof Error && error.message.toLowerCase().includes('x-api-key')) {
+  if (
+    error instanceof Error &&
+    error.message.toLowerCase().includes('x-api-key')
+  ) {
     return createAssistantAPIErrorMessage(INVALID_API_KEY_ERROR_MESSAGE)
   }
   if (error instanceof Error) {

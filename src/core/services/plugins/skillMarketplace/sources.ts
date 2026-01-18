@@ -3,7 +3,12 @@ import { dirname, join, resolve } from 'node:path'
 import { unzipSync } from 'fflate'
 import type { MarketplaceSource } from './schemas'
 import { MarketplaceSourceSchema } from './schemas'
-import { ensureDir, ensureEmptyDir, safeCopyDirectory, safeJoinWithin } from './fs'
+import {
+  ensureDir,
+  ensureEmptyDir,
+  safeCopyDirectory,
+  safeJoinWithin,
+} from './fs'
 
 function githubRepoFromUrl(input: string): string | null {
   const ssh = input.match(/^git@github\.com:([^/]+\/[^/]+?)(?:\.git)?$/)

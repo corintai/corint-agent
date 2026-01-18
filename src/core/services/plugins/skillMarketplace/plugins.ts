@@ -9,7 +9,14 @@ import { basename, dirname, join, resolve } from 'node:path'
 import { CONFIG_BASE_DIR } from '@constants/product'
 import { getCwd } from '@utils/state'
 import type { PluginEntry, PluginScope } from './schemas'
-import { ensureDir, ensureEmptyDir, readJsonFile, safeCopyDirectory, safeJoinWithin, writeJsonFile } from './fs'
+import {
+  ensureDir,
+  ensureEmptyDir,
+  readJsonFile,
+  safeCopyDirectory,
+  safeJoinWithin,
+  writeJsonFile,
+} from './fs'
 import { getMarketplaceManifest, loadKnownMarketplaces } from './marketplaces'
 import { readMarketplaceFromDirectory } from './manifest'
 import {

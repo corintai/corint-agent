@@ -77,7 +77,9 @@ export function CreateAgentWizard(props: {
               return
             }
 
-            props.onComplete(`Created agent: ${chalk.bold(finalAgent.agentType)}`)
+            props.onComplete(
+              `Created agent: ${chalk.bold(finalAgent.agentType)}`,
+            )
           }}
         />
       ),

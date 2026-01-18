@@ -184,7 +184,10 @@ async function testChatEndpoint(
       })
     }
 
-    if (testPayload.temperature !== undefined && testPayload.temperature !== 1) {
+    if (
+      testPayload.temperature !== undefined &&
+      testPayload.temperature !== 1
+    ) {
       debugLogger.api('GPT5_PARAMETER_FIX_TEMPERATURE', {
         model: ctx.selectedModel,
         from: testPayload.temperature,
@@ -328,9 +331,7 @@ async function testResponsesEndpoint(
         responseContent = data.output_text
       } else if (data.output) {
         responseContent =
-          typeof data.output === 'string'
-            ? data.output
-            : data.output.text || ''
+          typeof data.output === 'string' ? data.output : data.output.text || ''
       }
 
       debugLogger.api('GPT5_RESPONSES_API_TEST_RESPONSE_PARSED', {
@@ -401,7 +402,10 @@ async function testProviderSpecificEndpoint(
   ctx: ConnectionTestContext,
   baseURL: string,
 ): Promise<ConnectionTestResult> {
-  if (ctx.selectedProvider === 'anthropic' || ctx.selectedProvider === 'bigdream') {
+  if (
+    ctx.selectedProvider === 'anthropic' ||
+    ctx.selectedProvider === 'bigdream'
+  ) {
     try {
       debugLogger.api('PROVIDER_CONNECTION_TEST_NATIVE_SDK', {
         provider: ctx.selectedProvider,

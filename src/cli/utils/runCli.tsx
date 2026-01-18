@@ -21,7 +21,11 @@ import { showInvalidConfigDialog } from '@components/InvalidConfigDialog'
 import { ConfigParseError } from '@utils/text/errors'
 import { clearOutputStyleCache } from '@services/outputStyles'
 import { ResumeConversation } from '@screens/ResumeConversation'
-import { enableConfigs, getCurrentProjectConfig, validateAndRepairAllGPT5Profiles } from '@utils/config'
+import {
+  enableConfigs,
+  getCurrentProjectConfig,
+  validateAndRepairAllGPT5Profiles,
+} from '@utils/config'
 import { clearAgentCache, setFlagAgentsFromCliJson } from '@utils/agent/loader'
 import { setEnabledSettingSourcesFromCli } from '@utils/config/settingSources'
 import { getClients, getClientsForCliMcpConfig } from '@services/mcpClient'
@@ -680,9 +684,8 @@ async function gracefulExit(code = 0) {
     const { getKodeAgentSessionId } =
       await import('@utils/protocol/kodeAgentSessionId')
     const { join } = await import('path')
-    const { getSessionOutputDir } = await import(
-      '@utils/session/sessionTempDir'
-    )
+    const { getSessionOutputDir } =
+      await import('@utils/session/sessionTempDir')
 
     const sessionId = getKodeAgentSessionId()
     const transcriptPath = join(

@@ -22,7 +22,11 @@ import {
   ReasoningEffortOption,
 } from './options'
 import { printModelConfig } from './printModelConfig'
-import type { ConnectionTestResult, ModelInfo, ModelSelectorScreen } from './types'
+import type {
+  ConnectionTestResult,
+  ModelInfo,
+  ModelSelectorScreen,
+} from './types'
 import { useEscapeNavigation } from './useEscapeNavigation'
 import { ModelSelectionScreen } from './ModelSelectionScreen'
 import { fetchModelsWithRetry, fetchOllamaModels } from './handlers/modelFetch'
@@ -164,7 +168,6 @@ export function ModelSelector({
   const [providerBaseUrl, setProviderBaseUrl] = useState<string>('')
   const [providerBaseUrlCursorOffset, setProviderBaseUrlCursorOffset] =
     useState<number>(0)
-
 
   const mainMenuOptions = [
     { value: 'custom-openai', label: 'Custom OpenAI-Compatible API' },
@@ -733,8 +736,9 @@ export function ModelSelector({
     ] as ModelParamField[]
   }
 
-
-  const providerDisplayName = getProviderLabel(selectedProvider, 0).split(' (')[0]
+  const providerDisplayName = getProviderLabel(selectedProvider, 0).split(
+    ' (',
+  )[0]
 
   const partnerProvidersMaxVisible = getSafeVisibleOptionCount(
     6,

@@ -66,14 +66,17 @@ export function ModelParamsScreen({
       >
         <Text bold>
           Model Parameters{' '}
-          {exitState.pending ? `(press ${exitState.keyName} again to exit)` : ''}
+          {exitState.pending
+            ? `(press ${exitState.keyName} again to exit)`
+            : ''}
         </Text>
         <Box flexDirection="column" gap={1}>
           <Text bold>Configure parameters for {selectedModel}:</Text>
           <Box flexDirection="column" width={70}>
             <Text color={theme.secondaryText}>
               Use <Text color={theme.suggestion}>Tab</Text> to navigate between
-              fields. Press <Text color={theme.suggestion}>Enter</Text> to submit.
+              fields. Press <Text color={theme.suggestion}>Enter</Text> to
+              submit.
             </Text>
           </Box>
 
@@ -91,7 +94,9 @@ export function ModelParamsScreen({
                       {field.label}
                     </Text>
                     {field.description && (
-                      <Text color={theme.secondaryText}>{field.description}</Text>
+                      <Text color={theme.secondaryText}>
+                        {field.description}
+                      </Text>
                     )}
                   </>
                 ) : (

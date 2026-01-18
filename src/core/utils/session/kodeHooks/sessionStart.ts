@@ -12,7 +12,10 @@ import { sessionStartCache } from './state'
 import { parseSessionStartHooks } from './parsing'
 import { runCommandHook } from './execution'
 import { applyEnvFileToProcessEnv } from './env'
-import { coerceHookPermissionMode, parseSessionStartAdditionalContext } from './utils'
+import {
+  coerceHookPermissionMode,
+  parseSessionStartAdditionalContext,
+} from './utils'
 
 export async function getSessionStartAdditionalContext(args?: {
   permissionMode?: unknown

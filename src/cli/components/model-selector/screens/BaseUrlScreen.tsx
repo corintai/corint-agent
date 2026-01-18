@@ -93,7 +93,9 @@ export function BaseUrlScreen({
             <Box marginTop={1}>
               <Text>
                 <Text
-                  color={isLoadingModels ? theme.secondaryText : theme.suggestion}
+                  color={
+                    isLoadingModels ? theme.secondaryText : theme.suggestion
+                  }
                 >
                   [Submit Base URL]
                 </Text>
@@ -128,7 +130,9 @@ export function BaseUrlScreen({
       >
         <Text bold>
           {providerName} API Configuration{' '}
-          {exitState.pending ? `(press ${exitState.keyName} again to exit)` : ''}
+          {exitState.pending
+            ? `(press ${exitState.keyName} again to exit)`
+            : ''}
         </Text>
         <Box flexDirection="column" gap={1}>
           <Text bold>Configure the API endpoint for {providerName}:</Text>

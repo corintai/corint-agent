@@ -85,9 +85,7 @@ async function shouldAutoCompact(messages: Message[]): Promise<boolean> {
   return isAboveAutoCompactThreshold
 }
 
-export async function checkContextLimit(
-  messages: Message[],
-): Promise<{
+export async function checkContextLimit(messages: Message[]): Promise<{
   withinLimit: boolean
   currentTokens: number
   modelLimit: number
@@ -139,7 +137,10 @@ export async function checkAutoCompact(
     })
 
     try {
-      const compactedMessages = await executeAutoCompact(messages, toolUseContext)
+      const compactedMessages = await executeAutoCompact(
+        messages,
+        toolUseContext,
+      )
       return { messages: compactedMessages, wasCompacted: true }
     } catch (error) {
       logError(error)

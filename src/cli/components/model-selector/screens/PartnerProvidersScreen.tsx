@@ -44,7 +44,9 @@ export function PartnerProvidersScreen({
       >
         <Text bold>
           Partner Providers{' '}
-          {exitState.pending ? `(press ${exitState.keyName} again to exit)` : ''}
+          {exitState.pending
+            ? `(press ${exitState.keyName} again to exit)`
+            : ''}
         </Text>
         <Box flexDirection="column" gap={containerGap}>
           <Text bold>Select a partner AI provider for this model profile:</Text>

@@ -1,5 +1,10 @@
 import chalk from 'chalk'
-import { DEBUG_PATHS, DEBUG_VERBOSE_TERMINAL_LOG_LEVELS, TERMINAL_LOG_LEVELS, STARTUP_TIMESTAMP } from './constants'
+import {
+  DEBUG_PATHS,
+  DEBUG_VERBOSE_TERMINAL_LOG_LEVELS,
+  TERMINAL_LOG_LEVELS,
+  STARTUP_TIMESTAMP,
+} from './constants'
 import { debug } from './core'
 import { isDebugMode, isDebugVerboseMode } from './flags'
 import { terminalLog } from './terminal'

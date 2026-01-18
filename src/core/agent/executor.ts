@@ -445,10 +445,33 @@ export async function* runToolUse(
 
   const toolInput = toolUse.input as Record<string, unknown>
 
+  // Log tool input for debugging
+  const inputKeys = Object.keys(toolInput)
+  const isEmptyInput = inputKeys.length === 0
+
+  debugLogger.flow('TOOL_INPUT_RECEIVED', {
+    toolName: tool.name,
+    toolUseID: toolUse.id,
+    inputKeys,
+    inputEmpty: isEmptyInput,
+    inputSize: JSON.stringify(toolInput).length,
+    rawInputPreview: JSON.stringify(toolInput).slice(0, 200),
+    requestId: currentRequest?.id,
+  })
+
+  if (isEmptyInput) {
+    debugLogger.warn('TOOL_CALLED_WITH_EMPTY_INPUT', {
+      toolName: tool.name,
+      toolUseID: toolUse.id,
+      expectedSchema: tool.inputSchema.description,
+      requestId: currentRequest?.id,
+    })
+  }
+
   debugLogger.flow('TOOL_VALIDATION_START', {
     toolName: tool.name,
     toolUseID: toolUse.id,
-    inputKeys: Object.keys(toolInput),
+    inputKeys,
     requestId: currentRequest?.id,
   })
 
@@ -499,9 +522,28 @@ async function* checkPermissionsAndCallTool(
   if (!isValidInput.success) {
     let errorMessage = `InputValidationError: ${isValidInput.error.message}`
 
-    if (tool.name === 'Read' && Object.keys(preprocessedInput).length === 0) {
+    // Special handling for tools with empty input
+    const inputKeys = Object.keys(preprocessedInput)
+    const isEmptyInput = inputKeys.length === 0
+
+    if (tool.name === 'Read' && isEmptyInput) {
       errorMessage = `Error: The Read tool requires a 'file_path' parameter to specify which file to read. Please provide the absolute path to the file you want to read. For example: {"file_path": "/path/to/file.txt"}`
+    } else if (tool.name === 'Write' && isEmptyInput) {
+      errorMessage = `Error: The Write tool requires both 'file_path' and 'content' parameters. Please provide them as: {"file_path": "/absolute/path/to/file", "content": "file content here"}. Both parameters are REQUIRED.`
+    } else if (tool.name === 'Edit' && isEmptyInput) {
+      errorMessage = `Error: The Edit tool requires 'file_path', 'old_string', and 'new_string' parameters. Please provide all three parameters.`
+    } else if (isEmptyInput) {
+      errorMessage = `Error: The ${tool.name} tool was called with no parameters. Please check the tool definition and provide all required parameters. Tool input was: ${JSON.stringify(preprocessedInput)}`
     }
+
+    debugLogger.error('TOOL_INPUT_VALIDATION_FAILED', {
+      toolName: tool.name,
+      toolUseID,
+      inputKeys,
+      isEmptyInput,
+      validationErrors: isValidInput.error.errors,
+      rawInput: JSON.stringify(preprocessedInput).slice(0, 500),
+    })
 
     yield createUserMessage([
       {

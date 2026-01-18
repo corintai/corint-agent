@@ -26,7 +26,11 @@ import {
   themeColor,
   toSelectableToolNames,
 } from './ui/helpers'
-import type { AgentSourceFilter, AgentWithOverride, ModeState } from './ui/types'
+import type {
+  AgentSourceFilter,
+  AgentWithOverride,
+  ModeState,
+} from './ui/types'
 
 function computeOverrides(args: {
   allAgents: AgentConfig[]

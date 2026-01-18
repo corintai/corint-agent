@@ -130,7 +130,7 @@ function RQ5(command: string): boolean {
       if (!new RegExp(`(?:\\n|^[^\\n]*\\n)${escaped}\\s*\\)`).test(tail))
         return false
       const full = new RegExp(
-        `^\\$\\(cat\\s*<<-?\\s*(?:'+${escaped}'+|\\\\${escaped})[^\\n]*\\n(?:[\\s\\S]*?\\n)?${escaped}\\s*\\)` ,
+        `^\\$\\(cat\\s*<<-?\\s*(?:'+${escaped}'+|\\\\${escaped})[^\\n]*\\n(?:[\\s\\S]*?\\n)?${escaped}\\s*\\)`,
       )
       if (!tail.match(full)) return false
     }
@@ -139,7 +139,7 @@ function RQ5(command: string): boolean {
     for (const { delimiter } of matches) {
       const escaped = delimiter.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
       const pattern = new RegExp(
-        `\\$\\(cat\\s*<<-?\\s*(?:'+${escaped}'+|\\\\${escaped})[^\\n]*\\n(?:[\\s\\S]*?\\n)?${escaped}\\s*\\)` ,
+        `\\$\\(cat\\s*<<-?\\s*(?:'+${escaped}'+|\\\\${escaped})[^\\n]*\\n(?:[\\s\\S]*?\\n)?${escaped}\\s*\\)`,
       )
       remaining = remaining.replace(pattern, '')
     }

@@ -3,7 +3,11 @@ import type { ToolPermissionContext } from '@kode-types/toolPermissionContext'
 import { PRODUCT_NAME } from '@constants/product'
 import { getCwd } from '@utils/state'
 
-import type { BashPermissionDecision, BashPermissionResult, DecisionReason } from './types'
+import type {
+  BashPermissionDecision,
+  BashPermissionResult,
+  DecisionReason,
+} from './types'
 import {
   SAFE_SHELL_SEPARATORS,
   isOpToken,

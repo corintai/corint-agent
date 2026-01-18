@@ -136,9 +136,7 @@ function handleSessionPrompt(msg: JsonRpcMessage): void {
     return
   }
 
-  const promptParts = Array.isArray(msg.params?.prompt)
-    ? msg.params.prompt
-    : []
+  const promptParts = Array.isArray(msg.params?.prompt) ? msg.params.prompt : []
   const text = promptParts
     .map((part: any) => (typeof part?.text === 'string' ? part.text : ''))
     .join('')

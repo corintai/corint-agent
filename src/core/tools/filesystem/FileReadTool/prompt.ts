@@ -15,7 +15,7 @@ Usage:
 - This tool allows reading images (eg PNG, JPG, etc). When reading an image file the contents are presented visually.
 - This tool can read PDF files (.pdf). PDFs are processed page by page, extracting both text and visual content for analysis.
 - This tool can read Jupyter notebooks (.ipynb files) and returns all cells with their outputs, combining code, text, and visualizations.
-- This tool can read Excel files (.xlsx, .xls) and returns structured JSON data from all sheets. By default, it reads up to 100 rows per sheet, which can be adjusted using the limit parameter.
+- This tool can read Excel files (.xlsx, .xls) and returns structured JSON data from all sheets. By default, it reads up to 100 rows per sheet; offset/limit apply to row numbers (1-based) and can be used to page through large sheets.
 - This tool can only read files, not directories. To read a directory, use an ls command via the Bash tool.
 - You can call multiple tools in a single response. It is always better to speculatively read multiple potentially useful files in parallel.
 - You will regularly be asked to read screenshots. If the user provides a path to a screenshot, ALWAYS use this tool to view the file at the path. This tool will work with all temporary file paths.

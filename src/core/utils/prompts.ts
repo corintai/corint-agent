@@ -5,7 +5,11 @@ import {
   INTERRUPT_MESSAGE_FOR_TOOL_USE,
 } from '@utils/messages'
 import { getCwd } from '@utils/state'
-import { PRODUCT_NAME, PROJECT_FILE, PRODUCT_COMMAND } from '@shared/constants/product'
+import {
+  PRODUCT_NAME,
+  PROJECT_FILE,
+  PRODUCT_COMMAND,
+} from '@shared/constants/product'
 import { BashTool } from '@tools/BashTool/BashTool'
 import { MACRO } from './macros'
 import { getSessionStartAdditionalContext } from '@utils/session/kodeHooks'

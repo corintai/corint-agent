@@ -30,7 +30,9 @@ export function registerUpdateCommand(program: Command): void {
       console.log('\nRun one of the following commands to update:')
       for (const c of cmds) console.log(`  ${c}`)
       if (process.platform !== 'win32') {
-        console.log('\nNote: you may need to prefix with "sudo" on macOS/Linux.')
+        console.log(
+          '\nNote: you may need to prefix with "sudo" on macOS/Linux.',
+        )
       }
       process.exit(0)
     })

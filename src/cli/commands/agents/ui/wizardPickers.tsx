@@ -16,9 +16,7 @@ import {
   themeColor,
 } from './helpers'
 import type { WizardContextValue, WizardFinalAgent } from './types'
-import {
-  getPrimaryAgentFilePath,
-} from '../storage'
+import { getPrimaryAgentFilePath } from '../storage'
 import { validateAgentConfig, validateAgentType } from '../generation'
 
 function modelOptions(): (OptionSubtree | { label: string; value: string })[] {

@@ -26,12 +26,19 @@ import { getCLISyspromptPrefix } from '@constants/prompts'
 
 import { ModelAdapterFactory } from '../modelAdapterFactory'
 import { UnifiedRequestParams } from '@kode-types/modelCapabilities'
-import { getCompletionWithProfile, getGPT5CompletionWithProfile } from '../openai'
+import {
+  getCompletionWithProfile,
+  getGPT5CompletionWithProfile,
+} from '../openai'
 import { generateKodeContext } from '@services/kodeContext'
 import { convertAnthropicMessagesToOpenAIMessages as convertAnthropicMessagesToOpenAIMessagesUtil } from '@utils/model/openaiMessageConversion'
 
 import { PROMPT_CACHING_ENABLED, splitSysPromptPrefix } from './prompt'
-import { getAssistantMessageFromError, getMaxTokensFromProfile, isGPT5Model } from './shared'
+import {
+  getAssistantMessageFromError,
+  getMaxTokensFromProfile,
+  isGPT5Model,
+} from './shared'
 import { MAIN_QUERY_TEMPERATURE } from '../llmConstants'
 import { withRetry } from './retry'
 

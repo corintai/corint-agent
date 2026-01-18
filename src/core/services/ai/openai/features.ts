@@ -1,10 +1,6 @@
 import type { OpenAI } from 'openai'
 import { debug as debugLogger } from '@utils/log/debugLogger'
-import {
-  ERROR_HANDLERS,
-  GPT5_ERROR_HANDLERS,
-  hasModelError,
-} from './errors'
+import { ERROR_HANDLERS, GPT5_ERROR_HANDLERS, hasModelError } from './errors'
 
 interface ModelFeatures {
   usesMaxCompletionTokens: boolean

@@ -41,7 +41,9 @@ export function ResourceNameScreen({
       >
         <Text bold>
           Azure Resource Setup{' '}
-          {exitState.pending ? `(press ${exitState.keyName} again to exit)` : ''}
+          {exitState.pending
+            ? `(press ${exitState.keyName} again to exit)`
+            : ''}
         </Text>
         <Box flexDirection="column" gap={1}>
           <Text bold>Enter your Azure OpenAI resource name:</Text>

@@ -6,10 +6,7 @@ import { createCancellableTextCollector } from './streams'
 import { spawnWithExited } from './process'
 import { getShellCmd } from './shellCmd'
 import { makeBackgroundTaskId } from './ids'
-import {
-  buildSandboxCmd,
-  maybeAnnotateMacosSandboxStderr,
-} from './sandbox'
+import { buildSandboxCmd, maybeAnnotateMacosSandboxStderr } from './sandbox'
 import type {
   BackgroundProcess,
   BunShellExecOptions,

@@ -124,9 +124,7 @@ export interface ToolPermissionRequest {
 
 export interface ToolUiBridge {
   showOverlay?: (overlay: ToolOverlay | null) => void
-  requestToolPermission?: (
-    request: ToolPermissionRequest,
-  ) => Promise<boolean>
+  requestToolPermission?: (request: ToolPermissionRequest) => Promise<boolean>
 }
 
 export function getToolDescription(tool: Tool): string {

@@ -13,7 +13,10 @@ import {
 } from '@utils/log/debugLogger'
 import { getModelManager } from '@utils/model'
 import type { ToolUseContext } from '@tool'
-import { responseStateManager, getConversationId } from '../responseStateManager'
+import {
+  responseStateManager,
+  getConversationId,
+} from '../responseStateManager'
 
 import { queryAnthropicNative } from './anthropic'
 import { queryOpenAI } from './openaiQuery'

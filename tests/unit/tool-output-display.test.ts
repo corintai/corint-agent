@@ -171,11 +171,14 @@ describe('toolOutputDisplay', () => {
     const longText = Array.from({ length: 200 }, (_, i) => `L${i + 1}`).join(
       '\n',
     )
-    await withEnv({ CORINT_PACKAGED: '1', CORINT_TOOL_OUTPUT_FULL: '1' }, () => {
-      const out = maybeTruncateVerboseToolOutput(longText)
-      expect(out.truncated).toBe(false)
-      expect(out.text).toBe(longText)
-    })
+    await withEnv(
+      { CORINT_PACKAGED: '1', CORINT_TOOL_OUTPUT_FULL: '1' },
+      () => {
+        const out = maybeTruncateVerboseToolOutput(longText)
+        expect(out.truncated).toBe(false)
+        expect(out.text).toBe(longText)
+      },
+    )
   })
 
   test('maybeTruncateVerboseToolOutput: env overrides max lines/chars', async () => {

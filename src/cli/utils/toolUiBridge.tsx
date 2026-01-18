@@ -27,7 +27,9 @@ export function createToolUiBridge({
       if (overlay.type === 'bash-background') {
         setToolJSX({
           jsx: (
-            <BashToolRunInBackgroundOverlay onBackground={overlay.onBackground} />
+            <BashToolRunInBackgroundOverlay
+              onBackground={overlay.onBackground}
+            />
           ),
           shouldHidePromptInput: false,
         })

@@ -58,7 +58,9 @@ export function ApiKeyScreen({
       >
         <Text bold>
           API Key Setup{' '}
-          {exitState.pending ? `(press ${exitState.keyName} again to exit)` : ''}
+          {exitState.pending
+            ? `(press ${exitState.keyName} again to exit)`
+            : ''}
         </Text>
         <Box flexDirection="column" gap={1}>
           <Text bold>
@@ -114,7 +116,7 @@ export function ApiKeyScreen({
               )}
               {selectedProvider === 'glm-coding' && (
                 <>
-                  💡 This is for GLM Coding Plan API.{" "}
+                  💡 This is for GLM Coding Plan API.{' '}
                   <Text color={theme.suggestion}>
                     Use the same API key as regular GLM
                   </Text>

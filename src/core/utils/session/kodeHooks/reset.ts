@@ -1,4 +1,8 @@
-import { pluginHooksCache, sessionStartCache, settingsHooksCache } from './state'
+import {
+  pluginHooksCache,
+  sessionStartCache,
+  settingsHooksCache,
+} from './state'
 
 export function __resetKodeHooksCacheForTests(): void {
   settingsHooksCache.clear()

@@ -11,7 +11,11 @@ import { decorateToolsForCli } from '@cli/tools/decorateTools'
 import { getCurrentProjectConfig } from '@utils/config'
 import { isDefaultSlowAndCapableModel } from '@utils/model'
 import { dateToFilename, logError, parseLogFilename } from '@utils/log'
-import { CACHE_PATHS, getNextAvailableLogForkNumber, loadLogList } from '@utils/log'
+import {
+  CACHE_PATHS,
+  getNextAvailableLogForkNumber,
+  loadLogList,
+} from '@utils/log'
 import { loadMessagesFromLog } from '@utils/session/conversationRecovery'
 import { getClients } from '@services/mcpClient'
 

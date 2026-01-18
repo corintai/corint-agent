@@ -132,8 +132,12 @@ describe('skill marketplace (local .corint-plugin/marketplace.json)', () => {
         project: true,
       })
       expect(install.installedSkills.sort()).toEqual(['pdf', 'xlsx'])
-      expect(existsSync(join(projectDir, '.corint', 'skills', 'pdf'))).toBe(true)
-      expect(existsSync(join(projectDir, '.corint', 'skills', 'xlsx'))).toBe(true)
+      expect(existsSync(join(projectDir, '.corint', 'skills', 'pdf'))).toBe(
+        true,
+      )
+      expect(existsSync(join(projectDir, '.corint', 'skills', 'xlsx'))).toBe(
+        true,
+      )
     })
   })
 

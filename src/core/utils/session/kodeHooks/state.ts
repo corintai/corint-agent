@@ -7,4 +7,7 @@ export type CachedHooks = {
 
 export const settingsHooksCache = new Map<string, CachedHooks>()
 export const pluginHooksCache = new Map<string, CachedHooks>()
-export const sessionStartCache = new Map<string, { additionalContext: string }>()
+export const sessionStartCache = new Map<
+  string,
+  { additionalContext: string }
+>()

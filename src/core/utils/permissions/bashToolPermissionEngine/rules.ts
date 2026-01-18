@@ -68,7 +68,10 @@ function findMatchingBashRules(args: {
       : [trimmed, withoutRedirections].flatMap(cmd =>
           cmd.split('&&').flatMap(part => part.trim()),
         )
-  const rules = collectBashRuleStrings(args.toolPermissionContext, args.behavior)
+  const rules = collectBashRuleStrings(
+    args.toolPermissionContext,
+    args.behavior,
+  )
   const matches: string[] = []
   for (const rule of rules) {
     const parsed = parseToolRuleString(rule)

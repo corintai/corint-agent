@@ -27,7 +27,8 @@ export function registerSkillCommands(program: Command): void {
         const { setCwd } = await import('@utils/state')
         await setCwd(options.cwd ?? cwd())
 
-        const { installSkillPlugin } = await import('@services/skillMarketplace')
+        const { installSkillPlugin } =
+          await import('@services/skillMarketplace')
         const result = installSkillPlugin(plugin, {
           project: options.project === true,
           force: options.force === true,
@@ -58,7 +59,8 @@ export function registerSkillCommands(program: Command): void {
         const { setCwd } = await import('@utils/state')
         await setCwd(options.cwd ?? cwd())
 
-        const { uninstallSkillPlugin } = await import('@services/skillMarketplace')
+        const { uninstallSkillPlugin } =
+          await import('@services/skillMarketplace')
         const result = uninstallSkillPlugin(plugin, {
           project: options.project === true,
         })
@@ -79,7 +81,8 @@ export function registerSkillCommands(program: Command): void {
     .description('List installed skill plugins')
     .action(async () => {
       try {
-        const { listInstalledSkillPlugins } = await import('@services/skillMarketplace')
+        const { listInstalledSkillPlugins } =
+          await import('@services/skillMarketplace')
         console.log(JSON.stringify(listInstalledSkillPlugins(), null, 2))
         process.exit(0)
       } catch (error) {

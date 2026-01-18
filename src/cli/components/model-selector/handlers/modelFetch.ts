@@ -43,9 +43,7 @@ export async function fetchOllamaModels(
     } else if (Array.isArray(responseData)) {
       models = responseData
     } else {
-      throw new Error(
-        'Invalid response from Ollama API: missing models array',
-      )
+      throw new Error('Invalid response from Ollama API: missing models array')
     }
 
     const ollamaModels = models.map((model: any) => ({
@@ -83,7 +81,10 @@ export async function fetchOllamaModels(
       if (data.model_info && typeof data.model_info === 'object') {
         const modelInfo = data.model_info
         for (const key of Object.keys(modelInfo)) {
-          if (key.endsWith('.context_length') || key.endsWith('_context_length')) {
+          if (
+            key.endsWith('.context_length') ||
+            key.endsWith('_context_length')
+          ) {
             const val = modelInfo[key]
             if (typeof val === 'number' && isFinite(val) && val > 0) {
               return val
@@ -128,7 +129,11 @@ export async function fetchOllamaModels(
           if (showResp.ok) {
             const showData = await showResp.json()
             const ctxTokens = extractContextTokens(showData)
-            if (typeof ctxTokens === 'number' && isFinite(ctxTokens) && ctxTokens > 0) {
+            if (
+              typeof ctxTokens === 'number' &&
+              isFinite(ctxTokens) &&
+              ctxTokens > 0
+            ) {
               return { ...m, context_length: ctxTokens }
             }
           }
@@ -337,7 +342,8 @@ export async function fetchModels(
       return []
     }
 
-    let baseURL = ctx.providerBaseUrl || providers[ctx.selectedProvider]?.baseURL
+    let baseURL =
+      ctx.providerBaseUrl || providers[ctx.selectedProvider]?.baseURL
 
     if (ctx.selectedProvider === 'custom-openai') {
       baseURL = ctx.customBaseUrl
@@ -359,9 +365,9 @@ export async function fetchModels(
         (model as any).name ||
         (model as any).model ||
         'unknown'
-      const modelInfo = models[ctx.selectedProvider as keyof typeof models]?.find(
-        m => m.model === modelName,
-      )
+      const modelInfo = models[
+        ctx.selectedProvider as keyof typeof models
+      ]?.find(m => m.model === modelName)
       fetchedModels.push({
         model: modelName,
         provider: ctx.selectedProvider,

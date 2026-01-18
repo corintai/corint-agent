@@ -220,7 +220,9 @@ function buildSandboxEnvAssignments(options?: {
 }): string[] {
   const envAssignments = []
   envAssignments.push(`CORINT_SANDBOX=1`)
-  envAssignments.push(`CORINT_SANDBOX_ALLOW_LOCAL=${options?.allowLocalBinding ? '1' : '0'}`)
+  envAssignments.push(
+    `CORINT_SANDBOX_ALLOW_LOCAL=${options?.allowLocalBinding ? '1' : '0'}`,
+  )
   envAssignments.push(
     `CORINT_SANDBOX_NO_NETWORK=${options?.needsNetworkRestriction ? '1' : '0'}`,
   )
@@ -283,7 +285,9 @@ function buildMacosSandboxFileReadRules(
     rules.push(`(deny file-read* (regex "^${regex}($|/)" ) (${logTag}))`)
   }
 
-  rules.push(...buildMacosSandboxDenyUnlinkRules(readConfig.denyOnly ?? [], logTag))
+  rules.push(
+    ...buildMacosSandboxDenyUnlinkRules(readConfig.denyOnly ?? [], logTag),
+  )
   return rules
 }
 
@@ -436,7 +440,11 @@ export function buildSandboxCmd(
   const hasWriteRestrictions = writeConfig !== undefined
   const hasNetworkRestrictions = needsNetworkRestriction === true
 
-  if (!hasReadRestrictions && !hasWriteRestrictions && !hasNetworkRestrictions) {
+  if (
+    !hasReadRestrictions &&
+    !hasWriteRestrictions &&
+    !hasNetworkRestrictions
+  ) {
     return null
   }
 

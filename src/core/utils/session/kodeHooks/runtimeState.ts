@@ -132,9 +132,7 @@ export function drainHookSystemPromptAdditions(toolUseContext: any): string[] {
   return additions
 }
 
-export function getHookTranscriptPath(
-  toolUseContext: any,
-): string | undefined {
+export function getHookTranscriptPath(toolUseContext: any): string | undefined {
   return getHookRuntimeState(toolUseContext).transcriptPath
 }
 

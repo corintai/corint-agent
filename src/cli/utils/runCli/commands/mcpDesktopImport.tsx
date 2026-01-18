@@ -2,7 +2,11 @@ import React from 'react'
 import { Command } from '@commander-js/extra-typings'
 
 import type { McpServerConfig } from '@utils/config'
-import { addMcpServer, ensureConfigScope, getMcpServer } from '@services/mcpClient'
+import {
+  addMcpServer,
+  ensureConfigScope,
+  getMcpServer,
+} from '@services/mcpClient'
 
 export function registerMcpDesktopImportCommand(mcp: Command): void {
   mcp

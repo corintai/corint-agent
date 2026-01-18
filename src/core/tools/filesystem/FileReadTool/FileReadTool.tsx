@@ -293,7 +293,7 @@ export const FileReadTool = {
     }
 
     if (ext === '.xlsx' || ext === '.xls') {
-      const excelData = await readExcelFile(fullFilePath, limit)
+      const excelData = await readExcelFile(fullFilePath, { offset, limit })
       const data = {
         type: 'excel' as const,
         file: {
@@ -565,7 +565,7 @@ async function readImage(
 
 async function readExcelFile(
   filePath: string,
-  maxRows: number = 100,
+  options?: { offset?: number; limit?: number },
 ): Promise<{
   sheets: Array<{
     name: string
@@ -574,6 +574,17 @@ async function readExcelFile(
   }>
   totalRows: number
 }> {
+  const maxRows =
+    typeof options?.limit === 'number' && Number.isFinite(options.limit)
+      ? Math.max(0, Math.floor(options.limit))
+      : 100
+  const offset =
+    typeof options?.offset === 'number' && Number.isFinite(options.offset)
+      ? Math.max(0, Math.floor(options.offset))
+      : 1
+  const startIndex = offset <= 1 ? 0 : offset - 1
+  const endIndex = startIndex + maxRows
+
   const fileReadResult = secureFileService.safeReadFile(filePath, {
     encoding: 'buffer' as BufferEncoding,
     maxFileSize: 10 * 1024 * 1024,
@@ -594,7 +605,8 @@ async function readExcelFile(
     const worksheet = workbook.Sheets[sheetName]
     const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 })
 
-    const limitedRows = jsonData.slice(0, maxRows)
+    const limitedRows =
+      maxRows === 0 ? [] : jsonData.slice(startIndex, endIndex)
     totalRows += jsonData.length
 
     sheets.push({

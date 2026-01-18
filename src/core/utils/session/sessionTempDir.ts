@@ -29,10 +29,7 @@ function getSessionBaseDir(): string {
 
 export function getSessionOutputDir(): string {
   if (!sessionOutputDir) {
-    sessionOutputDir = join(
-      getSessionBaseDir(),
-      SESSION_DIRNAME,
-    )
+    sessionOutputDir = join(getSessionBaseDir(), SESSION_DIRNAME)
   }
   return sessionOutputDir
 }

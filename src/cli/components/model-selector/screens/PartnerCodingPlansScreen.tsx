@@ -46,7 +46,9 @@ export function PartnerCodingPlansScreen({
       >
         <Text bold>
           Partner Coding Plans{' '}
-          {exitState.pending ? `(press ${exitState.keyName} again to exit)` : ''}
+          {exitState.pending
+            ? `(press ${exitState.keyName} again to exit)`
+            : ''}
         </Text>
         <Box flexDirection="column" gap={containerGap}>
           <Text bold>

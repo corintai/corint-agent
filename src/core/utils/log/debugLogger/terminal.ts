@@ -1,6 +1,9 @@
 import { format } from 'node:util'
 import chalk from 'chalk'
-import { DEBUG_VERBOSE_TERMINAL_LOG_LEVELS, TERMINAL_LOG_LEVELS } from './constants'
+import {
+  DEBUG_VERBOSE_TERMINAL_LOG_LEVELS,
+  TERMINAL_LOG_LEVELS,
+} from './constants'
 import { isDebugMode, isDebugVerboseMode } from './flags'
 import type { LogEntry } from './types'
 import { LogLevel } from './types'

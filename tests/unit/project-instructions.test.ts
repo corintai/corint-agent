@@ -96,7 +96,8 @@ describe('projectInstructions (AGENTS.md discovery)', () => {
       process.env.CORINT_PROJECT_DOC_MAX_BYTES = 'not-a-number'
       expect(getProjectDocMaxBytes()).toBeGreaterThan(0)
     } finally {
-      if (original === undefined) delete process.env.CORINT_PROJECT_DOC_MAX_BYTES
+      if (original === undefined)
+        delete process.env.CORINT_PROJECT_DOC_MAX_BYTES
       else process.env.CORINT_PROJECT_DOC_MAX_BYTES = original
     }
   })

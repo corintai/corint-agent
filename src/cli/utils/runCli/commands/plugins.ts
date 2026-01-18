@@ -50,7 +50,8 @@ export function registerPluginCommands(program: Command): void {
         const { setCwd } = await import('@utils/state')
         await setCwd(options.cwd ?? cwd())
 
-        const { installSkillPlugin } = await import('@services/skillMarketplace')
+        const { installSkillPlugin } =
+          await import('@services/skillMarketplace')
         const result = installSkillPlugin(plugin, {
           scope,
           force: options.force === true,
@@ -92,7 +93,8 @@ export function registerPluginCommands(program: Command): void {
         const { setCwd } = await import('@utils/state')
         await setCwd(options.cwd ?? cwd())
 
-        const { uninstallSkillPlugin } = await import('@services/skillMarketplace')
+        const { uninstallSkillPlugin } =
+          await import('@services/skillMarketplace')
         const result = uninstallSkillPlugin(plugin, { scope })
         const skillList =
           result.removedSkills.length > 0
@@ -129,7 +131,8 @@ export function registerPluginCommands(program: Command): void {
         const { setCwd, getCwd } = await import('@utils/state')
         await setCwd(options.cwd ?? cwd())
 
-        const { listInstalledSkillPlugins } = await import('@services/skillMarketplace')
+        const { listInstalledSkillPlugins } =
+          await import('@services/skillMarketplace')
         const all = listInstalledSkillPlugins()
         const filtered = Object.fromEntries(
           Object.entries(all).filter(([, record]) => {
@@ -216,7 +219,8 @@ export function registerPluginCommands(program: Command): void {
         const { setCwd } = await import('@utils/state')
         await setCwd(options.cwd ?? cwd())
 
-        const { disableSkillPlugin } = await import('@services/skillMarketplace')
+        const { disableSkillPlugin } =
+          await import('@services/skillMarketplace')
         const result = disableSkillPlugin(plugin, { scope })
         console.log(`Disabled ${result.pluginSpec}`)
         process.exit(0)

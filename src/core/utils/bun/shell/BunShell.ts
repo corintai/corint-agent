@@ -80,9 +80,7 @@ export class BunShell {
     return execInBackground(this.state, command, timeout, options)
   }
 
-  getBackgroundOutput(
-    shellId: string,
-  ): {
+  getBackgroundOutput(shellId: string): {
     stdout: string
     stderr: string
     code: number | null

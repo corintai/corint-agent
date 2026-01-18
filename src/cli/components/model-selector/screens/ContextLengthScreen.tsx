@@ -37,15 +37,17 @@ export function ContextLengthScreen({
       >
         <Text bold>
           Context Length Configuration{' '}
-          {exitState.pending ? `(press ${exitState.keyName} again to exit)` : ''}
+          {exitState.pending
+            ? `(press ${exitState.keyName} again to exit)`
+            : ''}
         </Text>
         <Box flexDirection="column" gap={1}>
           <Text bold>Choose the context window length for your model:</Text>
           <Box flexDirection="column" width={70}>
             <Text color={theme.secondaryText}>
-              This determines how much conversation history and context the model
-              can process at once. Higher values allow for longer conversations
-              but may increase costs.
+              This determines how much conversation history and context the
+              model can process at once. Higher values allow for longer
+              conversations but may increase costs.
             </Text>
           </Box>
 
@@ -68,7 +70,8 @@ export function ContextLengthScreen({
 
           <Box flexDirection="column" marginY={1}>
             <Text dimColor>
-              Selected: <Text color={theme.suggestion}>{selectedOption.label}</Text>
+              Selected:{' '}
+              <Text color={theme.suggestion}>{selectedOption.label}</Text>
             </Text>
           </Box>
         </Box>

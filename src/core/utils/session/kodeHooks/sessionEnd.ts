@@ -6,7 +6,11 @@ import { matcherMatchesTool } from './matching'
 import { loadPluginMatchers, loadSettingsMatchers } from './loaders'
 import { runCommandHook, withHookTimeout } from './execution'
 import { runPromptHook } from './prompt'
-import { coerceHookMessage, coerceHookPermissionMode, tryParseHookJson } from './utils'
+import {
+  coerceHookMessage,
+  coerceHookPermissionMode,
+  tryParseHookJson,
+} from './utils'
 
 export async function runSessionEndHooks(args: {
   reason: string

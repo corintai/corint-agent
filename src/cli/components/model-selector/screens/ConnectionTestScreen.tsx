@@ -40,7 +40,9 @@ export function ConnectionTestScreen({
       >
         <Text bold>
           Connection Test{' '}
-          {exitState.pending ? `(press ${exitState.keyName} again to exit)` : ''}
+          {exitState.pending
+            ? `(press ${exitState.keyName} again to exit)`
+            : ''}
         </Text>
         <Box flexDirection="column" gap={1}>
           <Text bold>Testing connection to {providerDisplayName}...</Text>
@@ -103,7 +105,8 @@ export function ConnectionTestScreen({
                 <Box marginTop={1}>
                   <Text>
                     <Text color={theme.suggestion}>Press Enter</Text> to retry
-                    test, or <Text color={theme.suggestion}>Esc</Text> to go back
+                    test, or <Text color={theme.suggestion}>Esc</Text> to go
+                    back
                   </Text>
                 </Box>
               )}

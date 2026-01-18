@@ -61,7 +61,9 @@ export function ConfirmationScreen({
       >
         <Text bold>
           Configuration Confirmation{' '}
-          {exitState.pending ? `(press ${exitState.keyName} again to exit)` : ''}
+          {exitState.pending
+            ? `(press ${exitState.keyName} again to exit)`
+            : ''}
         </Text>
         <Box flexDirection="column" gap={1}>
           <Text bold>Confirm your model configuration:</Text>
@@ -131,9 +133,8 @@ export function ConfirmationScreen({
             <Text>
               <Text bold>Context Length: </Text>
               <Text color={theme.suggestion}>
-                {CONTEXT_LENGTH_OPTIONS.find(
-                  opt => opt.value === contextLength,
-                )?.label || `${contextLength.toLocaleString()} tokens`}
+                {CONTEXT_LENGTH_OPTIONS.find(opt => opt.value === contextLength)
+                  ?.label || `${contextLength.toLocaleString()} tokens`}
               </Text>
             </Text>
 
@@ -147,9 +148,9 @@ export function ConfirmationScreen({
 
           <Box marginTop={1}>
             <Text dimColor>
-              Press <Text color={theme.suggestion}>Esc</Text> to go back to model
-              parameters or <Text color={theme.suggestion}>Enter</Text> to save
-              configuration
+              Press <Text color={theme.suggestion}>Esc</Text> to go back to
+              model parameters or <Text color={theme.suggestion}>Enter</Text> to
+              save configuration
             </Text>
           </Box>
         </Box>

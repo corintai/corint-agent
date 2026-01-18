@@ -42,7 +42,9 @@ export function ProviderSelectionScreen({
       gap={containerGap}
       children={
         <Box flexDirection="column" gap={containerGap}>
-          <Text bold>Select your preferred AI provider for this model profile:</Text>
+          <Text bold>
+            Select your preferred AI provider for this model profile:
+          </Text>
           <Box flexDirection="column" width={70}>
             <Text color={theme.secondaryText}>
               {compactLayout ? (

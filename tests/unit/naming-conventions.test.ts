@@ -41,7 +41,10 @@ describe('Naming conventions', () => {
     for (const entry of entries) {
       if (!entry.isFile()) continue
       if (entry.name.startsWith('.')) continue
-      if (isTsLikeFile(entry.name) && !CORE_UTILS_ROOT_ALLOWLIST.has(entry.name)) {
+      if (
+        isTsLikeFile(entry.name) &&
+        !CORE_UTILS_ROOT_ALLOWLIST.has(entry.name)
+      ) {
         violations.push(entry.name)
       }
     }
