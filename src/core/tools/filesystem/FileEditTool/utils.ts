@@ -1,5 +1,4 @@
-import { isAbsolute, resolve } from 'path'
-import { getCwd } from '@utils/state'
+import { normalizeFilePath } from '@utils/fs/file'
 import { readFileBun } from '@utils/bun/file'
 import { type Hunk } from 'diff'
 import { getPatch } from '@utils/text/diff'
@@ -11,9 +10,7 @@ export async function applyEdit(
   new_string: string,
   replace_all = false,
 ): Promise<{ patch: Hunk[]; updatedFile: string }> {
-  const fullFilePath = isAbsolute(file_path)
-    ? file_path
-    : resolve(getCwd(), file_path)
+  const fullFilePath = normalizeFilePath(file_path)
 
   let originalFile
   let updatedFile

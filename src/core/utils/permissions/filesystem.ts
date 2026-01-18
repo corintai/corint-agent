@@ -2,12 +2,16 @@ import { dirname, isAbsolute, resolve, relative } from 'path'
 import { statSync } from 'fs'
 import { getCwd, getOriginalCwd } from '@utils/state'
 import { isMainPlanFilePathForActiveConversation } from '@utils/plan/planMode'
+import { expandTmpDirPath } from '@utils/fs/file'
 
 const readFileAllowedDirectories: Set<string> = new Set()
 const writeFileAllowedDirectories: Set<string> = new Set()
 
 export function toAbsolutePath(path: string): string {
-  const abs = isAbsolute(path) ? resolve(path) : resolve(getCwd(), path)
+  const expanded = expandTmpDirPath(path)
+  const abs = isAbsolute(expanded)
+    ? resolve(expanded)
+    : resolve(getCwd(), expanded)
   return normalizeForCompare(abs)
 }
 

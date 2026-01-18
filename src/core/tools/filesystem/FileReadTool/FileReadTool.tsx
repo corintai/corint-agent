@@ -155,8 +155,12 @@ export const FileReadTool = {
   },
   renderToolUseMessage(input, { verbose }) {
     const { file_path, ...rest } = input
+    const fullFilePath = normalizeFilePath(file_path)
     const entries = [
-      ['file_path', verbose ? file_path : relative(getCwd(), file_path)],
+      [
+        'file_path',
+        verbose ? fullFilePath : relative(getCwd(), fullFilePath),
+      ],
       ...Object.entries(rest),
     ]
     return entries

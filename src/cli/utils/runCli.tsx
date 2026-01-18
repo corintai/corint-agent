@@ -690,7 +690,7 @@ async function gracefulExit(code = 0) {
     const sessionId = getKodeAgentSessionId()
     const transcriptPath = join(
       getSessionOutputDir(),
-      'kode-hooks-transcripts',
+      'hooks',
       `${sessionId}.transcript.txt`,
     )
 

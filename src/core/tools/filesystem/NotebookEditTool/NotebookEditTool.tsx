@@ -1,11 +1,12 @@
 import { randomUUID } from 'crypto'
-import { extname, isAbsolute, relative, resolve } from 'path'
+import { extname, relative } from 'path'
 import { z } from 'zod'
 import type { Tool } from '@tool'
 import { NotebookCellType, NotebookContent } from '@kode-types/notebook'
 import {
   detectFileEncoding,
   detectLineEndings,
+  normalizeFilePath,
   writeTextContent,
 } from '@utils/fs/file'
 import { readFileBun, fileExistsBun } from '@utils/bun/file'
@@ -97,7 +98,7 @@ export const NotebookEditTool = {
     return false
   },
   needsPermissions({ notebook_path }) {
-    return !hasWritePermission(notebook_path)
+    return !hasWritePermission(normalizeFilePath(notebook_path))
   },
   renderResultForAssistant({ cell_id, edit_mode, new_source, error }) {
     if (error) {
@@ -114,7 +115,8 @@ export const NotebookEditTool = {
   },
   renderToolUseMessage(input, { verbose }) {
     const cellRef = input.cell_id ?? '(none)'
-    return `notebook_path: ${verbose ? input.notebook_path : relative(getCwd(), input.notebook_path)}, cell_id: ${cellRef}, content: ${input.new_source.slice(0, 30)}…, cell_type: ${input.cell_type}, edit_mode: ${input.edit_mode ?? 'replace'}`
+    const fullFilePath = normalizeFilePath(input.notebook_path)
+    return `notebook_path: ${verbose ? fullFilePath : relative(getCwd(), fullFilePath)}, cell_id: ${cellRef}, content: ${input.new_source.slice(0, 30)}…, cell_type: ${input.cell_type}, edit_mode: ${input.edit_mode ?? 'replace'}`
   },
   async validateInput({
     notebook_path,
@@ -122,9 +124,7 @@ export const NotebookEditTool = {
     cell_type,
     edit_mode = 'replace',
   }) {
-    const fullPath = isAbsolute(notebook_path)
-      ? notebook_path
-      : resolve(getCwd(), notebook_path)
+    const fullPath = normalizeFilePath(notebook_path)
 
     if (!fileExistsBun(fullPath)) {
       return {
@@ -183,9 +183,7 @@ export const NotebookEditTool = {
     return { result: true }
   },
   async *call({ notebook_path, cell_id, new_source, cell_type, edit_mode }) {
-    const fullPath = isAbsolute(notebook_path)
-      ? notebook_path
-      : resolve(getCwd(), notebook_path)
+    const fullPath = normalizeFilePath(notebook_path)
     const mode = edit_mode ?? 'replace'
     let editedCellId: string | undefined = cell_id
 

@@ -3,7 +3,7 @@ import type {
   TextBlockParam,
 } from '@anthropic-ai/sdk/resources/index.mjs'
 
-import { extname, isAbsolute, relative, resolve } from 'path'
+import { extname, relative } from 'path'
 import { z } from 'zod'
 import { Tool } from '@tool'
 import {
@@ -17,7 +17,7 @@ import {
 } from '@kode-types/notebook'
 import { formatOutput } from '@tools/BashTool/utils'
 import { getCwd } from '@utils/state'
-import { findSimilarFile } from '@utils/fs/file'
+import { findSimilarFile, normalizeFilePath } from '@utils/fs/file'
 import { readFileBun, fileExistsBun } from '@utils/bun/file'
 import { DESCRIPTION, PROMPT } from './prompt'
 import { hasReadPermission } from '@utils/permissions/filesystem'
@@ -55,12 +55,10 @@ export const NotebookReadTool = {
     return true
   },
   needsPermissions({ notebook_path }) {
-    return !hasReadPermission(notebook_path)
+    return !hasReadPermission(normalizeFilePath(notebook_path))
   },
   async validateInput({ notebook_path }) {
-    const fullFilePath = isAbsolute(notebook_path)
-      ? notebook_path
-      : resolve(getCwd(), notebook_path)
+    const fullFilePath = normalizeFilePath(notebook_path)
 
     if (!fileExistsBun(fullFilePath)) {
       const similarFilename = findSimilarFile(fullFilePath)
@@ -86,12 +84,11 @@ export const NotebookReadTool = {
     return { result: true }
   },
   renderToolUseMessage(input, { verbose }) {
-    return `notebook_path: ${verbose ? input.notebook_path : relative(getCwd(), input.notebook_path)}`
+    const fullFilePath = normalizeFilePath(input.notebook_path)
+    return `notebook_path: ${verbose ? fullFilePath : relative(getCwd(), fullFilePath)}`
   },
   async *call({ notebook_path }) {
-    const fullPath = isAbsolute(notebook_path)
-      ? notebook_path
-      : resolve(getCwd(), notebook_path)
+    const fullPath = normalizeFilePath(notebook_path)
 
     const content = await readFileBun(fullPath)
     if (!content) {

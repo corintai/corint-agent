@@ -40,7 +40,7 @@ export function updateHookTranscriptForMessages(
   const state = getHookRuntimeState(toolUseContext)
   const sessionId = getKodeAgentSessionId()
 
-  const dir = join(getSessionOutputDir(), 'kode-hooks-transcripts')
+  const dir = join(getSessionOutputDir(), 'hooks')
   try {
     mkdirSync(dir, { recursive: true })
   } catch {}

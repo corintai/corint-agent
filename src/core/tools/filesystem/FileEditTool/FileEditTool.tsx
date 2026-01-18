@@ -1,6 +1,6 @@
 import { Hunk } from 'diff'
 import { mkdirSync, statSync } from 'fs'
-import { dirname, isAbsolute, relative, resolve, sep } from 'path'
+import { dirname, isAbsolute, relative } from 'path'
 import { z } from 'zod'
 import { Tool, ValidationResult } from '@tool'
 import {
@@ -8,6 +8,7 @@ import {
   detectFileEncoding,
   detectLineEndings,
   findSimilarFile,
+  normalizeFilePath,
   writeTextContent,
 } from '@utils/fs/file'
 import { readFileBun, fileExistsBun } from '@utils/bun/file'
@@ -57,10 +58,11 @@ export const FileEditTool = {
     return false
   },
   needsPermissions({ file_path }) {
-    return !hasWritePermission(file_path)
+    return !hasWritePermission(normalizeFilePath(file_path))
   },
   renderToolUseMessage(input, { verbose }) {
-    return `file_path: ${verbose ? input.file_path : relative(getCwd(), input.file_path)}`
+    const fullFilePath = normalizeFilePath(input.file_path)
+    return `file_path: ${verbose ? fullFilePath : relative(getCwd(), fullFilePath)}`
   },
   async validateInput(
     { file_path, old_string, new_string, replace_all },
@@ -77,9 +79,7 @@ export const FileEditTool = {
       } as ValidationResult
     }
 
-    const fullFilePath = isAbsolute(file_path)
-      ? file_path
-      : resolve(getCwd(), file_path)
+    const fullFilePath = normalizeFilePath(file_path)
 
     if (old_string === '') {
       if (!fileExistsBun(fullFilePath)) return { result: true }
@@ -175,9 +175,7 @@ export const FileEditTool = {
     { file_path, old_string, new_string, replace_all },
     { readFileTimestamps },
   ) {
-    const fullFilePath = isAbsolute(file_path)
-      ? file_path
-      : resolve(getCwd(), file_path)
+    const fullFilePath = normalizeFilePath(file_path)
 
     if (fileExistsBun(fullFilePath)) {
       const readTimestamp = readFileTimestamps[fullFilePath]

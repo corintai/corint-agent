@@ -22,7 +22,10 @@ import {
 } from '@utils/messages'
 import { resolveToolNameAlias } from '@utils/tooling/toolNameAliases'
 import { getCwd } from '@utils/state'
-import { setRequestStatus } from '@utils/session/requestStatus'
+import {
+  formatToolStatusDetail,
+  setRequestStatus,
+} from '@utils/session/requestStatus'
 import {
   getHookTranscriptPath,
   queueHookAdditionalContexts,
@@ -400,7 +403,16 @@ export async function* runToolUse(
 ): AsyncGenerator<Message, void> {
   const currentRequest = getCurrentRequest()
   const aliasResolution = resolveToolNameAlias(toolUse.name)
-  setRequestStatus({ kind: 'tool', detail: aliasResolution.resolvedName })
+  const toolDetail = formatToolStatusDetail(
+    aliasResolution.resolvedName,
+    toolUse.input && typeof toolUse.input === 'object'
+      ? (toolUse.input as Record<string, unknown>)
+      : null,
+  )
+  setRequestStatus({
+    kind: 'tool',
+    detail: toolDetail ?? aliasResolution.resolvedName,
+  })
 
   debugLogger.flow('TOOL_USE_START', {
     toolName: toolUse.name,

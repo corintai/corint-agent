@@ -19,7 +19,7 @@ function getLabel(status: RequestStatus): string {
     case 'streaming':
       return 'Streaming'
     case 'tool':
-      return status.detail ? `Running tool: ${status.detail}` : 'Running tool'
+      return status.detail ? status.detail : 'Running tool'
     case 'idle':
       return 'Working'
   }

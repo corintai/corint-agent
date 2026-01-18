@@ -1,12 +1,11 @@
 import { mkdirSync, statSync } from 'fs'
-import { dirname, isAbsolute, relative, resolve, sep } from 'path'
+import { dirname, isAbsolute, relative } from 'path'
 import { z } from 'zod'
 import { Tool, ValidationResult } from '@tool'
 import {
-  addLineNumbers,
   detectFileEncoding,
   detectLineEndings,
-  findSimilarFile,
+  normalizeFilePath,
   writeTextContent,
 } from '@utils/fs/file'
 import { readFileBun, fileExistsBun } from '@utils/bun/file'
@@ -89,7 +88,7 @@ export const MultiEditTool = {
   },
   needsPermissions(input?: z.infer<typeof inputSchema>) {
     if (!input) return true
-    return !hasWritePermission(input.file_path)
+    return !hasWritePermission(normalizeFilePath(input.file_path))
   },
   renderResultForAssistant(content) {
     return content
@@ -97,9 +96,8 @@ export const MultiEditTool = {
   renderToolUseMessage(input, { verbose }) {
     const { file_path, edits } = input
     const workingDir = getCwd()
-    const relativePath = isAbsolute(file_path)
-      ? relative(workingDir, file_path)
-      : file_path
+    const fullFilePath = normalizeFilePath(file_path)
+    const relativePath = relative(workingDir, fullFilePath)
 
     if (verbose) {
       const editSummary = edits
@@ -118,9 +116,7 @@ export const MultiEditTool = {
     context?: { readFileTimestamps?: Record<string, number> },
   ): Promise<ValidationResult> {
     const workingDir = getCwd()
-    const normalizedPath = isAbsolute(file_path)
-      ? resolve(file_path)
-      : resolve(workingDir, file_path)
+    const normalizedPath = normalizeFilePath(file_path)
 
     if (normalizedPath.endsWith('.ipynb')) {
       return {
@@ -233,9 +229,7 @@ export const MultiEditTool = {
   async *call({ file_path, edits }, { readFileTimestamps }) {
     const startTime = Date.now()
     const workingDir = getCwd()
-    const filePath = isAbsolute(file_path)
-      ? resolve(file_path)
-      : resolve(workingDir, file_path)
+    const filePath = normalizeFilePath(file_path)
 
     try {
       let currentContent = ''

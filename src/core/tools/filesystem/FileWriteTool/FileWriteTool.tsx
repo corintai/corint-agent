@@ -1,7 +1,6 @@
 import { Hunk } from 'diff'
-import { mkdirSync, readFileSync, statSync } from 'fs'
-import { EOL } from 'os'
-import { dirname, extname, isAbsolute, relative, resolve, sep } from 'path'
+import { mkdirSync, statSync } from 'fs'
+import { dirname, relative } from 'path'
 import { z } from 'zod'
 import type { Tool } from '@tool'
 import {
@@ -9,15 +8,14 @@ import {
   detectFileEncoding,
   detectLineEndings,
   detectRepoLineEndings,
+  normalizeFilePath,
   writeTextContent,
 } from '@utils/fs/file'
 import { readFileBun, fileExistsBun } from '@utils/bun/file'
-import { logError } from '@utils/log'
 import { getCwd } from '@utils/state'
 import { PROMPT } from './prompt'
 import { hasWritePermission } from '@utils/permissions/filesystem'
 import { getPatch } from '@utils/text/diff'
-import { PROJECT_FILE } from '@constants/product'
 import { emitReminderEvent } from '@services/systemReminder'
 import { recordFileEdit } from '@services/fileFreshness'
 
@@ -55,15 +53,14 @@ export const FileWriteTool = {
     return false
   },
   needsPermissions({ file_path }) {
-    return !hasWritePermission(file_path)
+    return !hasWritePermission(normalizeFilePath(file_path))
   },
   renderToolUseMessage(input, { verbose }) {
-    return `file_path: ${verbose ? input.file_path : relative(getCwd(), input.file_path)}`
+    const fullFilePath = normalizeFilePath(input.file_path)
+    return `file_path: ${verbose ? fullFilePath : relative(getCwd(), fullFilePath)}`
   },
   async validateInput({ file_path }, { readFileTimestamps }) {
-    const fullFilePath = isAbsolute(file_path)
-      ? file_path
-      : resolve(getCwd(), file_path)
+    const fullFilePath = normalizeFilePath(file_path)
 
     if (fullFilePath.endsWith('.ipynb')) {
       return {
@@ -98,9 +95,7 @@ export const FileWriteTool = {
     return { result: true }
   },
   async *call({ file_path, content }, { readFileTimestamps }) {
-    const fullFilePath = isAbsolute(file_path)
-      ? file_path
-      : resolve(getCwd(), file_path)
+    const fullFilePath = normalizeFilePath(file_path)
     const dir = dirname(fullFilePath)
     const oldFileExists = fileExistsBun(fullFilePath)
 

@@ -116,8 +116,9 @@ ${mcpCliException}    - Set \`dangerouslyDisableSandbox: true\` if:
 ${sections.join('\n')}
 ${overridePolicy}
   - IMPORTANT: For temporary files, rely on the session temp directory via \`TMPDIR\`
-    - \`TMPDIR\` is set to a per-session directory under \`/tmp/.corint\`
+    - \`TMPDIR\` is set to a per-session directory under \`/tmp/corint\`
     - Prefer using \`TMPDIR\` over writing directly to \`/tmp\` or \`/var/tmp\`
+    - When generating code/scripts (e.g. Python), ALWAYS write to \`$TMPDIR\` using an absolute path (avoid relative paths into the project)
     - Most programs that respect \`TMPDIR\` will automatically use it`
 }
 

@@ -1,6 +1,9 @@
 import { getContext } from '@context'
 import { getCurrentProjectConfig } from '@utils/config'
-import { cleanupOldMessageFilesInBackground } from '@utils/session/cleanup'
+import {
+  cleanupOldMessageFilesInBackground,
+  cleanupOldSessionDirsInBackground,
+} from '@utils/session/cleanup'
 import {
   ensureSessionTempDirExists,
   getSessionTempDir,
@@ -48,6 +51,7 @@ export async function setup(cwd: string, safeMode?: boolean): Promise<void> {
   }
 
   cleanupOldMessageFilesInBackground()
+  cleanupOldSessionDirsInBackground()
   getContext()
 
   const projectConfig = getCurrentProjectConfig()

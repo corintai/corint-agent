@@ -22,9 +22,9 @@ let sessionTempDir: string | null = null
 
 function getSessionBaseDir(): string {
   if (process.platform === 'win32') {
-    return join(tmpdir(), '.corint')
+    return join(tmpdir(), 'corint')
   }
-  return join('/tmp', '.corint')
+  return join('/tmp', 'corint')
 }
 
 export function getSessionOutputDir(): string {

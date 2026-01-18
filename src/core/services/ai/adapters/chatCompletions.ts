@@ -6,7 +6,10 @@ import {
 } from '@kode-types/modelCapabilities'
 import { Tool, getToolDescription } from '@tool'
 import { zodToJsonSchema } from 'zod-to-json-schema'
-import { setRequestStatus } from '@utils/session/requestStatus'
+import {
+  formatToolStatusDetail,
+  setRequestStatus,
+} from '@utils/session/requestStatus'
 
 export class ChatCompletionsAdapter extends OpenAIAdapter {
   createRequest(params: UnifiedRequestParams): any {
@@ -272,7 +275,23 @@ export class ChatCompletionsAdapter extends OpenAIAdapter {
         }
 
         if (event.type === 'tool_request') {
-          setRequestStatus({ kind: 'tool', detail: event.tool?.name })
+          let parsedInput: Record<string, unknown> | null = null
+          if (event.tool?.input) {
+            if (typeof event.tool.input === 'string') {
+              try {
+                parsedInput = JSON.parse(event.tool.input)
+              } catch {
+                parsedInput = null
+              }
+            } else if (typeof event.tool.input === 'object') {
+              parsedInput = event.tool.input as Record<string, unknown>
+            }
+          }
+          const detail = formatToolStatusDetail(event.tool?.name, parsedInput)
+          setRequestStatus({
+            kind: 'tool',
+            detail: detail ?? event.tool?.name,
+          })
           pendingToolCalls.push(event.tool)
           continue
         }

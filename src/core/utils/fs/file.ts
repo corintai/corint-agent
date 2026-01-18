@@ -26,6 +26,7 @@ import { listAllContentFiles } from '@utils/system/ripgrep'
 import { LRUCache } from 'lru-cache'
 import { getCwd } from '@utils/state'
 import { BunSearcher } from '@utils/bun/searcher'
+import { getSessionTempDir } from '@utils/session/sessionTempDir'
 
 export type File = {
   filename: string
@@ -291,10 +292,30 @@ export function detectLineEndingsDirect(
   }
 }
 
+function stripOuterQuotes(value: string): string {
+  const trimmed = value.trim()
+  if (
+    (trimmed.startsWith('"') && trimmed.endsWith('"')) ||
+    (trimmed.startsWith("'") && trimmed.endsWith("'"))
+  ) {
+    return trimmed.slice(1, -1)
+  }
+  return trimmed
+}
+
+export function expandTmpDirPath(filePath: string): string {
+  const cleaned = stripOuterQuotes(filePath)
+  const match = cleaned.match(/^\$(?:\{TMPDIR\}|TMPDIR)([\\/].*)?$/)
+  if (!match) return cleaned
+  const suffix = match[1] ?? ''
+  return `${getSessionTempDir()}${suffix}`
+}
+
 export function normalizeFilePath(filePath: string): string {
-  const absoluteFilePath = isAbsolute(filePath)
-    ? filePath
-    : resolve(getCwd(), filePath)
+  const expandedFilePath = expandTmpDirPath(filePath)
+  const absoluteFilePath = isAbsolute(expandedFilePath)
+    ? expandedFilePath
+    : resolve(getCwd(), expandedFilePath)
 
   if (absoluteFilePath.endsWith(' AM.png')) {
     return absoluteFilePath.replace(
@@ -314,7 +335,9 @@ export function normalizeFilePath(filePath: string): string {
 }
 
 export function getAbsolutePath(path: string | undefined): string | undefined {
-  return path ? (isAbsolute(path) ? path : resolve(getCwd(), path)) : undefined
+  if (!path) return undefined
+  const expanded = expandTmpDirPath(path)
+  return isAbsolute(expanded) ? expanded : resolve(getCwd(), expanded)
 }
 
 export function getAbsoluteAndRelativePaths(path: string | undefined): {
