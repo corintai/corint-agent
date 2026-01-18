@@ -16,6 +16,7 @@ import { getPatch } from '@utils/text/diff'
 import { normalizeLineEndings } from '@utils/text/normalizeLineEndings'
 import { BLACK_CIRCLE } from '@constants/figures'
 import { formatDuration } from '@utils/format'
+import { getTodos } from '@utils/session/todoStorage'
 import type { Tool } from '@tool'
 import { BashTool } from '@tools/BashTool/BashTool'
 import { KillShellTool } from '@tools/KillShellTool/KillShellTool'
@@ -55,7 +56,58 @@ export function decorateToolsForCli(): void {
   todoWriteTool.renderToolUseRejectedMessage = () => (
     <FallbackToolUseRejectedMessage />
   )
-  todoWriteTool.renderToolResultMessage = () => null
+  todoWriteTool.renderToolResultMessage = (output: any) => {
+    const agentId =
+      output && typeof output === 'object' ? output.agentId : undefined
+    const todos = getTodos(agentId)
+    if (todos.length === 0) {
+      return (
+        <Box flexDirection="row" marginTop={1}>
+          <Text>&nbsp;&nbsp;⎿ &nbsp;</Text>
+          <Text>No todos currently tracked</Text>
+        </Box>
+      )
+    }
+
+    const count = todos.length
+    const label = count === 1 ? 'todo' : 'todos'
+    return (
+      <Box flexDirection="column" marginTop={1}>
+        <Box flexDirection="row">
+          <Text>&nbsp;&nbsp;⎿ &nbsp;</Text>
+          <Text>
+            <Text bold>
+              {count} {label}
+            </Text>
+            <Text>:</Text>
+          </Text>
+        </Box>
+        <Box marginTop={1} flexDirection="column" paddingLeft={2}>
+          {todos.map((todo, index) => {
+            const isCompleted = todo.status === 'completed'
+            const isInProgress = todo.status === 'in_progress'
+            const statusLabel = isCompleted
+              ? '[done]'
+              : isInProgress
+                ? '[doing]'
+                : '[todo]'
+            return (
+              <Box key={index} flexDirection="row">
+                <Text dimColor={isCompleted}>{statusLabel} </Text>
+                <Text
+                  bold={isInProgress}
+                  dimColor={isCompleted}
+                  strikethrough={isCompleted}
+                >
+                  {todo.content}
+                </Text>
+              </Box>
+            )
+          })}
+        </Box>
+      </Box>
+    )
+  }
 
   const taskTool = TaskTool as Tool
   taskTool.renderToolResultMessage = (output: any) => {
