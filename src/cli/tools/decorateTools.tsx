@@ -15,11 +15,13 @@ import { fileExistsBun } from '@utils/bun/file'
 import { getPatch } from '@utils/text/diff'
 import { normalizeLineEndings } from '@utils/text/normalizeLineEndings'
 import { BLACK_CIRCLE } from '@constants/figures'
+import { formatDuration } from '@utils/format'
 import type { Tool } from '@tool'
 import { BashTool } from '@tools/BashTool/BashTool'
 import { KillShellTool } from '@tools/KillShellTool/KillShellTool'
 import { AskUserQuestionTool } from '@tools/interaction/AskUserQuestionTool/AskUserQuestionTool'
 import { TodoWriteTool } from '@tools/interaction/TodoWriteTool/TodoWriteTool'
+import { TaskTool } from '@tools/agent/TaskTool/TaskTool'
 import { FileWriteTool } from '@tools/FileWriteTool/FileWriteTool'
 import { FileEditTool } from '@tools/FileEditTool/FileEditTool'
 import BashToolResultMessage from '@cli/tools/system/BashTool/BashToolResultMessage'
@@ -54,6 +56,22 @@ export function decorateToolsForCli(): void {
     <FallbackToolUseRejectedMessage />
   )
   todoWriteTool.renderToolResultMessage = () => null
+
+  const taskTool = TaskTool as Tool
+  taskTool.renderToolResultMessage = (output: any) => {
+    if (!output || output.status !== 'completed') {
+      return null
+    }
+    const durationMs =
+      typeof output.totalDurationMs === 'number' ? output.totalDurationMs : null
+    if (durationMs === null) return null
+    return (
+      <Box flexDirection="row">
+        <Text>&nbsp;&nbsp;⎿ &nbsp;</Text>
+        <Text>Task completed in {formatDuration(durationMs)}</Text>
+      </Box>
+    )
+  }
 
   const askUserQuestionTool = AskUserQuestionTool as Tool
   askUserQuestionTool.renderToolUseRejectedMessage = () => {

@@ -23,6 +23,7 @@ import { getMaxThinkingTokens } from '@utils/model/thinking'
 import { generateAgentId } from '@utils/agent/storage'
 import { getAgentByType, getAvailableAgentTypes } from '@utils/agent/loader'
 import { upsertBackgroundAgentTask } from '@utils/session/backgroundTasks'
+import { formatDuration } from '@utils/format'
 import {
   getAgentTranscript,
   saveAgentTranscript,
@@ -646,7 +647,10 @@ export const TaskTool = {
     }
 
     const renderProgressText = (toolUseCount: number): string => {
-      const header = `${input.description || 'Task'}… (${toolUseCount} tool${toolUseCount === 1 ? '' : 's'})`
+      const elapsed = formatDuration(
+        Math.max(0, Date.now() - startTime),
+      )
+      const header = `${input.description || 'Task'}… (${toolUseCount} tool${toolUseCount === 1 ? '' : 's'}, ${elapsed})`
       if (recentActions.length === 0) return header
       const lines = recentActions.map(a => `- ${a}`)
       return [header, ...lines].join('\n')
