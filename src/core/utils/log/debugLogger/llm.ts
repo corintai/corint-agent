@@ -15,6 +15,7 @@ function writeLLMLogToFile(context: {
   usage?: { inputTokens: number; outputTokens: number }
   timing: { start: number; end: number }
   apiFormat?: 'anthropic' | 'openai'
+  tag?: string
 }) {
   try {
     const llmLogPath = DEBUG_PATHS.llm()
@@ -36,6 +37,9 @@ function writeLLMLogToFile(context: {
 
     let logContent = `\n${stepSeparator}\n`
     logContent += `LLM STEP ${step} (${context.apiFormat || 'unknown'} API)\n`
+    if (context.tag) {
+      logContent += `Tag: ${context.tag}\n`
+    }
     logContent += `Start: ${startTimestamp}\n`
     logContent += `End:   ${endTimestamp}\n`
     logContent += `Duration: ${duration}ms`
@@ -103,6 +107,7 @@ export function logLLMInteraction(context: {
   usage?: { inputTokens: number; outputTokens: number }
   timing: { start: number; end: number }
   apiFormat?: 'anthropic' | 'openai'
+  tag?: string
 }) {
   // Always write to llm.log file regardless of debug mode
   writeLLMLogToFile(context)
@@ -118,6 +123,9 @@ export function logLLMInteraction(context: {
   terminalLog(`   Messages Count: ${context.messages.length}`)
   terminalLog(`   System Prompt Length: ${context.systemPrompt.length} chars`)
   terminalLog(`   Duration: ${duration.toFixed(0)}ms`)
+  if (context.tag) {
+    terminalLog(`   Tag: ${context.tag}`)
+  }
 
   if (context.usage) {
     terminalLog(

@@ -44,6 +44,7 @@ Do not include any other text in your response.`,
     ],
     userPrompt: `Command: ${command}\nOutput: ${output}`,
     enablePromptCaching: true,
+    logTag: 'bash:filepaths',
   })
   const content = response.message.content
     .filter(_ => _.type === 'text')

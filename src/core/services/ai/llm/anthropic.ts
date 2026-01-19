@@ -293,6 +293,7 @@ export async function queryAnthropicNative(
     stopSequences?: string[]
     modelProfile?: ModelProfile | null
     toolUseContext?: ToolUseContext
+    logTag?: string
   },
 ): Promise<AssistantMessage> {
   const config = getGlobalConfig()
@@ -687,6 +688,7 @@ export async function queryAnthropicNative(
         end: Date.now(),
       },
       apiFormat: 'anthropic',
+      tag: options?.logTag,
     })
 
     const inputTokens = response.usage.input_tokens

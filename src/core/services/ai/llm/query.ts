@@ -35,6 +35,7 @@ export async function queryLLM(
     maxTokens?: number
     stopSequences?: string[]
     toolUseContext?: ToolUseContext
+    logTag?: string
     __testModelManager?: any
     __testQueryLLMWithPromptCaching?: any
   },
@@ -174,6 +175,7 @@ export async function queryLLMWithPromptCaching(
     stopSequences?: string[]
     modelProfile?: ModelProfile | null
     toolUseContext?: ToolUseContext
+    logTag?: string
   },
 ): Promise<AssistantMessage> {
   const config = getGlobalConfig()
@@ -217,6 +219,7 @@ export async function queryModel(
   messages: (UserMessage | AssistantMessage)[],
   systemPrompt: string[] = [],
   signal?: AbortSignal,
+  options?: { logTag?: string },
 ): Promise<AssistantMessage> {
   return queryLLM(
     messages,
@@ -228,6 +231,7 @@ export async function queryModel(
       safeMode: false,
       model: modelPointer,
       prependCLISysprompt: true,
+      logTag: options?.logTag,
     },
   )
 }
@@ -238,12 +242,14 @@ export async function queryQuick({
   assistantPrompt,
   enablePromptCaching = false,
   signal,
+  logTag,
 }: {
   systemPrompt?: string[]
   userPrompt: string
   assistantPrompt?: string
   enablePromptCaching?: boolean
   signal?: AbortSignal
+  logTag?: string
 }): Promise<AssistantMessage> {
   const messages = [
     {
@@ -253,5 +259,5 @@ export async function queryQuick({
     },
   ] as (UserMessage | AssistantMessage)[]
 
-  return queryModel('quick', messages, systemPrompt, signal)
+  return queryModel('quick', messages, systemPrompt, signal, { logTag })
 }

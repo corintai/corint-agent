@@ -179,6 +179,7 @@ async function defaultGateQuery(args: {
       model: args.model ?? 'quick',
       prependCLISysprompt: false,
       stopSequences: DEFAULT_GATE_STOP_SEQUENCES,
+      logTag: 'bash:gate',
     },
   )
 

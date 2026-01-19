@@ -217,6 +217,7 @@ const getCommandPrefix = memoize(
       userPrompt,
       signal: abortSignal,
       enablePromptCaching: false,
+      logTag: 'bash:prefix',
     })
 
     const rawPrefix =

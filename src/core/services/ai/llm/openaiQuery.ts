@@ -409,6 +409,7 @@ export async function queryOpenAI(
     stopSequences?: string[]
     modelProfile?: ModelProfile | null
     toolUseContext?: ToolUseContext
+    logTag?: string
   },
 ): Promise<AssistantMessage> {
   const config = getGlobalConfig()
@@ -741,6 +742,7 @@ export async function queryOpenAI(
       end: Date.now(),
     },
     apiFormat: queryResult.apiFormat,
+    tag: options?.logTag,
   })
 
   assistantMessage.costUSD = costUSD

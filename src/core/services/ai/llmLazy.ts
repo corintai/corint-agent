@@ -14,6 +14,7 @@ export async function queryLLM(
     prependCLISysprompt: boolean
     temperature?: number
     toolUseContext?: ToolUseContext
+    logTag?: string
     __testModelManager?: any
     __testQueryLLMWithPromptCaching?: any
   },
@@ -35,6 +36,7 @@ export async function queryQuick(args: {
   assistantPrompt?: string
   enablePromptCaching?: boolean
   signal?: AbortSignal
+  logTag?: string
 }): Promise<AssistantMessage> {
   const { queryQuick: inner } = await import('@services/llm')
   return inner(args as any)
