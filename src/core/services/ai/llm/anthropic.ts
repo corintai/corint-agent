@@ -397,6 +397,7 @@ export async function queryAnthropicNative(
   let start = Date.now()
   let attemptNumber = 0
   let response
+  let requestPayload: any = null
 
   try {
     response = await withRetry(
@@ -426,6 +427,7 @@ export async function queryAnthropicNative(
           }
           ;(params as any).thinking = { max_tokens: maxThinkingTokens }
         }
+        requestPayload = config.stream ? { ...params, stream: true } : params
 
         debugLogger.api('ANTHROPIC_API_CALL_START_STREAMING', {
           endpoint: modelProfile?.baseURL || 'DEFAULT_ANTHROPIC',
@@ -672,6 +674,7 @@ export async function queryAnthropicNative(
     logLLMInteraction({
       systemPrompt: systemPrompt.join('\n'),
       messages: [...systemMessages, ...anthropicMessages],
+      request: requestPayload,
       response: response,
       usage: response.usage
         ? {

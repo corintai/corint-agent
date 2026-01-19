@@ -213,6 +213,16 @@ export function modeSpecificBashDecision(
   command: string,
   toolPermissionContext: ToolPermissionContext,
 ): BashPermissionDecision {
+  if (toolPermissionContext.mode === 'bypassPermissions') {
+    return {
+      behavior: 'allow',
+      updatedInput: { command },
+      decisionReason: {
+        type: 'other',
+        reason: 'Auto-allowed in bypassPermissions mode',
+      },
+    }
+  }
   if (toolPermissionContext.mode !== 'acceptEdits') {
     return {
       behavior: 'passthrough',

@@ -5,9 +5,12 @@ import { DEBUG_PATHS } from './constants'
 import { isDebugMode } from './flags'
 import { terminalLog } from './terminal'
 
+let llmLogSequence = 0
+
 function writeLLMLogToFile(context: {
   systemPrompt: string
   messages: any[]
+  request?: any
   response: any
   usage?: { inputTokens: number; outputTokens: number }
   timing: { start: number; end: number }
@@ -23,63 +26,32 @@ function writeLLMLogToFile(context: {
 
     const duration = context.timing.end - context.timing.start
     const timestamp = new Date().toISOString()
+    const startTimestamp = new Date(context.timing.start).toISOString()
+    const endTimestamp = new Date(context.timing.end).toISOString()
+    const step = (llmLogSequence += 1)
 
-    const separator = '='.repeat(80)
-    const subSeparator = '-'.repeat(60)
+    const separator = '='.repeat(96)
+    const subSeparator = '-'.repeat(72)
+    const stepSeparator = '#'.repeat(96)
 
-    let logContent = `\n${separator}\n`
-    logContent += `[${timestamp}] LLM Interaction (${context.apiFormat || 'unknown'} API)\n`
+    let logContent = `\n${stepSeparator}\n`
+    logContent += `LLM STEP ${step} (${context.apiFormat || 'unknown'} API)\n`
+    logContent += `Start: ${startTimestamp}\n`
+    logContent += `End:   ${endTimestamp}\n`
     logContent += `Duration: ${duration}ms`
     if (context.usage) {
       logContent += ` | Tokens: ${context.usage.inputTokens} in → ${context.usage.outputTokens} out`
     }
-    logContent += `\n${separator}\n\n`
-
-    // System Prompt
-    logContent += `${subSeparator}\n`
-    logContent += `SYSTEM PROMPT (${context.systemPrompt.length} chars):\n`
-    logContent += `${subSeparator}\n`
-    logContent += `${context.systemPrompt}\n\n`
-
-    // Messages
-    logContent += `${subSeparator}\n`
-    logContent += `MESSAGES (${context.messages.length} total):\n`
-    logContent += `${subSeparator}\n`
-
-    context.messages.forEach((msg, index) => {
-      const role = (msg.role || 'unknown').toUpperCase()
-      logContent += `\n[${index}] ${role}:\n`
-
-      if (typeof msg.content === 'string') {
-        logContent += `${msg.content}\n`
-      } else if (Array.isArray(msg.content)) {
-        msg.content.forEach((block: any, blockIndex: number) => {
-          if (block.type === 'text') {
-            logContent += `  [text] ${block.text}\n`
-          } else if (block.type === 'tool_use') {
-            logContent += `  [tool_use] ${block.name}: ${JSON.stringify(block.input, null, 2)}\n`
-          } else if (block.type === 'tool_result') {
-            const resultContent =
-              typeof block.content === 'string'
-                ? block.content
-                : JSON.stringify(block.content, null, 2)
-            logContent += `  [tool_result] tool_use_id=${block.tool_use_id}:\n${resultContent}\n`
-          } else {
-            logContent += `  [${block.type || 'unknown'}] ${JSON.stringify(block, null, 2)}\n`
-          }
-        })
-      } else if (msg.content) {
-        logContent += `${JSON.stringify(msg.content, null, 2)}\n`
+    const requestPayload =
+      context.request ?? {
+        systemPrompt: context.systemPrompt,
+        messages: context.messages,
       }
-
-      // Handle OpenAI tool_calls format
-      if (msg.tool_calls && msg.tool_calls.length > 0) {
-        logContent += `  [tool_calls]:\n`
-        msg.tool_calls.forEach((tc: any, tcIndex: number) => {
-          logContent += `    [${tcIndex}] ${tc.function?.name || tc.name}: ${tc.function?.arguments || JSON.stringify(tc.input)}\n`
-        })
-      }
-    })
+    logContent += `${separator}\n`
+    logContent += `REQUEST RAW JSON:\n`
+    logContent += `${separator}\n`
+    logContent += `${JSON.stringify(requestPayload, null, 2)}\n`
+    logContent += `${separator}\n\n`
 
     // Response
     logContent += `\n${subSeparator}\n`
@@ -112,6 +84,9 @@ function writeLLMLogToFile(context: {
     }
 
     logContent += `\nStop Reason: ${context.response?.stop_reason || context.response?.finish_reason || 'unknown'}\n`
+    logContent += `\nRaw Response JSON:\n`
+    logContent += `${subSeparator}\n`
+    logContent += `${JSON.stringify(context.response, null, 2)}\n`
     logContent += `${separator}\n`
 
     appendFileSync(llmLogPath, logContent)
@@ -123,6 +98,7 @@ function writeLLMLogToFile(context: {
 export function logLLMInteraction(context: {
   systemPrompt: string
   messages: any[]
+  request?: any
   response: any
   usage?: { inputTokens: number; outputTokens: number }
   timing: { start: number; end: number }

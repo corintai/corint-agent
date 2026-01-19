@@ -502,6 +502,7 @@ export async function queryOpenAI(
   }
 
   let adapterContext: AdapterExecutionContext | null = null
+  let requestPayload: any = null
 
   if (modelProfile && modelProfile.modelName) {
     debugLogger.api('CHECKING_ADAPTER_SYSTEM', {
@@ -552,6 +553,7 @@ export async function queryOpenAI(
           request: adapter.createRequest(unifiedParams),
           shouldUseResponses: true,
         }
+        requestPayload = adapterContext.request
       }
     }
   }
@@ -566,6 +568,7 @@ export async function queryOpenAI(
 
         if (adapterContext) {
           if (adapterContext.shouldUseResponses) {
+            requestPayload = adapterContext.request
             const { callGPT5ResponsesAPI } = await import('../openai')
 
             const response = await callGPT5ResponsesAPI(
@@ -599,6 +602,7 @@ export async function queryOpenAI(
             10,
             signal,
           )
+          requestPayload = adapterContext.request
           let finalResponse
           if (config.stream) {
             finalResponse = await handleMessageStream(
@@ -658,6 +662,7 @@ export async function queryOpenAI(
         if (reasoningEffort) {
           opts.reasoning_effort = reasoningEffort
         }
+        requestPayload = opts
 
         const completionFunction = isGPT5Model(modelProfile?.modelName || '')
           ? getGPT5CompletionWithProfile
@@ -725,6 +730,7 @@ export async function queryOpenAI(
   logLLMInteraction({
     systemPrompt: systemPrompt.join('\n'),
     messages: [...openaiSystem, ...openaiMessages],
+    request: requestPayload,
     response: assistantMessage.message || queryResult.rawResponse,
     usage: {
       inputTokens,

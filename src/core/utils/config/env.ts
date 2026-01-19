@@ -54,6 +54,7 @@ export const env = {
       : process.platform === 'darwin'
         ? 'macos'
         : 'linux',
+  osVersion: process.env.OS || process.platform,
   nodeVersion: process.version,
   terminal: process.env.TERM_PROGRAM,
 }
