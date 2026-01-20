@@ -90,6 +90,24 @@ type Props = {
   initialUpdateCommands?: string[] | null
 }
 
+function formatTaskDuration(ms: number): string {
+  const totalSeconds = Math.max(0, Math.round(ms / 1000))
+  const hours = Math.floor(totalSeconds / 3600)
+  const minutes = Math.floor((totalSeconds % 3600) / 60)
+  const seconds = totalSeconds % 60
+
+  if (hours > 0) return `${hours}h ${minutes}m ${seconds}s`
+  if (minutes > 0) return `${minutes}m ${seconds}s`
+  return `${seconds}s`
+}
+
+function buildTaskCompletionMessage(durationMs: number): AssistantMessage {
+  const content = `${'='.repeat(48)}\nTask Completed: ${formatTaskDuration(durationMs)}`
+  const message = createAssistantMessage(content)
+  message.isApiErrorMessage = true
+  return message
+}
+
 export type BinaryFeedbackContext = {
   m1: AssistantMessage
   m2: AssistantMessage
@@ -223,6 +241,7 @@ export function REPL({
       return
     }
 
+    const requestStartedAt = Date.now()
     setIsLoading(true)
 
     const newAbortController = new AbortController()
@@ -265,6 +284,10 @@ export function REPL({
 
       const lastMessage = newMessages[newMessages.length - 1]!
       if (lastMessage.type === 'assistant') {
+        setMessages(_ => [
+          ..._,
+          buildTaskCompletionMessage(Date.now() - requestStartedAt),
+        ])
         setAbortController(null)
         setIsLoading(false)
         return
@@ -307,6 +330,10 @@ export function REPL({
       )) {
         setMessages(oldMessages => [...oldMessages, message])
       }
+      setMessages(_ => [
+        ..._,
+        buildTaskCompletionMessage(Date.now() - requestStartedAt),
+      ])
     } else {
       addToHistory(initialPrompt)
     }
@@ -323,6 +350,7 @@ export function REPL({
     newMessages: MessageType[],
     passedAbortController?: AbortController,
   ) {
+    const requestStartedAt = Date.now()
     const controllerToUse = passedAbortController || new AbortController()
     if (!passedAbortController) {
       setAbortController(controllerToUse)
@@ -346,6 +374,10 @@ export function REPL({
     ) {
     }
     if (lastMessage.type === 'assistant') {
+      setMessages(oldMessages => [
+        ...oldMessages,
+        buildTaskCompletionMessage(Date.now() - requestStartedAt),
+      ])
       setAbortController(null)
       setIsLoading(false)
       return
@@ -420,6 +452,10 @@ export function REPL({
       }
     }
 
+    setMessages(oldMessages => [
+      ...oldMessages,
+      buildTaskCompletionMessage(Date.now() - requestStartedAt),
+    ])
     setIsLoading(false)
   }
 

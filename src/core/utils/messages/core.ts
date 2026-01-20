@@ -263,7 +263,28 @@ export function normalizeMessages(messages: Message[]): NormalizedMessage[] {
         ),
     )
 
-    return contentBlocks.map((block, blockIndex) => {
+    const orderedBlocks =
+      message.type === 'assistant'
+        ? (() => {
+            const thinkingBlocks: typeof contentBlocks = []
+            const restBlocks: typeof contentBlocks = []
+            for (const block of contentBlocks) {
+              if (
+                block.type === 'thinking' ||
+                block.type === 'redacted_thinking'
+              ) {
+                thinkingBlocks.push(block)
+              } else {
+                restBlocks.push(block)
+              }
+            }
+            return thinkingBlocks.length > 0
+              ? [...thinkingBlocks, ...restBlocks]
+              : contentBlocks
+          })()
+        : contentBlocks
+
+    return orderedBlocks.map((block, blockIndex) => {
       switch (message.type) {
         case 'assistant':
           const baseSeed = String(

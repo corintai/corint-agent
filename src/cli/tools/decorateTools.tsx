@@ -15,7 +15,6 @@ import { fileExistsBun } from '@utils/bun/file'
 import { getPatch } from '@utils/text/diff'
 import { normalizeLineEndings } from '@utils/text/normalizeLineEndings'
 import { BLACK_CIRCLE } from '@constants/figures'
-import { formatDuration } from '@utils/format'
 import { getTodos } from '@utils/session/todoStorage'
 import type { Tool } from '@tool'
 import { BashTool } from '@tools/BashTool/BashTool'
@@ -28,6 +27,17 @@ import { FileEditTool } from '@tools/FileEditTool/FileEditTool'
 import BashToolResultMessage from '@cli/tools/system/BashTool/BashToolResultMessage'
 
 let decorated = false
+
+function formatTaskDuration(ms: number): string {
+  const totalSeconds = Math.max(0, Math.round(ms / 1000))
+  const hours = Math.floor(totalSeconds / 3600)
+  const minutes = Math.floor((totalSeconds % 3600) / 60)
+  const seconds = totalSeconds % 60
+
+  if (hours > 0) return `${hours}h ${minutes}m ${seconds}s`
+  if (minutes > 0) return `${minutes}m ${seconds}s`
+  return `${seconds}s`
+}
 
 export function decorateToolsForCli(): void {
   if (decorated) return
@@ -118,9 +128,9 @@ export function decorateToolsForCli(): void {
       typeof output.totalDurationMs === 'number' ? output.totalDurationMs : null
     if (durationMs === null) return null
     return (
-      <Box flexDirection="row">
-        <Text>&nbsp;&nbsp;⎿ &nbsp;</Text>
-        <Text>Task completed in {formatDuration(durationMs)}</Text>
+      <Box flexDirection="column">
+        <Text>{'-'.repeat(48)}</Text>
+        <Text>Task Completed: {formatTaskDuration(durationMs)}</Text>
       </Box>
     )
   }
