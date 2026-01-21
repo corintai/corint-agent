@@ -9,6 +9,7 @@ import type { SetToolJSXFn } from '@cli/types/toolUi'
 import type { ContentBlockParam } from '@anthropic-ai/sdk/resources/index.mjs'
 import { setCwd } from '@utils/state'
 import { getCwd } from '@utils/state'
+import { resolveMainAgentId } from '@utils/agent/storage'
 import chalk from 'chalk'
 import * as React from 'react'
 import { UserBashInputMessage } from '@components/messages/UserBashInputMessage'
@@ -40,6 +41,10 @@ export async function processUserInput(
     mediaType: string
   }> | null,
 ): Promise<Message[]> {
+  if (!context.agentId || !context.agentId.trim()) {
+    context.agentId = resolveMainAgentId()
+  }
+
   if (mode === 'bash') {
     const userMessage = createUserMessage(`<bash-input>${input}</bash-input>`)
 

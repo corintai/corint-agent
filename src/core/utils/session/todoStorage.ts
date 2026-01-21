@@ -4,12 +4,15 @@ import {
   writeAgentData,
   resolveAgentId,
 } from '@utils/agent/storage'
+import { buildTodoTree } from './todoTree'
 
 export interface TodoItem {
   id: string
   content: string
   status: 'pending' | 'in_progress' | 'completed'
   activeForm: string
+  parentId?: string
+  order?: number
   priority: 'high' | 'medium' | 'low'
   createdAt?: number
   updatedAt?: number
@@ -96,6 +99,44 @@ export function getTodoMetrics(): TodoMetrics {
   )
 }
 
+function applyParentAutoComplete(todos: TodoItem[]): TodoItem[] {
+  const roots = buildTodoTree(todos)
+  const byId = new Map(todos.map(todo => [todo.id, todo]))
+  const updated = new Map<string, TodoItem>()
+
+  const visit = (node: { todo: TodoItem; children: any[] }): boolean => {
+    const childStatuses = node.children.map(visit)
+    const childrenComplete =
+      node.children.length > 0 && childStatuses.every(Boolean)
+
+    const current = updated.get(node.todo.id) ?? byId.get(node.todo.id)!
+    const currentCompleted = current.status === 'completed'
+
+    if (childrenComplete && !currentCompleted) {
+      updated.set(node.todo.id, {
+        ...current,
+        status: 'completed',
+        previousStatus: current.status,
+        updatedAt: Date.now(),
+      })
+      return true
+    }
+
+    if (node.children.length > 0) {
+      return childrenComplete && currentCompleted
+    }
+
+    return currentCompleted
+  }
+
+  for (const root of roots) {
+    visit(root)
+  }
+
+  if (updated.size === 0) return todos
+  return todos.map(todo => updated.get(todo.id) ?? todo)
+}
+
 export function getTodos(agentId?: string): TodoItem[] {
   const resolvedAgentId = resolveAgentId(agentId)
   const now = Date.now()
@@ -150,22 +191,27 @@ export function setTodos(todos: TodoItem[], agentId?: string): void {
       processedTodos = todos.filter(todo => todo.status !== 'completed')
     }
 
-    const updatedTodos = processedTodos.map(todo => {
-      const existingTodo = existingTodos.find(
-        existing => existing.id === todo.id,
-      )
+    const updatedTodos = applyParentAutoComplete(
+      processedTodos.map((todo, index) => {
+        const existingTodo = existingTodos.find(
+          existing => existing.id === todo.id,
+        )
 
-      return {
-        ...todo,
-        activeForm: todo.activeForm || todo.content,
-        updatedAt: Date.now(),
-        createdAt: todo.createdAt || Date.now(),
-        previousStatus:
-          existingTodo?.status !== todo.status
-            ? existingTodo?.status
-            : todo.previousStatus,
-      }
-    })
+        return {
+          ...todo,
+          activeForm: todo.activeForm || todo.content,
+          order: Number.isFinite(todo.order)
+            ? (todo.order as number)
+            : existingTodo?.order ?? index,
+          updatedAt: Date.now(),
+          createdAt: todo.createdAt || Date.now(),
+          previousStatus:
+            existingTodo?.status !== todo.status
+              ? existingTodo?.status
+              : todo.previousStatus,
+        }
+      }),
+    )
 
     writeAgentData(resolvedAgentId, updatedTodos)
     updateMetrics('setTodos')
@@ -183,20 +229,25 @@ export function setTodos(todos: TodoItem[], agentId?: string): void {
     processedTodos = todos.filter(todo => todo.status !== 'completed')
   }
 
-  const updatedTodos = processedTodos.map(todo => {
-    const existingTodo = existingTodos.find(existing => existing.id === todo.id)
+  const updatedTodos = applyParentAutoComplete(
+    processedTodos.map((todo, index) => {
+      const existingTodo = existingTodos.find(existing => existing.id === todo.id)
 
-    return {
-      ...todo,
-      activeForm: todo.activeForm || todo.content,
-      updatedAt: Date.now(),
-      createdAt: todo.createdAt || Date.now(),
-      previousStatus:
-        existingTodo?.status !== todo.status
-          ? existingTodo?.status
-          : todo.previousStatus,
-    }
-  })
+      return {
+        ...todo,
+        activeForm: todo.activeForm || todo.content,
+        order: Number.isFinite(todo.order)
+          ? (todo.order as number)
+          : existingTodo?.order ?? index,
+        updatedAt: Date.now(),
+        createdAt: todo.createdAt || Date.now(),
+        previousStatus:
+          existingTodo?.status !== todo.status
+            ? existingTodo?.status
+            : todo.previousStatus,
+      }
+    }),
+  )
 
   setSessionState({
     ...getSessionState(),

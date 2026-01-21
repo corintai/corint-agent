@@ -73,6 +73,15 @@ export function resolveAgentId(agentId?: string): string {
   return agentId || getDefaultAgentId()
 }
 
+export function resolveMainAgentId(): string {
+  const envAgentId =
+    process.env.ANYCORINT_AGENT_ID ?? process.env.CORINT_AGENT_ID
+  if (envAgentId && envAgentId.trim()) {
+    return envAgentId.trim()
+  }
+  return 'main'
+}
+
 export function generateAgentId(): string {
   return randomUUID()
 }

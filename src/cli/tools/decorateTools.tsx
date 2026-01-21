@@ -16,6 +16,7 @@ import { getPatch } from '@utils/text/diff'
 import { normalizeLineEndings } from '@utils/text/normalizeLineEndings'
 import { BLACK_CIRCLE } from '@constants/figures'
 import { getTodos } from '@utils/session/todoStorage'
+import { getTodoRenderModel } from '@utils/session/todoRenderModel'
 import type { Tool } from '@tool'
 import { BashTool } from '@tools/BashTool/BashTool'
 import { KillShellTool } from '@tools/KillShellTool/KillShellTool'
@@ -70,17 +71,22 @@ export function decorateToolsForCli(): void {
     const agentId =
       output && typeof output === 'object' ? output.agentId : undefined
     const todos = getTodos(agentId)
-    if (todos.length === 0) {
+    const model = getTodoRenderModel(todos)
+    if (model.kind === 'empty') {
       return (
         <Box flexDirection="row" marginTop={1}>
           <Text>&nbsp;&nbsp;⎿ &nbsp;</Text>
-          <Text>No todos currently tracked</Text>
+          <Text>{model.message}</Text>
         </Box>
       )
     }
 
-    const count = todos.length
+    const count = model.items.length
     const label = count === 1 ? 'todo' : 'todos'
+    const changeSummary =
+      output && typeof output === 'object' ? output.changeSummary : undefined
+    const changeReason =
+      output && typeof output === 'object' ? output.changeReason : undefined
     return (
       <Box flexDirection="column" marginTop={1}>
         <Box flexDirection="row">
@@ -92,10 +98,16 @@ export function decorateToolsForCli(): void {
             <Text>:</Text>
           </Text>
         </Box>
+        {(changeSummary || changeReason) && (
+          <Box flexDirection="column" marginTop={1} paddingLeft={2}>
+            {changeSummary && <Text dimColor>{changeSummary}</Text>}
+            {changeReason && <Text dimColor>{`Reason: ${changeReason}`}</Text>}
+          </Box>
+        )}
         <Box marginTop={1} flexDirection="column" paddingLeft={2}>
-          {todos.map((todo, index) => {
-            const isCompleted = todo.status === 'completed'
-            const isInProgress = todo.status === 'in_progress'
+          {model.items.map((item, index) => {
+            const isCompleted = item.contentDim
+            const isInProgress = item.contentBold
             const statusLabel = isCompleted
               ? '[done]'
               : isInProgress
@@ -109,7 +121,7 @@ export function decorateToolsForCli(): void {
                   dimColor={isCompleted}
                   strikethrough={isCompleted}
                 >
-                  {todo.content}
+                  {`${'  '.repeat(item.depth)}${item.number}. ${item.content}`}
                 </Text>
               </Box>
             )

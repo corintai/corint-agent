@@ -1,4 +1,5 @@
 import type { TodoItem as StoredTodoItem } from '@utils/session/todoStorage'
+import { buildTodoTree, flattenTodoTree } from './todoTree'
 
 export type TodoRenderModel =
   | {
@@ -14,6 +15,8 @@ export type TodoRenderModel =
         contentBold: boolean
         contentDim: boolean
         contentStrikethrough: boolean
+        number: string
+        depth: number
       }>
     }
 
@@ -22,9 +25,12 @@ export function getTodoRenderModel(todos: StoredTodoItem[]): TodoRenderModel {
     return { kind: 'empty', message: 'No todos currently tracked' }
   }
 
+  const flattened = flattenTodoTree(buildTodoTree(todos))
+
   return {
     kind: 'list',
-    items: todos.map(todo => {
+    items: flattened.map(node => {
+      const todo = node.todo
       const isCompleted = todo.status === 'completed'
       const isInProgress = todo.status === 'in_progress'
 
@@ -35,6 +41,8 @@ export function getTodoRenderModel(todos: StoredTodoItem[]): TodoRenderModel {
         contentBold: isInProgress,
         contentDim: isCompleted,
         contentStrikethrough: isCompleted,
+        number: node.number,
+        depth: node.depth,
       }
     }),
   }

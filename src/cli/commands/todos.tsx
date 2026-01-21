@@ -44,7 +44,7 @@ function TodosView({
               dimColor={item.contentDim}
               strikethrough={item.contentStrikethrough}
             >
-              {item.content}
+              {`${'  '.repeat(item.depth)}${item.number}. ${item.content}`}
             </Text>
           </Box>
         ))}

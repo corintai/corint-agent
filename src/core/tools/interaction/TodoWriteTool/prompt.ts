@@ -163,6 +163,9 @@ The assistant did not use the todo list because this is a single command executi
    - Exactly ONE task must be in_progress at any time (not less, not more)
    - Complete current tasks before starting new ones
    - Remove tasks that are no longer relevant from the list entirely
+   - When breaking down a task into subtasks, keep the parent task and add children with parentPath (e.g., "2" -> "2.1", "2.2")
+   - If you create a new parent and children in the same update, assign an id to the parent and use parentId on the children
+   - Provide a brief update reason when you change the todo list (use the "reason" field)
 
 3. **Task Completion Requirements**:
    - ONLY mark a task as completed when you have FULLY accomplished it

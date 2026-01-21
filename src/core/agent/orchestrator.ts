@@ -43,6 +43,7 @@ import {
   messagePairValidForBinaryFeedback,
   shouldUseBinaryFeedback,
 } from '@utils/binaryFeedback'
+import { resolveMainAgentId } from '@utils/agent/storage'
 import { ToolUseQueue } from './executor'
 import type {
   Message,
@@ -111,6 +112,10 @@ export async function* query(
     m2: AssistantMessage,
   ) => Promise<BinaryFeedbackResult>,
 ): AsyncGenerator<Message, void> {
+  if (!toolUseContext.agentId || !toolUseContext.agentId.trim()) {
+    toolUseContext.agentId = resolveMainAgentId()
+  }
+
   const shouldPersistSession =
     toolUseContext.options?.persistSession !== false &&
     process.env.NODE_ENV !== 'test'
