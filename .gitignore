@@ -27,5 +27,6 @@ main.js
 # test database
 risk_demo.db
 
-# Output directory for temporary files
+# directories for temporary files
 output/
+data/

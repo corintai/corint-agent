@@ -1,6 +1,34 @@
+import { statSync } from 'fs'
+import { extname } from 'path'
 import { getTodos, TodoItem } from '@utils/session/todoStorage'
 import { debug as debugLogger } from '@utils/log/debugLogger'
 import { logError } from '@utils/log'
+
+const LARGE_DATA_FILE_BYTES = 100 * 1024 * 1024
+const DATA_FILE_EXTENSIONS = new Set([
+  '.csv',
+  '.tsv',
+  '.parquet',
+  '.json',
+  '.jsonl',
+  '.ndjson',
+  '.xlsx',
+  '.xls',
+])
+
+function getFileSizeBytes(filePath: string): number | null {
+  try {
+    return statSync(filePath).size
+  } catch {
+    return null
+  }
+}
+
+function formatSize(bytes: number | null): string {
+  if (!bytes || bytes <= 0) return ''
+  const mb = bytes / (1024 * 1024)
+  return ` (${mb.toFixed(1)} MB)`
+}
 
 export interface ReminderMessage {
   role: 'system'
@@ -334,12 +362,26 @@ class SystemReminderService {
     })
 
     this.addEventListener('file:mentioned', context => {
+      const extension = extname(context.filePath || '').toLowerCase()
+      const isDataFile = DATA_FILE_EXTENSIONS.has(extension)
+      const fileSize = getFileSizeBytes(context.filePath)
+      const sizeLabel = formatSize(fileSize)
+      const isLargeDataFile =
+        isDataFile && fileSize !== null && fileSize >= LARGE_DATA_FILE_BYTES
+      const mentionLabel = `@${context.originalMention}`
+
+      const content = isDataFile
+        ? isLargeDataFile
+          ? `The user mentioned ${mentionLabel}. This looks like a large local data file${sizeLabel}. Do NOT read the entire file with the Read tool. Start with AnalyzeLocalFile using a preview query (LIMIT 20) to inspect columns/types, then convert CSV/JSON to Parquet for repeated analysis and use AnalyzeLocalFile for full queries. Use Read only for tiny snippets like headers if needed.`
+          : `The user mentioned ${mentionLabel}. This looks like a local data file${sizeLabel}. Prefer AnalyzeLocalFile for preview (LIMIT 20) and analysis; avoid full Read unless the user explicitly asks for raw file contents. For CSV/JSON larger than 100MB, convert to Parquet first.`
+        : `The user mentioned ${mentionLabel}. You MUST read the entire content of the file at path: ${context.filePath} using the Read tool to understand the full context before proceeding with the user's request.`
+
       this.createMentionReminder({
         type: 'file_mention',
         key: `file_mention_${context.filePath}_${context.timestamp}`,
         category: 'general',
         priority: 'high',
-        content: `The user mentioned @${context.originalMention}. You MUST read the entire content of the file at path: ${context.filePath} using the Read tool to understand the full context before proceeding with the user's request.`,
+        content,
         timestamp: context.timestamp,
       })
     })

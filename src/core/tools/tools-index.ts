@@ -28,6 +28,9 @@ import { getMCPTools } from '@services/mcpClient'
 import { QuerySQLTool } from './data/QuerySQLTool/QuerySQLTool'
 import { ExploreSchemaTool } from './data/ExploreSchemaTool/ExploreSchemaTool'
 import { ListDataSourcesTool } from './data/ListDataSourcesTool/ListDataSourcesTool'
+import { AnalyzeLocalFileTool } from './data/AnalyzeLocalFileTool/AnalyzeLocalFileTool'
+import { ConvertToParquetTool } from './data/ConvertToParquetTool/ConvertToParquetTool'
+import { ConvertExcelToCSVTool } from './data/ConvertExcelToCSVTool/ConvertExcelToCSVTool'
 
 export const getAllTools = (): Tool[] => [
   TaskTool as unknown as Tool,
@@ -57,6 +60,9 @@ export const getAllTools = (): Tool[] => [
   QuerySQLTool as unknown as Tool,
   ExploreSchemaTool as unknown as Tool,
   ListDataSourcesTool as unknown as Tool,
+  AnalyzeLocalFileTool as unknown as Tool,
+  ConvertToParquetTool as unknown as Tool,
+  ConvertExcelToCSVTool as unknown as Tool,
 ]
 
 export const getTools = memoize(
