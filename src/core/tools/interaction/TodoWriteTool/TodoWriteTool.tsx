@@ -71,6 +71,7 @@ type Output =
   | {
       oldTodos: InputTodo[]
       newTodos: InputTodo[]
+      displayTodos?: StoredTodoItem[]
       agentId?: string
       changeSummary?: string
       changeReason?: string
@@ -381,59 +382,59 @@ export const TodoWriteTool = {
       }
     }
 
-    const todoItems: StoredTodoItem[] = shouldClear
-      ? []
-      : todos.map((todo, index) => {
-          const parentPath =
-            typeof todo.parentPath === 'string' ? todo.parentPath.trim() : ''
-          const parentContent =
-            typeof todo.parentContent === 'string'
-              ? todo.parentContent.trim()
-              : ''
-          const resolvedParentId =
-            todo.parentId ||
-            (parentPath ? numberToId.get(parentPath) : undefined) ||
-            (parentContent ? contentToId.get(parentContent) : undefined)
+    const mappedTodos: StoredTodoItem[] = todos.map((todo, index) => {
+      const parentPath =
+        typeof todo.parentPath === 'string' ? todo.parentPath.trim() : ''
+      const parentContent =
+        typeof todo.parentContent === 'string'
+          ? todo.parentContent.trim()
+          : ''
+      const resolvedParentId =
+        todo.parentId ||
+        (parentPath ? numberToId.get(parentPath) : undefined) ||
+        (parentContent ? contentToId.get(parentContent) : undefined)
 
-          const explicitId = typeof todo.id === 'string' ? todo.id.trim() : ''
-          const baseById = explicitId ? existingById.get(explicitId) : undefined
-          if (baseById) {
-            consumedIds.add(baseById.id)
-          }
-          const reused = !explicitId
-            ? takeReusable(
-                reusableExact,
-                `${todo.content}|||${normalizeActiveForm(todo)}|||${resolvedParentId || ''}`,
-              ) ??
-              takeReusable(
-                reusableContentParent,
-                `${todo.content}|||${resolvedParentId || ''}`,
-              ) ??
-              takeReusable(reusableUniqueContent, todo.content)
-            : undefined
-          const base = baseById ?? reused
+      const explicitId = typeof todo.id === 'string' ? todo.id.trim() : ''
+      const baseById = explicitId ? existingById.get(explicitId) : undefined
+      if (baseById) {
+        consumedIds.add(baseById.id)
+      }
+      const reused = !explicitId
+        ? takeReusable(
+            reusableExact,
+            `${todo.content}|||${normalizeActiveForm(todo)}|||${resolvedParentId || ''}`,
+          ) ??
+          takeReusable(
+            reusableContentParent,
+            `${todo.content}|||${resolvedParentId || ''}`,
+          ) ??
+          takeReusable(reusableUniqueContent, todo.content)
+        : undefined
+      const base = baseById ?? reused
 
-          const order =
-            Number.isFinite(todo.order) && typeof todo.order === 'number'
-              ? todo.order
-              : base?.order ?? index
+      const order =
+        Number.isFinite(todo.order) && typeof todo.order === 'number'
+          ? todo.order
+          : base?.order ?? index
 
-          const id = explicitId || base?.id || randomUUID()
-          const parentId = resolvedParentId && resolvedParentId !== id
-            ? resolvedParentId
-            : undefined
+      const id = explicitId || base?.id || randomUUID()
+      const parentId = resolvedParentId && resolvedParentId !== id
+        ? resolvedParentId
+        : undefined
 
-          return {
-            id,
-            content: todo.content,
-            status: todo.status,
-            activeForm: todo.activeForm,
-            parentId,
-            order,
-            priority: base?.priority ?? 'medium',
-            ...(base?.createdAt ? { createdAt: base.createdAt } : {}),
-          }
-        })
+      return {
+        id,
+        content: todo.content,
+        status: todo.status,
+        activeForm: todo.activeForm,
+        parentId,
+        order,
+        priority: base?.priority ?? 'medium',
+        ...(base?.createdAt ? { createdAt: base.createdAt } : {}),
+      }
+    })
+
+    const todoItems: StoredTodoItem[] = shouldClear ? [] : mappedTodos
 
     try {
       setTodos(todoItems, agentId)
@@ -452,6 +453,7 @@ export const TodoWriteTool = {
     }
 
     const storedTodos = getTodos(agentId)
+    const displayTodos = shouldClear ? mappedTodos : storedTodos
     const changeSummary = summarizeTodoChanges(previousTodos, storedTodos)
     const trimmedReason =
       typeof reason === 'string' && reason.trim().length > 0
@@ -490,6 +492,7 @@ export const TodoWriteTool = {
           parentId: todo.parentId,
           order: todo.order,
         })),
+        displayTodos: shouldClear ? displayTodos : undefined,
         agentId: agentId || undefined,
         changeSummary,
         changeReason,

@@ -70,7 +70,13 @@ export function decorateToolsForCli(): void {
   todoWriteTool.renderToolResultMessage = (output: any) => {
     const agentId =
       output && typeof output === 'object' ? output.agentId : undefined
-    const todos = getTodos(agentId)
+    const displayTodos =
+      output &&
+      typeof output === 'object' &&
+      Array.isArray(output.displayTodos)
+        ? output.displayTodos
+        : null
+    const todos = displayTodos ?? getTodos(agentId)
     const model = getTodoRenderModel(todos)
     if (model.kind === 'empty') {
       return (
