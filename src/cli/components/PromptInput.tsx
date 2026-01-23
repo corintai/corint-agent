@@ -17,8 +17,9 @@ import type { SetToolJSXFn } from '@cli/types/toolUi'
 import { TokenWarning, WARNING_THRESHOLD } from './TokenWarning'
 import { useTerminalSize } from '@hooks/useTerminalSize'
 import { getTheme } from '@utils/theme'
-import { getModelManager, reloadModelManager } from '@utils/model'
+import { getModelManager } from '@utils/model'
 import { saveGlobalConfig } from '@utils/config'
+import { GLOBAL_CONFIG_FILE } from '@utils/config/env'
 import { setTerminalTitle } from '@cli/utils/terminal'
 import { launchExternalEditor } from '@utils/system/externalEditor'
 import {
@@ -268,9 +269,9 @@ function PromptInput({
 
       if (!errorMessage) {
         if (debugInfo.totalModels === 0) {
-          errorMessage = '❌ No models configured. Use /model to add models.'
+          errorMessage = `❌ No models configured. Edit ${GLOBAL_CONFIG_FILE} to add model profiles.`
         } else if (debugInfo.activeModels === 0) {
-          errorMessage = `❌ No active models (${debugInfo.totalModels} total, all inactive). Use /model to activate models.`
+          errorMessage = `❌ No active models (${debugInfo.totalModels} total, all inactive). Set isActive=true in ${GLOBAL_CONFIG_FILE}.`
         } else if (debugInfo.activeModels === 1) {
           const allModelNames = debugInfo.availableModels
             .map(m => `${m.name}${m.isActive ? '' : ' (inactive)'}`)

@@ -1,6 +1,7 @@
 import React from 'react'
 import { Box, Text } from 'ink'
 import { getTheme } from '@utils/theme'
+import { GLOBAL_CONFIG_FILE } from '@utils/config/env'
 
 type Props = {
   onDone(): void
@@ -24,7 +25,7 @@ export function ConsoleOAuthFlow({ onDone }: Props) {
         OAuth authentication is not available in this version.
       </Text>
       <Text color={theme.secondaryText}>
-        Please configure your API keys using /model command.
+        Configure your API keys in {GLOBAL_CONFIG_FILE}.
       </Text>
     </Box>
   )

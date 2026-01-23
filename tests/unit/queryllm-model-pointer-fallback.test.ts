@@ -1,5 +1,6 @@
 import { describe, expect, test } from 'bun:test'
 import { queryLLM } from '@services/llm'
+import { GLOBAL_CONFIG_FILE } from '@utils/config/env'
 
 describe('queryLLM model pointer fallback (Reference CLI parity)', () => {
   test('falls back when resolveModelWithInfo fails (no throw)', async () => {
@@ -11,7 +12,7 @@ describe('queryLLM model pointer fallback (Reference CLI parity)', () => {
           success: false,
           profile: null,
           error:
-            "Model pointer 'quick' points to invalid model 'bad-model'. Use /model to reconfigure.",
+            `Model pointer 'quick' points to invalid model 'bad-model'. Update ${GLOBAL_CONFIG_FILE} or select a configured model with /model.`,
         }
       },
       resolveModel() {

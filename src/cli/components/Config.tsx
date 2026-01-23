@@ -4,6 +4,7 @@ import { useState } from 'react'
 import figures from 'figures'
 import { getTheme } from '@utils/theme'
 import { GlobalConfig, saveGlobalConfig, getGlobalConfig } from '@utils/config'
+import { GLOBAL_CONFIG_FILE } from '@utils/config/env'
 import chalk from 'chalk'
 import { useExitOnCtrlCD } from '@hooks/useExitOnCtrlCD'
 import { getModelManager } from '@utils/model'
@@ -201,7 +202,8 @@ export function Config({ onClose }: Props): React.ReactNode {
           </Text>
           {activeProfiles.length === 0 ? (
             <Text color={theme.secondaryText}>
-              No models configured. Use /model to add models.
+              No models configured. Edit {GLOBAL_CONFIG_FILE} to add model
+              profiles.
             </Text>
           ) : (
             <Box flexDirection="column" marginLeft={2}>
@@ -214,7 +216,7 @@ export function Config({ onClose }: Props): React.ReactNode {
               ))}
               <Box marginTop={1}>
                 <Text color={theme.suggestion}>
-                  Use /model to manage model configurations
+                  Use /model to select configured models
                 </Text>
               </Box>
             </Box>
@@ -272,7 +274,7 @@ export function Config({ onClose }: Props): React.ReactNode {
                 ↑/↓ to navigate · Enter to change · Esc to close
                 <Text color={theme.suggestion}>
                   {' '}
-                  · Use /model for model config
+                  · Use /model to select models
                 </Text>
               </>
             )}

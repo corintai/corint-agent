@@ -5,7 +5,6 @@ import {
   getGlobalConfig,
   saveGlobalConfig,
   DEFAULT_GLOBAL_CONFIG,
-  ProviderType,
 } from '@utils/config'
 import { OrderedList } from '@inkjs/ui'
 import { useExitOnCtrlCD } from '@hooks/useExitOnCtrlCD'
@@ -15,8 +14,7 @@ import { StructuredDiff } from './StructuredDiff'
 import { getTheme, type ThemeNames } from '@utils/theme'
 import { clearTerminal } from '@cli/utils/terminal'
 import { PressEnterToContinue } from './PressEnterToContinue'
-import { ModelSelector } from './ModelSelector'
-type StepId = 'theme' | 'usage' | 'providers' | 'model'
+type StepId = 'theme' | 'usage'
 
 interface OnboardingStep {
   id: StepId
@@ -29,7 +27,6 @@ type Props = {
 
 export function Onboarding({ onDone }: Props): React.ReactNode {
   const [currentStepIndex, setCurrentStepIndex] = useState(0)
-  const [showModelSelector, setShowModelSelector] = useState(false)
   const config = getGlobalConfig()
 
   const [selectedTheme, setSelectedTheme] = useState(
@@ -55,27 +52,13 @@ export function Onboarding({ onDone }: Props): React.ReactNode {
     setSelectedTheme(newTheme as ThemeNames)
   }
 
-  function handleProviderSelectionDone() {
-    goToNextStep()
-  }
-
-  function handleModelSelectionDone() {
-    onDone()
-  }
-
   const exitState = useExitOnCtrlCD(() => process.exit(0))
 
   useInput(
     async (_, key) => {
       const currentStep = steps[currentStepIndex]
-      if (
-        key.return &&
-        currentStep &&
-        ['usage', 'providers', 'model'].includes(currentStep.id)
-      ) {
-        if (currentStep.id === 'model') {
-          setShowModelSelector(true)
-        } else if (currentStepIndex === steps.length - 1) {
+      if (key.return && currentStep && currentStep.id === 'usage') {
+        if (currentStepIndex === steps.length - 1) {
           onDone()
         } else {
           await clearTerminal()
@@ -83,7 +66,7 @@ export function Onboarding({ onDone }: Props): React.ReactNode {
         }
       }
     },
-    { isActive: !showModelSelector },
+    { isActive: true },
   )
 
   const themeStep = (
@@ -139,21 +122,6 @@ export function Onboarding({ onDone }: Props): React.ReactNode {
     </Box>
   )
 
-  const providersStep = (
-    <Box flexDirection="column" gap={1} paddingLeft={1}>
-      <Box flexDirection="column" width={70}>
-        <Text color={theme.secondaryText}>
-          Next, let's select your preferred AI provider and model.
-        </Text>
-      </Box>
-      <ModelSelector
-        onDone={handleProviderSelectionDone}
-        skipModelType={true}
-        isOnboarding={true}
-      />
-    </Box>
-  )
-
   const usageStep = (
     <Box flexDirection="column" gap={1} paddingLeft={1}>
       <Text bold>Using {PRODUCT_NAME} effectively:</Text>
@@ -197,44 +165,9 @@ export function Onboarding({ onDone }: Props): React.ReactNode {
     </Box>
   )
 
-  const modelStep = (
-    <Box flexDirection="column" gap={1} paddingLeft={1}>
-      <Text bold>Configure your models:</Text>
-      <Box flexDirection="column" width={70}>
-        <Text>
-          You can customize which models {PRODUCT_NAME} uses for different
-          tasks.
-          <Newline />
-          <Text color={theme.secondaryText}>
-            Let's set up your preferred models for large and small tasks.
-          </Text>
-        </Text>
-        <Box marginTop={1}>
-          <Text>
-            Press <Text color={theme.suggestion}>Enter</Text> to continue to the
-            model selection screen.
-          </Text>
-        </Box>
-      </Box>
-      <PressEnterToContinue />
-    </Box>
-  )
-
   const steps: OnboardingStep[] = []
   steps.push({ id: 'theme', component: themeStep })
   steps.push({ id: 'usage', component: usageStep })
-
-  steps.push({ id: 'model', component: modelStep })
-
-  if (showModelSelector) {
-    return (
-      <ModelSelector
-        onDone={handleModelSelectionDone}
-        skipModelType={true}
-        isOnboarding={true}
-      />
-    )
-  }
 
   return (
     <Box flexDirection="column" gap={1}>

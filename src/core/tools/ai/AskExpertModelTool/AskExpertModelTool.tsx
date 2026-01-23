@@ -1,6 +1,7 @@
 import { z } from 'zod'
 import { Tool, ValidationResult } from '@tool'
 import { getModelManager } from '@utils/model'
+import { GLOBAL_CONFIG_FILE } from '@utils/config/env'
 import {
   createUserMessage,
   createAssistantMessage,
@@ -154,12 +155,12 @@ Question: What are the most effective React optimization techniques for handling
         if (availableModels.length > 0) {
           return {
             result: false,
-            message: `Model '${expert_model}' is not configured. Available models: ${availableModels.join(', ')}. Check if any available model closely matches the user's request (e.g., 'kimi' matches 'kimi-k2-0711-preview'). If there's a strong match, auto retry using the correct model name. If no close match exists, inform the user that '${expert_model}' needs to be configured using /model command.`,
+            message: `Model '${expert_model}' is not configured. Available models: ${availableModels.join(', ')}. Check if any available model closely matches the user's request (e.g., 'kimi' matches 'kimi-k2-0711-preview'). If there's a strong match, auto retry using the correct model name. If no close match exists, inform the user that '${expert_model}' must be added to ${GLOBAL_CONFIG_FILE} (modelProfiles) or imported via 'kode models import'.`,
           }
         } else {
           return {
             result: false,
-            message: `Model '${expert_model}' not found and no models are currently configured in the system. Inform the user that models need to be configured first using the /model command.`,
+            message: `Model '${expert_model}' not found and no models are currently configured in the system. Inform the user that models must be configured in ${GLOBAL_CONFIG_FILE} or imported via 'kode models import'.`,
           }
         }
       }
@@ -349,7 +350,7 @@ ${output.expertAnswer}`
         if (error.message?.includes('invalid api key')) {
           throw new Error(
             `Invalid API key for ${expertModel}.\n\n` +
-              `Please check your model configuration with /model command.`,
+              `Please check your model configuration in ${GLOBAL_CONFIG_FILE}.`,
           )
         }
 
@@ -362,11 +363,11 @@ ${output.expertAnswer}`
             const availableModels = modelManager.getAllAvailableModelNames()
             if (availableModels.length > 0) {
               throw new Error(
-                `Model '${expertModel}' is not configured. Available models: ${availableModels.join(', ')}. Check if any available model closely matches the user's request (e.g., 'kimi' matches 'kimi-k2-0711-preview'). If there's a strong match, auto retry using the correct model name. If no close match exists, inform the user that '${expertModel}' needs to be configured using /model command.`,
+                `Model '${expertModel}' is not configured. Available models: ${availableModels.join(', ')}. Check if any available model closely matches the user's request (e.g., 'kimi' matches 'kimi-k2-0711-preview'). If there's a strong match, auto retry using the correct model name. If no close match exists, inform the user that '${expertModel}' must be added to ${GLOBAL_CONFIG_FILE} (modelProfiles) or imported via 'kode models import'.`,
               )
             } else {
               throw new Error(
-                `Model '${expertModel}' not found and no models are currently configured in the system. Inform the user that models need to be configured first using the /model command.`,
+                `Model '${expertModel}' not found and no models are currently configured in the system. Inform the user that models must be configured in ${GLOBAL_CONFIG_FILE} or imported via 'kode models import'.`,
               )
             }
           } catch (modelError) {

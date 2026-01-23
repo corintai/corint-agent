@@ -20,6 +20,7 @@ import {
   getGlobalConfig,
   ModelProfile,
 } from '@utils/config'
+import { GLOBAL_CONFIG_FILE } from '@utils/config/env'
 import { logError } from '@utils/log'
 import { USER_AGENT } from '@utils/system/http'
 import { setRequestStatus } from '@utils/session/requestStatus'
@@ -353,7 +354,7 @@ export async function queryAnthropicNative(
     }
     debugLogger.error('ANTHROPIC_FALLBACK_ERROR', errorDetails)
     throw new Error(
-      `No valid ModelProfile available for Anthropic provider. Please configure model through /model command. Debug: ${JSON.stringify(errorDetails)}`,
+      `No valid ModelProfile available for Anthropic provider. Configure model profiles in ${GLOBAL_CONFIG_FILE}. Debug: ${JSON.stringify(errorDetails)}`,
     )
   }
 

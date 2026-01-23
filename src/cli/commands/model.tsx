@@ -2,10 +2,11 @@ import React from 'react'
 import { render } from 'ink'
 import { ModelConfig } from '@components/ModelConfig'
 import { enableConfigs } from '@utils/config'
+import { reloadModelManager } from '@utils/model'
 import { triggerModelConfigChange } from '@messages'
 
-export const help = 'Change your AI provider and model settings'
-export const description = 'Change your AI provider and model settings'
+export const help = 'Select configured models for model pointers'
+export const description = 'Select configured models for model pointers'
 export const isEnabled = true
 export const isHidden = false
 export const name = 'model'
@@ -21,6 +22,7 @@ export async function call(
 ): Promise<React.ReactNode> {
   const { abortController } = context
   enableConfigs()
+  reloadModelManager()
   abortController?.abort?.()
   return (
     <ModelConfig

@@ -8,6 +8,7 @@ import {
   ModelPointerType,
   saveGlobalConfig,
 } from '@utils/config'
+import { GLOBAL_CONFIG_FILE } from '@utils/config/env'
 
 export const USE_BEDROCK = !!(
   process.env.CORINT_USE_BEDROCK ?? process.env.CLAUDE_CODE_USE_BEDROCK
@@ -289,7 +290,7 @@ export class ModelManager {
         success: false,
         modelName: null,
         blocked: false,
-        message: '❌ No models configured. Use /model to add models.',
+        message: `❌ No models configured. Edit ${GLOBAL_CONFIG_FILE} to add model profiles.`,
       }
     }
     if (allModels.length === 1) {
@@ -297,7 +298,7 @@ export class ModelManager {
         success: false,
         modelName: null,
         blocked: false,
-        message: `⚠️ Only one model configured (${allModels[0].modelName}). Use /model to add more models for switching.`,
+        message: `⚠️ Only one model configured (${allModels[0].modelName}). Add more profiles in ${GLOBAL_CONFIG_FILE} to enable switching.`,
       }
     }
 
@@ -724,7 +725,7 @@ export class ModelManager {
         return {
           success: false,
           profile: null,
-          error: `Model pointer '${modelParam}' is not configured. Use /model to set up models.`,
+          error: `Model pointer '${modelParam}' is not configured. Use /model to select a configured model or update ${GLOBAL_CONFIG_FILE}.`,
         }
       }
 
@@ -737,7 +738,7 @@ export class ModelManager {
         return {
           success: false,
           profile: null,
-          error: `Model pointer '${modelParam}' points to invalid model '${pointerId}'. Use /model to reconfigure.`,
+          error: `Model pointer '${modelParam}' points to invalid model '${pointerId}'. Update ${GLOBAL_CONFIG_FILE} or select a configured model with /model.`,
         }
       }
 
@@ -745,7 +746,7 @@ export class ModelManager {
         return {
           success: false,
           profile: null,
-          error: `Model '${profile.name}' (pointed by '${modelParam}') is inactive. Use /model to activate it.`,
+          error: `Model '${profile.name}' (pointed by '${modelParam}') is inactive. Set isActive=true in ${GLOBAL_CONFIG_FILE}.`,
         }
       }
 
@@ -770,7 +771,7 @@ export class ModelManager {
         return {
           success: false,
           profile: null,
-          error: `Model '${modelParam}' not found. Use /model to add models, or run 'kode models list' to see configured profiles.`,
+          error: `Model '${modelParam}' not found. Check ${GLOBAL_CONFIG_FILE} or run 'kode models list' to see configured profiles.`,
         }
       }
 
@@ -778,7 +779,7 @@ export class ModelManager {
         return {
           success: false,
           profile: null,
-          error: `Model '${profile.name}' is inactive. Use /model to activate it.`,
+          error: `Model '${profile.name}' is inactive. Set isActive=true in ${GLOBAL_CONFIG_FILE}.`,
         }
       }
 

@@ -1,30 +1,27 @@
 import { Box, Text, useInput } from 'ink'
 import * as React from 'react'
-import { useState, useCallback, useEffect, useRef } from 'react'
+import { useState, useCallback } from 'react'
 import figures from 'figures'
 import { getTheme } from '@utils/theme'
 import {
   getGlobalConfig,
-  saveGlobalConfig,
   ModelPointerType,
   setModelPointer,
 } from '@utils/config'
+import { GLOBAL_CONFIG_FILE } from '@utils/config/env'
 import { getModelManager } from '@utils/model'
-import { useExitOnCtrlCD } from '@hooks/useExitOnCtrlCD'
-import { ModelSelector } from './ModelSelector'
-import { ModelListManager } from './ModelListManager'
 
 type Props = {
   onClose: () => void
 }
 
 type ModelPointerSetting = {
-  id: ModelPointerType | 'add-new'
+  id: ModelPointerType
   label: string
   description: string
   value: string
   options: Array<{ id: string; name: string }>
-  type: 'modelPointer' | 'action'
+  type: 'modelPointer'
   onChange(value?: string): void
 }
 
@@ -32,21 +29,10 @@ export function ModelConfig({ onClose }: Props): React.ReactNode {
   const config = getGlobalConfig()
   const theme = getTheme()
   const [selectedIndex, setSelectedIndex] = useState(0)
-  const [showModelSelector, setShowModelSelector] = useState(false)
-  const [showModelListManager, setShowModelListManager] = useState(false)
-  const [currentPointer, setCurrentPointer] = useState<ModelPointerType | null>(
-    null,
-  )
   const [refreshKey, setRefreshKey] = useState(0)
   const [isDeleteMode, setIsDeleteMode] = useState(false)
-  const selectedIndexRef = useRef(selectedIndex)
-  const exitState = useExitOnCtrlCD(() => process.exit(0))
 
   const modelManager = getModelManager()
-
-  useEffect(() => {
-    selectedIndexRef.current = selectedIndex
-  }, [selectedIndex])
 
   const availableModels = React.useMemo((): Array<{
     id: string
@@ -97,18 +83,7 @@ export function ModelConfig({ onClose }: Props): React.ReactNode {
       },
     ]
 
-    return [
-      ...modelSettings,
-      {
-        id: 'manage-models',
-        label: 'Manage Model List',
-        description: 'View, add, and delete model configurations',
-        value: '',
-        options: [],
-        type: 'action' as const,
-        onChange: () => handleManageModels(),
-      },
-    ]
+    return modelSettings
   }, [config.modelPointers, availableModels, refreshKey])
 
   const handleModelPointerChange = (
@@ -117,21 +92,6 @@ export function ModelConfig({ onClose }: Props): React.ReactNode {
   ) => {
     setModelPointer(pointer, modelId)
     setRefreshKey(prev => prev + 1)
-  }
-
-  const handleManageModels = () => {
-    setShowModelListManager(true)
-  }
-
-  const handleModelConfigurationComplete = () => {
-    setShowModelSelector(false)
-    setShowModelListManager(false)
-    setCurrentPointer(null)
-    setRefreshKey(prev => prev + 1)
-    const manageIndex = menuItems.findIndex(item => item.id === 'manage-models')
-    if (manageIndex !== -1) {
-      setSelectedIndex(manageIndex)
-    }
   }
 
   const handleInput = useCallback(
@@ -152,12 +112,11 @@ export function ModelConfig({ onClose }: Props): React.ReactNode {
         const setting = menuItems[selectedIndex]
 
         if (isDeleteMode && setting.type === 'modelPointer' && setting.value) {
-          setModelPointer(setting.id as ModelPointerType, '')
+          setModelPointer(setting.id, '')
           setRefreshKey(prev => prev + 1)
           setIsDeleteMode(false)
         } else if (setting.type === 'modelPointer') {
           if (setting.options.length === 0) {
-            handleManageModels()
             return
           }
           const currentIndex = setting.options.findIndex(
@@ -168,34 +127,13 @@ export function ModelConfig({ onClose }: Props): React.ReactNode {
           if (nextOption) {
             setting.onChange(nextOption.id)
           }
-        } else if (setting.type === 'action') {
-          setting.onChange()
         }
       }
     },
-    [selectedIndex, menuItems, onClose, isDeleteMode, modelManager],
+    [selectedIndex, menuItems, onClose, isDeleteMode],
   )
 
-  useInput(handleInput, {
-    isActive: !showModelSelector && !showModelListManager,
-  })
-
-  if (showModelListManager) {
-    return <ModelListManager onClose={handleModelConfigurationComplete} />
-  }
-
-  if (showModelSelector) {
-    return (
-      <ModelSelector
-        onDone={handleModelConfigurationComplete}
-        onCancel={handleModelConfigurationComplete}
-        skipModelType={true}
-        targetPointer={currentPointer || undefined}
-        isOnboarding={false}
-        abortController={new AbortController()}
-      />
-    )
-  }
+  useInput(handleInput)
 
   return (
     <Box
@@ -213,25 +151,20 @@ export function ModelConfig({ onClose }: Props): React.ReactNode {
           {isDeleteMode
             ? 'Press Enter/Space to clear selected pointer assignment, Esc to cancel'
             : availableModels.length === 0
-              ? 'No models configured. Use "Configure New Model" to add your first model.'
-              : 'Configure which models to use for different tasks. Space to cycle, Enter to configure.'}
+              ? `No models configured. Edit ${GLOBAL_CONFIG_FILE} to add model profiles.`
+              : 'Configure which models to use for different tasks. Space/Enter to cycle.'}
         </Text>
       </Box>
 
       {menuItems.map((setting, i) => {
         const isSelected = i === selectedIndex
         let displayValue = ''
-        let actionText = ''
 
         if (setting.type === 'modelPointer') {
           const currentModel = setting.options.find(
             opt => opt.id === setting.value,
           )
           displayValue = currentModel?.name || '(not configured)'
-          actionText = isSelected ? ' [Space to cycle]' : ''
-        } else if (setting.type === 'action') {
-          displayValue = ''
-          actionText = isSelected ? ' [Enter to configure]' : ''
         }
 
         return (
@@ -254,7 +187,6 @@ export function ModelConfig({ onClose }: Props): React.ReactNode {
                     {displayValue}
                   </Text>
                 )}
-                {actionText && <Text color="blue">{actionText}</Text>}
               </Box>
             </Box>
             {isSelected && (
@@ -276,8 +208,8 @@ export function ModelConfig({ onClose }: Props): React.ReactNode {
           {isDeleteMode
             ? 'CLEAR MODE: Press Enter/Space to clear assignment, Esc to cancel'
             : availableModels.length === 0
-              ? 'Use ↑/↓ to navigate, Enter to configure new model, Esc to exit'
-              : 'Use ↑/↓ to navigate, Space to cycle models, Enter to configure, d to clear, Esc to exit'}
+              ? `Use ↑/↓ to navigate, Esc to exit. Edit ${GLOBAL_CONFIG_FILE} to add models.`
+              : 'Use ↑/↓ to navigate, Space/Enter to cycle models, d to clear, Esc to exit'}
         </Text>
       </Box>
     </Box>
