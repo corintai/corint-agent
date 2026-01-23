@@ -7,6 +7,7 @@ import { getOriginalCwd, setCwd } from '@utils/state'
 import { Message } from '@query'
 import { resetReminderSession } from '@services/systemReminder'
 import { resetFileFreshnessSession } from '@services/fileFreshness'
+import { clearTodos } from '@utils/session/todoStorage'
 
 export async function clearConversation(context: {
   setForkConvoWithMessagesOnTheNextRender: (
@@ -22,6 +23,7 @@ export async function clearConversation(context: {
 
   resetReminderSession()
   resetFileFreshnessSession()
+  clearTodos()
 }
 
 const clear = {
