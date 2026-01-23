@@ -530,13 +530,10 @@ export async function queryAnthropicNative(
                   inputJSONBuffers.set(blockIndex, nextBuffer)
 
                   const trimmed = nextBuffer.trim()
-                  if (trimmed.length === 0) {
-                    contentBlocks[blockIndex].input = {}
-                    break
+                  if (trimmed.length > 0) {
+                    contentBlocks[blockIndex].input =
+                      parseToolUsePartialJsonOrThrow(nextBuffer) ?? {}
                   }
-
-                  contentBlocks[blockIndex].input =
-                    parseToolUsePartialJsonOrThrow(nextBuffer) ?? {}
                 }
                 break
 

@@ -44,6 +44,7 @@ import {
   shouldUseBinaryFeedback,
 } from '@utils/binaryFeedback'
 import { resolveMainAgentId } from '@utils/agent/storage'
+import { resolveToolNameAlias } from '@utils/tooling/toolNameAliases'
 import { ToolUseQueue } from './executor'
 import type {
   Message,
@@ -52,8 +53,46 @@ import type {
   ExtendedToolUseContext,
   BinaryFeedbackResult,
   HookState,
+  ToolUseLikeBlock,
 } from './types'
 import { isToolUseLikeBlock } from './types'
+
+// ============================================================================
+// Tool Use Repair
+// ============================================================================
+
+const MAX_TOOL_REPAIR_ATTEMPTS = 2
+
+function isMissingWriteToolInput(input: unknown): boolean {
+  if (!input || typeof input !== 'object') return true
+  const record = input as Record<string, unknown>
+  const filePath = record.file_path
+  const content = record.content
+  return (
+    typeof filePath !== 'string' ||
+    filePath.trim().length === 0 ||
+    typeof content !== 'string'
+  )
+}
+
+function getInvalidWriteToolUses(
+  toolUseMessages: ToolUseLikeBlock[],
+): ToolUseLikeBlock[] {
+  return toolUseMessages.filter(block => {
+    const resolvedName = resolveToolNameAlias(block.name).resolvedName
+    if (resolvedName !== 'Write') return false
+    return isMissingWriteToolInput(block.input)
+  })
+}
+
+function buildWriteToolRepairMessage(): string {
+  return [
+    'Tool call repair required.',
+    'Your last response included a Write tool call with missing required parameters.',
+    'Re-issue the Write tool call with both "file_path" (absolute path) and "content" (full file content).',
+    'Return only the tool call with valid JSON input and no other text.',
+  ].join('\n')
+}
 
 // ============================================================================
 // Binary Feedback
@@ -159,6 +198,7 @@ async function* queryCore(
     markPhase('QUERY_INIT')
     const stopHookActive = hookState?.stopHookActive === true
     const stopHookAttempts = hookState?.stopHookAttempts ?? 0
+    const toolRepairAttempts = hookState?.toolRepairAttempts ?? 0
 
     // ========================================================================
     // Phase 1: Pre-processing
@@ -360,6 +400,31 @@ async function* queryCore(
     const toolUseMessages =
       assistantMessage.message.content.filter(isToolUseLikeBlock)
 
+    const invalidWriteToolUses = getInvalidWriteToolUses(toolUseMessages)
+    const hasOnlyInvalidWriteTools =
+      invalidWriteToolUses.length > 0 &&
+      invalidWriteToolUses.length === toolUseMessages.length
+
+    if (
+      hasOnlyInvalidWriteTools &&
+      toolRepairAttempts < MAX_TOOL_REPAIR_ATTEMPTS
+    ) {
+      queueHookSystemMessages(toolUseContext, [buildWriteToolRepairMessage()])
+      yield* await queryCore(
+        messages,
+        systemPrompt,
+        context,
+        canUseTool,
+        toolUseContext,
+        getBinaryFeedbackResponse,
+        {
+          ...(hookState ?? {}),
+          toolRepairAttempts: toolRepairAttempts + 1,
+        },
+      )
+      return
+    }
+
     // No tool calls - end turn
     if (!toolUseMessages.length) {
       const stopHookEvent =
@@ -407,6 +472,7 @@ async function* queryCore(
             {
               stopHookActive: true,
               stopHookAttempts: stopHookAttempts + 1,
+              toolRepairAttempts,
             },
           )
           return

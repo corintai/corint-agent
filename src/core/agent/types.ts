@@ -121,6 +121,7 @@ export type BinaryFeedbackResult =
 export type HookState = {
   stopHookActive?: boolean
   stopHookAttempts?: number
+  toolRepairAttempts?: number
 }
 
 // ============================================================================
