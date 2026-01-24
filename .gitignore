@@ -30,3 +30,8 @@ risk_demo.db
 # directories for temporary files
 output/
 data/
+config/
+
+# Symlinks (do not commit)
+repository
+knowledge/rdl
