@@ -137,6 +137,12 @@ function applyParentAutoComplete(todos: TodoItem[]): TodoItem[] {
   return todos.map(todo => updated.get(todo.id) ?? todo)
 }
 
+/**
+ * Retrieves all todo items, optionally filtered by agent ID.
+ * Uses caching for performance optimization.
+ * @param agentId - Optional agent ID to filter todos
+ * @returns Array of todo items
+ */
 export function getTodos(agentId?: string): TodoItem[] {
   const resolvedAgentId = resolveAgentId(agentId)
   const now = Date.now()
@@ -174,6 +180,13 @@ export function getTodos(agentId?: string): TodoItem[] {
   return todoCache
 }
 
+/**
+ * Saves todo items to storage, with automatic timestamp updates and parent auto-completion.
+ * Respects configuration limits and auto-archive settings.
+ * @param todos - Array of todo items to save
+ * @param agentId - Optional agent ID for agent-specific storage
+ * @throws Error if todo limit is exceeded
+ */
 export function setTodos(todos: TodoItem[], agentId?: string): void {
   const resolvedAgentId = resolveAgentId(agentId)
   const config = getTodoConfig()
@@ -258,11 +271,19 @@ export function setTodos(todos: TodoItem[], agentId?: string): void {
   updateMetrics('setTodos')
 }
 
+/**
+ * Gets the current todo storage configuration.
+ * @returns Current configuration merged with defaults
+ */
 export function getTodoConfig(): TodoStorageConfig {
   const sessionState = getSessionState() as any
   return { ...DEFAULT_CONFIG, ...(sessionState[TODO_CONFIG_KEY] || {}) }
 }
 
+/**
+ * Updates the todo storage configuration.
+ * @param config - Partial configuration to merge with current settings
+ */
 export function setTodoConfig(config: Partial<TodoStorageConfig>): void {
   const currentConfig = getTodoConfig()
   const newConfig = { ...currentConfig, ...config }
@@ -278,6 +299,12 @@ export function setTodoConfig(config: Partial<TodoStorageConfig>): void {
   }
 }
 
+/**
+ * Adds a new todo item to the list.
+ * @param todo - Todo item to add (without timestamps)
+ * @returns Updated array of all todos
+ * @throws Error if a todo with the same ID already exists
+ */
 export function addTodo(
   todo: Omit<TodoItem, 'createdAt' | 'updatedAt'>,
 ): TodoItem[] {
@@ -299,6 +326,13 @@ export function addTodo(
   return updatedTodos
 }
 
+/**
+ * Updates an existing todo item.
+ * @param id - ID of the todo to update
+ * @param updates - Partial todo data to merge
+ * @returns Updated array of all todos
+ * @throws Error if todo with given ID is not found
+ */
 export function updateTodo(id: string, updates: Partial<TodoItem>): TodoItem[] {
   const todos = getTodos()
   const existingTodo = todos.find(todo => todo.id === id)
@@ -316,6 +350,12 @@ export function updateTodo(id: string, updates: Partial<TodoItem>): TodoItem[] {
   return updatedTodos
 }
 
+/**
+ * Deletes a todo item by ID.
+ * @param id - ID of the todo to delete
+ * @returns Updated array of remaining todos
+ * @throws Error if todo with given ID is not found
+ */
 export function deleteTodo(id: string): TodoItem[] {
   const todos = getTodos()
   const todoExists = todos.some(todo => todo.id === id)
@@ -330,29 +370,52 @@ export function deleteTodo(id: string): TodoItem[] {
   return updatedTodos
 }
 
+/**
+ * Clears all todo items from storage.
+ */
 export function clearTodos(): void {
   setTodos([])
   updateMetrics('clearTodos')
 }
 
+/**
+ * Retrieves a single todo item by ID.
+ * @param id - ID of the todo to find
+ * @returns The todo item or undefined if not found
+ */
 export function getTodoById(id: string): TodoItem | undefined {
   const todos = getTodos()
   updateMetrics('getTodoById')
   return todos.find(todo => todo.id === id)
 }
 
+/**
+ * Retrieves all todos with a specific status.
+ * @param status - Status to filter by ('pending', 'in_progress', or 'completed')
+ * @returns Array of matching todos
+ */
 export function getTodosByStatus(status: TodoItem['status']): TodoItem[] {
   const todos = getTodos()
   updateMetrics('getTodosByStatus')
   return todos.filter(todo => todo.status === status)
 }
 
+/**
+ * Retrieves all todos with a specific priority.
+ * @param priority - Priority to filter by ('high', 'medium', or 'low')
+ * @returns Array of matching todos
+ */
 export function getTodosByPriority(priority: TodoItem['priority']): TodoItem[] {
   const todos = getTodos()
   updateMetrics('getTodosByPriority')
   return todos.filter(todo => todo.priority === priority)
 }
 
+/**
+ * Queries todos with multiple filter criteria.
+ * @param query - Query object with optional filters for status, priority, content, tags, and date range
+ * @returns Array of todos matching all specified criteria
+ */
 export function queryTodos(query: TodoQuery): TodoItem[] {
   const todos = getTodos()
   updateMetrics('queryTodos')

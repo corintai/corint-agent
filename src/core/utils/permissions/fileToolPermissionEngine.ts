@@ -40,6 +40,11 @@ const SENSITIVE_DIR_NAMES = new Set([
   '.claude',
   '.corint',
   '.ssh',
+  '.aws',
+  '.kube',
+  '.docker',
+  '.gnupg',
+  '.config',
 ])
 const SENSITIVE_FILE_NAMES = new Set([
   '.gitconfig',
@@ -51,8 +56,28 @@ const SENSITIVE_FILE_NAMES = new Set([
   '.profile',
   '.ripgreprc',
   '.mcp.json',
+  '.env',
+  '.env.local',
+  '.env.production',
+  '.env.development',
+  'credentials',
+  'credentials.json',
+  'secrets.json',
+  'config.json',
+  '.netrc',
+  '.npmrc',
+  '.pypirc',
 ])
 
+/**
+ * Resolves a path similar to how CLI tools handle paths.
+ * Supports tilde expansion (~), relative paths, and Windows drive letters.
+ * @param inputPath - The path to resolve (can be relative, absolute, or use ~)
+ * @param baseDir - Optional base directory for relative paths (defaults to cwd)
+ * @returns The resolved absolute path
+ * @throws TypeError if inputPath or baseDir is not a string
+ * @throws Error if path contains null bytes (security check)
+ */
 export function resolveLikeCliPath(
   inputPath: string,
   baseDir?: string,
@@ -66,8 +91,14 @@ export function resolveLikeCliPath(
       `Base directory must be a string, received ${typeof base}`,
     )
   }
+  // Security: Reject null bytes which can be used for path injection
   if (inputPath.includes('\0') || base.includes('\0')) {
     throw new Error('Path contains null bytes')
+  }
+  // Security: Reject paths with excessive parent traversal
+  const parentTraversalCount = (inputPath.match(/\.\.\//g) || []).length
+  if (parentTraversalCount > 10) {
+    throw new Error('Path contains excessive parent directory traversal')
   }
 
   const trimmed = inputPath.trim()
@@ -87,6 +118,25 @@ export function resolveLikeCliPath(
   return path.isAbsolute(trimmed)
     ? path.resolve(trimmed)
     : path.resolve(base, trimmed)
+}
+
+/**
+ * Validates that a resolved path is within an allowed base directory.
+ * Prevents path traversal attacks by ensuring the final path doesn't escape.
+ * @param resolvedPath - The fully resolved absolute path
+ * @param allowedBase - The base directory that should contain the path
+ * @returns True if the path is safely within the allowed base
+ */
+export function isPathWithinBase(resolvedPath: string, allowedBase: string): boolean {
+  const normalizedPath = path.normalize(resolvedPath)
+  const normalizedBase = path.normalize(allowedBase)
+
+  // Ensure both paths end consistently for comparison
+  const pathWithSep = normalizedPath.endsWith(path.sep) ? normalizedPath : normalizedPath + path.sep
+  const baseWithSep = normalizedBase.endsWith(path.sep) ? normalizedBase : normalizedBase + path.sep
+
+  // Check if path starts with base (is within or equal to base)
+  return normalizedPath === normalizedBase || pathWithSep.startsWith(baseWithSep) || normalizedPath.startsWith(baseWithSep)
 }
 
 function toLower(value: string): string {
@@ -115,16 +165,31 @@ function posixRelative(fromPath: string, toPath: string): string {
   return POSIX.relative(fromPath, toPath)
 }
 
+/**
+ * Expands a path to include both the original and symlink-resolved versions.
+ * Useful for permission checks that need to consider both paths.
+ * @param inputPath - The path to expand
+ * @returns Array containing the original path and resolved symlink path (if different)
+ */
 export function expandSymlinkPaths(inputPath: string): string[] {
   const out = [inputPath]
   if (!existsSync(inputPath)) return out
   try {
     const resolved = realpathSync(inputPath)
     if (resolved && resolved !== inputPath) out.push(resolved)
-  } catch {}
+  } catch {
+    // Symlink resolution failed - file may not exist or permission denied
+  }
   return out
 }
 
+/**
+ * Detects suspicious Windows path patterns that could be used for path traversal attacks.
+ * Checks for: multiple colons, short name notation (~1), device paths, trailing dots/spaces,
+ * reserved device names, excessive dots, and network path patterns.
+ * @param inputPath - The path to check
+ * @returns True if the path contains suspicious patterns
+ */
 export function hasSuspiciousWindowsPathPattern(inputPath: string): boolean {
   const p = String(inputPath)
 
@@ -162,6 +227,13 @@ function matchesSuspiciousWindowsNetworkPathPatterns(
   return false
 }
 
+/**
+ * Checks if a file path points to a sensitive location that requires special handling.
+ * Sensitive paths include: network paths, directories like .git/.ssh/.aws, and
+ * files like .env, credentials, etc.
+ * @param inputPath - The path to check
+ * @returns True if the path is considered sensitive
+ */
 export function isSensitiveFilePath(inputPath: string): boolean {
   const p = String(inputPath)
   if (p.startsWith('\\\\') || p.startsWith('//')) return true
@@ -529,7 +601,9 @@ function getDirectoryForSuggestions(inputPath: string): string {
   const absolute = resolveLikeCliPath(inputPath)
   try {
     if (statSync(absolute).isDirectory()) return absolute
-  } catch {}
+  } catch {
+    // Path doesn't exist or not accessible - fall back to parent directory
+  }
   return path.dirname(absolute)
 }
 

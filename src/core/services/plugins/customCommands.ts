@@ -1,5 +1,5 @@
 import { existsSync, readFileSync, readdirSync, statSync } from 'fs'
-import { basename, dirname, join, relative, resolve, sep } from 'path'
+import { dirname, join } from 'path'
 import { homedir } from 'os'
 import { memoize } from 'lodash-es'
 import type { MessageParam } from '@anthropic-ai/sdk/resources/index.mjs'
@@ -9,280 +9,38 @@ import { getSessionPlugins } from '@utils/session/sessionPlugins'
 import { getCorintBaseDir } from '@utils/config/env'
 import { debug as debugLogger } from '@utils/log/debugLogger'
 import { logError } from '@utils/log'
-import { execFile } from 'child_process'
-import { promisify } from 'util'
-import matter from 'gray-matter'
-import yaml from 'js-yaml'
+import {
+  buildPluginQualifiedName,
+  isSkillMarkdownFile,
+  nameForCommandFile,
+  nameForPluginCommandFile,
+  sourceLabel,
+} from './commandUtils'
+import {
+  extractDescriptionFromMarkdown,
+  parseAllowedTools,
+  parseFrontmatter,
+  parseMaxThinkingTokens,
+  toBoolean,
+} from './frontmatterParser'
+import type {
+  CommandFileRecord,
+  CommandSource,
+  CustomCommandFrontmatter,
+  CustomCommandWithScope,
+} from './types'
 
-const execFileAsync = promisify(execFile)
-
-export async function executeBashCommands(content: string): Promise<string> {
-  const bashCommandRegex = /!\`([^`]+)\`/g
-  const matches = [...content.matchAll(bashCommandRegex)]
-
-  if (matches.length === 0) {
-    return content
-  }
-
-  let result = content
-
-  for (const match of matches) {
-    const fullMatch = match[0]
-    const command = match[1].trim()
-
-    try {
-      const parts = command.split(/\s+/)
-      const cmd = parts[0]
-      const args = parts.slice(1)
-
-      const { stdout, stderr } = await execFileAsync(cmd, args, {
-        timeout: 5000,
-        encoding: 'utf8',
-        cwd: getCwd(),
-      })
-
-      const output = stdout.trim() || stderr.trim() || '(no output)'
-      result = result.replace(fullMatch, output)
-    } catch (error) {
-      logError(error)
-      debugLogger.warn('CUSTOM_COMMAND_BASH_EXEC_FAILED', {
-        command,
-        error: error instanceof Error ? error.message : String(error),
-      })
-      result = result.replace(fullMatch, `(error executing: ${command})`)
-    }
-  }
-
-  return result
-}
-
-export async function resolveFileReferences(content: string): Promise<string> {
-  const fileRefRegex = /@([a-zA-Z0-9/._-]+(?:\.[a-zA-Z0-9]+)?)/g
-  const matches = [...content.matchAll(fileRefRegex)]
-
-  if (matches.length === 0) {
-    return content
-  }
-
-  let result = content
-
-  for (const match of matches) {
-    const fullMatch = match[0]
-    const filePath = match[1]
-
-    if (filePath.startsWith('agent-')) {
-      continue
-    }
-
-    try {
-      const fullPath = join(getCwd(), filePath)
-
-      if (existsSync(fullPath)) {
-        const fileContent = readFileSync(fullPath, { encoding: 'utf-8' })
-
-        const formattedContent = `\n\n## File: ${filePath}\n\`\`\`\n${fileContent}\n\`\`\`\n`
-        result = result.replace(fullMatch, formattedContent)
-      } else {
-        result = result.replace(fullMatch, `(file not found: ${filePath})`)
-      }
-    } catch (error) {
-      logError(error)
-      debugLogger.warn('CUSTOM_COMMAND_FILE_READ_FAILED', {
-        filePath,
-        error: error instanceof Error ? error.message : String(error),
-      })
-      result = result.replace(fullMatch, `(error reading: ${filePath})`)
-    }
-  }
-
-  return result
-}
-
-export interface CustomCommandFrontmatter {
-  description?: string
-  'allowed-tools'?: string[]
-  'argument-hint'?: string
-  when_to_use?: string
-  version?: string
-  model?: string
-  maxThinkingTokens?: number | string
-  max_thinking_tokens?: number | string
-  'max-thinking-tokens'?: number | string
-  name?: string
-  'disable-model-invocation'?: boolean | string
-}
-
-export interface CustomCommandWithScope {
-  type: 'prompt'
-  name: string
-  description: string
-  isEnabled: boolean
-  isHidden: boolean
-  aliases?: string[]
-  progressMessage: string
-  userFacingName(): string
-  getPromptForCommand(args: string): Promise<MessageParam[]>
-  allowedTools?: string[]
-  maxThinkingTokens?: number
-  argumentHint?: string
-  whenToUse?: string
-  version?: string
-  model?: string
-  isSkill?: boolean
-  disableModelInvocation?: boolean
-  hasUserSpecifiedDescription?: boolean
-  source?: 'localSettings' | 'userSettings' | 'pluginDir'
-  scope?: 'user' | 'project'
-  filePath?: string
-}
-
-export interface CustomCommandFile {
-  frontmatter: CustomCommandFrontmatter
-  content: string
-  filePath: string
-}
-
-export function parseFrontmatter(content: string): {
-  frontmatter: CustomCommandFrontmatter
-  content: string
-} {
-  const yamlSchema = (yaml as any).JSON_SCHEMA
-  const parsed = matter(content, {
-    engines: {
-      yaml: {
-        parse: (input: string) =>
-          yaml.load(input, yamlSchema ? { schema: yamlSchema } : undefined) ??
-          {},
-      },
-    },
-  })
-  return {
-    frontmatter: (parsed.data ?? {}) as CustomCommandFrontmatter,
-    content: parsed.content ?? '',
-  }
-}
-
-type CommandSource = 'localSettings' | 'userSettings' | 'pluginDir'
-
-function isSkillMarkdownFile(filePath: string): boolean {
-  return /^skill\.md$/i.test(basename(filePath))
-}
+export { executeBashCommands, resolveFileReferences } from './commandUtils'
+export { parseFrontmatter } from './frontmatterParser'
+export type {
+  CommandSource,
+  CustomCommandFile,
+  CustomCommandFrontmatter,
+  CustomCommandWithScope,
+} from './types'
 
 function getUserCorintBaseDir(): string {
   return getCorintBaseDir()
-}
-
-function toBoolean(value: unknown): boolean {
-  if (typeof value === 'boolean') return value
-  if (typeof value === 'string') {
-    const normalized = value.trim().toLowerCase()
-    if (['1', 'true', 'yes', 'on'].includes(normalized)) return true
-    if (['0', 'false', 'no', 'off'].includes(normalized)) return false
-  }
-  return false
-}
-
-function parseAllowedTools(value: unknown): string[] {
-  if (Array.isArray(value)) {
-    return value.map(v => String(v).trim()).filter(Boolean)
-  }
-  if (typeof value === 'string') {
-    const trimmed = value.trim()
-    if (!trimmed) return []
-    return trimmed
-      .split(/\s+/)
-      .map(v => v.trim())
-      .filter(Boolean)
-  }
-  return []
-}
-
-function parseMaxThinkingTokens(
-  frontmatter: CustomCommandFrontmatter,
-): number | undefined {
-  const raw =
-    (frontmatter as any).maxThinkingTokens ??
-    (frontmatter as any).max_thinking_tokens ??
-    (frontmatter as any)['max-thinking-tokens'] ??
-    (frontmatter as any)['max_thinking_tokens']
-  if (raw === undefined || raw === null) return undefined
-  const value = typeof raw === 'number' ? raw : Number(String(raw).trim())
-  if (!Number.isFinite(value) || value < 0) return undefined
-  return Math.floor(value)
-}
-
-function sourceLabel(source: CommandSource): string {
-  if (source === 'localSettings') return 'project'
-  if (source === 'userSettings') return 'user'
-  if (source === 'pluginDir') return 'plugin'
-  return 'unknown'
-}
-
-function extractDescriptionFromMarkdown(
-  markdown: string,
-  fallback: string,
-): string {
-  const lines = markdown.split(/\r?\n/)
-  for (const line of lines) {
-    const trimmed = line.trim()
-    if (!trimmed) continue
-    const heading = trimmed.match(/^#{1,6}\s+(.*)$/)
-    if (heading?.[1]) return heading[1].trim()
-    return trimmed.length > 120 ? `${trimmed.slice(0, 117)}...` : trimmed
-  }
-  return fallback
-}
-
-function namespaceFromDirPath(dirPath: string, baseDir: string): string {
-  const relPath = relative(baseDir, dirPath)
-  if (!relPath || relPath === '.' || relPath.startsWith('..')) return ''
-  return relPath.split(sep).join(':')
-}
-
-function nameForCommandFile(filePath: string, baseDir: string): string {
-  if (isSkillMarkdownFile(filePath)) {
-    const skillDir = dirname(filePath)
-    const parentDir = dirname(skillDir)
-    const skillName = basename(skillDir)
-    const namespace = namespaceFromDirPath(parentDir, baseDir)
-    return namespace ? `${namespace}:${skillName}` : skillName
-  }
-
-  const dir = dirname(filePath)
-  const namespace = namespaceFromDirPath(dir, baseDir)
-  const fileName = basename(filePath).replace(/\.md$/i, '')
-  return namespace ? `${namespace}:${fileName}` : fileName
-}
-
-type CommandFileRecord = {
-  baseDir: string
-  filePath: string
-  frontmatter: CustomCommandFrontmatter
-  content: string
-  source: CommandSource
-  scope: 'user' | 'project'
-}
-
-function buildPluginQualifiedName(
-  pluginName: string,
-  localName: string,
-): string {
-  const p = pluginName.trim()
-  const l = localName.trim()
-  if (!p) return l
-  if (!l || l === p) return p
-  return `${p}:${l}`
-}
-
-function nameForPluginCommandFile(
-  filePath: string,
-  commandsDir: string,
-  pluginName: string,
-): string {
-  const rel = relative(commandsDir, filePath)
-  const noExt = rel.replace(/\.md$/i, '')
-  const localName = noExt.split(sep).filter(Boolean).join(':')
-  return buildPluginQualifiedName(pluginName, localName)
 }
 
 function createPluginPromptCommandFromFile(record: {
@@ -929,39 +687,4 @@ export const reloadCustomCommands = (): void => {
   loadCustomCommands.cache.clear()
 }
 
-export function getCustomCommandDirectories(): {
-  userClaudeCommands: string
-  projectClaudeCommands: string
-  userClaudeSkills: string
-  projectClaudeSkills: string
-  userCorintCommands: string
-  projectCorintCommands: string
-  userCorintSkills: string
-  projectCorintSkills: string
-} {
-  const userCorintBaseDir = getUserCorintBaseDir()
-  return {
-    userClaudeCommands: join(homedir(), '.claude', 'commands'),
-    projectClaudeCommands: join(getCwd(), '.claude', 'commands'),
-    userClaudeSkills: join(homedir(), '.claude', 'skills'),
-    projectClaudeSkills: join(getCwd(), '.claude', 'skills'),
-    userCorintCommands: join(userCorintBaseDir, 'commands'),
-    projectCorintCommands: join(getCwd(), '.corint', 'commands'),
-    userCorintSkills: join(userCorintBaseDir, 'skills'),
-    projectCorintSkills: join(getCwd(), '.corint', 'skills'),
-  }
-}
-
-export function hasCustomCommands(): boolean {
-  const dirs = getCustomCommandDirectories()
-  return (
-    existsSync(dirs.userClaudeCommands) ||
-    existsSync(dirs.projectClaudeCommands) ||
-    existsSync(dirs.userClaudeSkills) ||
-    existsSync(dirs.projectClaudeSkills) ||
-    existsSync(dirs.userCorintCommands) ||
-    existsSync(dirs.projectCorintCommands) ||
-    existsSync(dirs.userCorintSkills) ||
-    existsSync(dirs.projectCorintSkills)
-  )
-}
+export { getCustomCommandDirectories, hasCustomCommands } from './customCommandDirectories'

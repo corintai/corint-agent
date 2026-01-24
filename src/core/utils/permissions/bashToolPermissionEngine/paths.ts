@@ -1,3 +1,16 @@
+/**
+ * Bash Command Path Permission Engine
+ *
+ * This module validates file system paths in bash commands to ensure they comply
+ * with security policies. It extracts paths from various shell commands (ls, cat, rm, etc.)
+ * and checks them against allowed working directories and permission rules.
+ *
+ * Key concepts:
+ * - PATH_COMMAND_ARG_EXTRACTORS: Maps commands to functions that extract path arguments
+ * - COMMAND_PATH_BEHAVIOR: Defines whether a command reads, writes, or creates files
+ * - Path validation considers: working directories, deny rules, sensitive paths, wildcards
+ */
+
 import { homedir } from 'os'
 import path from 'path'
 
@@ -20,10 +33,17 @@ import {
 import { stripOutputRedirections, type Redirection } from './redirections'
 import type { BashPermissionDecision, DecisionReason } from './types'
 
+/** Regex pattern to detect shell glob/wildcard characters */
 const WILDCARD_PATTERN = /[*?[\]{}]/
 
+/** Operation type for path-based commands */
 type BashPathOp = 'read' | 'write' | 'create'
 
+/**
+ * Command-specific path argument extractors.
+ * Each function takes the command's arguments and returns an array of paths
+ * that the command will access. Handles command-specific flag parsing.
+ */
 const PATH_COMMAND_ARG_EXTRACTORS: Record<
   string,
   (args: string[]) => string[]
@@ -241,8 +261,15 @@ const PATH_COMMAND_ARG_EXTRACTORS: Record<
   },
 }
 
+/** Set of commands that have path-based permission checks */
 const PATH_COMMANDS = new Set(Object.keys(PATH_COMMAND_ARG_EXTRACTORS))
 
+/**
+ * Maps commands to their file system operation type.
+ * - 'read': Command only reads files (safe for read-only directories)
+ * - 'write': Command modifies or deletes files (requires write permission)
+ * - 'create': Command creates new files/directories
+ */
 const COMMAND_PATH_BEHAVIOR: Record<string, BashPathOp> = {
   cd: 'read',
   ls: 'read',
@@ -393,6 +420,10 @@ function resolveTildeLikeClaude(value: string): string {
   return value
 }
 
+/**
+ * Extracts the base directory from a glob pattern for permission checking.
+ * For "src/**\/*.ts", returns "src". For non-glob paths, returns dirname.
+ */
 function baseDirForGlobPattern(pattern: string): string {
   if (!WILDCARD_PATTERN.test(pattern)) return path.dirname(pattern)
   const idx = pattern.search(WILDCARD_PATTERN)
@@ -400,6 +431,10 @@ function baseDirForGlobPattern(pattern: string): string {
   return path.dirname(slice)
 }
 
+/**
+ * Core permission check for a single absolute path.
+ * Checks deny rules first, then verifies path is in allowed working directories.
+ */
 function checkPathPermission(
   absPath: string,
   toolPermissionContext: ToolPermissionContext,
@@ -658,6 +693,20 @@ function validateOutputRedirections(
   return { behavior: 'passthrough', message: 'No unsafe redirections found' }
 }
 
+/**
+ * Main entry point for validating paths in bash commands.
+ *
+ * Validation flow:
+ * 1. Check for shell expansion syntax in redirections (requires manual approval)
+ * 2. Validate output redirections (>, >>, etc.)
+ * 3. Split compound commands and validate each subcommand's paths
+ *
+ * @param args.command - The full bash command string
+ * @param args.cwd - Current working directory for resolving relative paths
+ * @param args.toolPermissionContext - Permission rules and allowed directories
+ * @param args.hasCdInCompound - Whether the compound command contains 'cd'
+ * @returns Permission decision: 'passthrough', 'ask', or 'deny'
+ */
 export function validateBashCommandPaths(args: {
   command: string
   cwd: string

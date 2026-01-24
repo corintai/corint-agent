@@ -19,6 +19,7 @@ import {
 } from '@utils/log/debugLogger'
 import { getModelManager } from '@utils/model'
 import { getReasoningEffort } from '@utils/model/thinking'
+import { normalizeTokenUsage } from '@utils/model/tokens'
 import { normalizeContentFromAPI } from '@utils/messages'
 import { zodToJsonSchema } from 'zod-to-json-schema'
 import type { ToolUseContext } from '@tool'
@@ -65,33 +66,33 @@ function messageReducer(
   previous: OpenAI.ChatCompletionMessage,
   item: OpenAI.ChatCompletionChunk,
 ): OpenAI.ChatCompletionMessage {
-  const reduce = (acc: any, delta: OpenAI.ChatCompletionChunk.Choice.Delta) => {
+  const reduce = (acc: Record<string, unknown>, delta: OpenAI.ChatCompletionChunk.Choice.Delta): Record<string, unknown> => {
     acc = { ...acc }
     for (const [key, value] of Object.entries(delta)) {
       if (acc[key] === undefined || acc[key] === null) {
         acc[key] = value
         if (Array.isArray(acc[key])) {
-          for (const arr of acc[key]) {
+          for (const arr of acc[key] as Array<Record<string, unknown>>) {
             delete arr.index
           }
         }
       } else if (typeof acc[key] === 'string' && typeof value === 'string') {
-        acc[key] += value
+        acc[key] = (acc[key] as string) + value
       } else if (typeof acc[key] === 'number' && typeof value === 'number') {
         acc[key] = value
       } else if (Array.isArray(acc[key]) && Array.isArray(value)) {
-        const accArray = acc[key]
+        const accArray = acc[key] as Array<Record<string, unknown>>
         for (let i = 0; i < value.length; i++) {
-          const { index, ...chunkTool } = value[i]
+          const { index, ...chunkTool } = value[i] as { index: number; [key: string]: unknown }
           if (index - accArray.length > 1) {
             throw new Error(
               `Error: An array has an empty value when tool_calls are constructed. tool_calls: ${accArray}; tool: ${value}`,
             )
           }
-          accArray[index] = reduce(accArray[index], chunkTool)
+          accArray[index] = reduce(accArray[index] || {}, chunkTool as OpenAI.ChatCompletionChunk.Choice.Delta)
         }
       } else if (typeof acc[key] === 'object' && typeof value === 'object') {
-        acc[key] = reduce(acc[key], value)
+        acc[key] = reduce(acc[key] as Record<string, unknown>, value as OpenAI.ChatCompletionChunk.Choice.Delta)
       }
     }
     return acc
@@ -101,7 +102,10 @@ function messageReducer(
   if (!choice) {
     return previous
   }
-  return reduce(previous, choice.delta) as OpenAI.ChatCompletionMessage
+  return reduce(
+    previous as unknown as Record<string, unknown>,
+    choice.delta,
+  ) as unknown as OpenAI.ChatCompletionMessage
 }
 
 async function handleMessageStream(
@@ -246,7 +250,13 @@ function convertOpenAIResponseToAnthropic(
       let toolArgs = {}
       try {
         toolArgs = tool?.arguments ? JSON.parse(tool.arguments) : {}
-      } catch (e) {}
+      } catch (e) {
+        debugLogger.warn('TOOL_ARGS_PARSE_FAILED', {
+          toolName: toolName || 'unknown',
+          rawArguments: tool?.arguments?.slice(0, 200) || '',
+          error: e instanceof Error ? e.message : String(e),
+        })
+      }
 
       contentBlocks.push({
         type: 'tool_use',
@@ -305,7 +315,13 @@ function buildAssistantMessageFromUnifiedResponse(
       let toolArgs = {}
       try {
         toolArgs = tool?.arguments ? JSON.parse(tool.arguments) : {}
-      } catch (e) {}
+      } catch (e) {
+        debugLogger.warn('UNIFIED_TOOL_ARGS_PARSE_FAILED', {
+          toolName: toolName || 'unknown',
+          rawArguments: tool?.arguments?.slice(0, 200) || '',
+          error: e instanceof Error ? e.message : String(e),
+        })
+      }
 
       contentBlocks.push({
         type: 'tool_use',
@@ -360,37 +376,6 @@ function buildAssistantMessageFromUnifiedResponse(
     durationMs: Date.now() - startTime,
     uuid: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}` as any,
     responseId: unifiedResponse.responseId,
-  }
-}
-
-function normalizeUsage(usage?: any) {
-  if (!usage) {
-    return {
-      input_tokens: 0,
-      output_tokens: 0,
-      cache_read_input_tokens: 0,
-      cache_creation_input_tokens: 0,
-    }
-  }
-
-  const inputTokens =
-    usage.input_tokens ?? usage.prompt_tokens ?? usage.inputTokens ?? 0
-  const outputTokens =
-    usage.output_tokens ?? usage.completion_tokens ?? usage.outputTokens ?? 0
-  const cacheReadInputTokens =
-    usage.cache_read_input_tokens ??
-    usage.prompt_token_details?.cached_tokens ??
-    usage.cacheReadInputTokens ??
-    0
-  const cacheCreationInputTokens =
-    usage.cache_creation_input_tokens ?? usage.cacheCreatedInputTokens ?? 0
-
-  return {
-    ...usage,
-    input_tokens: inputTokens,
-    output_tokens: outputTokens,
-    cache_read_input_tokens: cacheReadInputTokens,
-    cache_creation_input_tokens: cacheCreationInputTokens,
   }
 }
 
@@ -585,7 +570,7 @@ export async function queryOpenAI(
               unifiedResponse,
               start,
             )
-            assistantMessage.message.usage = normalizeUsage(
+            assistantMessage.message.usage = normalizeTokenUsage(
               assistantMessage.message.usage,
             )
 
@@ -709,7 +694,7 @@ export async function queryOpenAI(
     assistantMessage.message.content || [],
   )
 
-  const normalizedUsage = normalizeUsage(assistantMessage.message.usage)
+  const normalizedUsage = normalizeTokenUsage(assistantMessage.message.usage)
   assistantMessage.message.usage = normalizedUsage
 
   const inputTokens = normalizedUsage.input_tokens ?? 0

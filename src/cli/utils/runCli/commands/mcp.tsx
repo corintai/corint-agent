@@ -25,7 +25,7 @@ import {
   normalizeMcpTransport,
   parseMcpHeaders,
 } from '@services/mcpCliUtils'
-import { startMCPServer } from '../../../../entrypoints/mcp'
+import { startMCPServer } from '@entrypoints/mcp'
 import { setup } from '../../setup'
 import { registerMcpDesktopImportCommand } from './mcpDesktopImport'
 

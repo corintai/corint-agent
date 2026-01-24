@@ -3,12 +3,20 @@ import { memoize } from 'lodash-es'
 import { logError } from '@utils/log'
 import { debug as debugLogger } from '@utils/log/debugLogger'
 import {
+  DEFAULT_GLOBAL_CONFIG,
   getGlobalConfig,
+  GlobalConfig,
   ModelProfile,
   ModelPointerType,
   saveGlobalConfig,
 } from '@utils/config'
 import { GLOBAL_CONFIG_FILE } from '@utils/config/env'
+import {
+  switchToNextModel as switchToNextModelInternal,
+  switchToNextModelWithContextCheck as switchToNextModelWithContextCheckInternal,
+  type SwitchResult,
+  type SwitchWithContextResult,
+} from './modelSwitching'
 
 export const USE_BEDROCK = !!(
   process.env.CORINT_USE_BEDROCK ?? process.env.CLAUDE_CODE_USE_BEDROCK
@@ -28,6 +36,12 @@ const DEFAULT_MODEL_CONFIG: ModelConfig = {
   vertex: 'claude-3-7-sonnet@20250219',
   firstParty: 'claude-sonnet-4-20250514',
 }
+
+const buildFallbackConfig = (): GlobalConfig => ({
+  ...DEFAULT_GLOBAL_CONFIG,
+  modelProfiles: [],
+  modelPointers: { ...DEFAULT_GLOBAL_CONFIG.modelPointers },
+})
 
 async function getModelConfig(): Promise<ModelConfig> {
   return DEFAULT_MODEL_CONFIG
@@ -69,10 +83,10 @@ export function getVertexRegionForModel(
 }
 
 export class ModelManager {
-  private config: any
+  private config: GlobalConfig
   private modelProfiles: ModelProfile[]
 
-  constructor(config: any) {
+  constructor(config: GlobalConfig) {
     this.config = config
     this.modelProfiles = config.modelProfiles || []
   }
@@ -118,241 +132,28 @@ export class ModelManager {
     return this.getMainAgentModel()
   }
 
-  switchToNextModelWithContextCheck(currentContextTokens: number = 0): {
-    success: boolean
-    modelName: string | null
-    previousModelName: string | null
-    contextOverflow: boolean
-    usagePercentage: number
-    currentContextTokens: number
-    skippedModels?: Array<{
-      name: string
-      provider: string
-      contextLength: number
-      budgetTokens: number | null
-      usagePercentage: number
-    }>
-  } {
-    const allProfiles = this.getAllConfiguredModels()
-    if (allProfiles.length === 0) {
-      return {
-        success: false,
-        modelName: null,
-        previousModelName: null,
-        contextOverflow: false,
-        usagePercentage: 0,
-        currentContextTokens,
-      }
-    }
-
-    allProfiles.sort((a, b) => a.createdAt - b.createdAt)
-
-    const currentMainModelName = this.config.modelPointers?.main
-    const currentModel = currentMainModelName
-      ? this.findModelProfile(currentMainModelName)
-      : null
-    const previousModelName = currentModel?.name || null
-
-    const budgetForModel = (
-      model: ModelProfile,
-    ): {
-      budgetTokens: number | null
-      usagePercentage: number
-      compatible: boolean
-    } => {
-      const contextLength = Number(model.contextLength)
-      if (!Number.isFinite(contextLength) || contextLength <= 0) {
-        debugLogger.warn('MODEL_INVALID_CONTEXT_LENGTH', {
-          modelName: model.name,
-          contextLength: model.contextLength,
-        })
-        return { budgetTokens: null, usagePercentage: 0, compatible: true }
-      }
-      const budgetTokens = Math.floor(contextLength * 0.9)
-      const usagePercentage =
-        budgetTokens > 0 ? (currentContextTokens / budgetTokens) * 100 : 0
-      const compatible =
-        budgetTokens > 0 ? currentContextTokens <= budgetTokens : true
-
-      debugLogger.info('MODEL_CONTEXT_BUDGET_CHECK', {
-        modelName: model.name,
-        contextLength,
-        budgetTokens,
-        currentContextTokens,
-        usagePercentage: usagePercentage.toFixed(1),
-        compatible,
-      })
-
-      return {
-        budgetTokens,
-        usagePercentage,
-        compatible,
-      }
-    }
-
-    const currentIndex = currentMainModelName
-      ? allProfiles.findIndex(p => p.modelName === currentMainModelName)
-      : -1
-    const startIndex = currentIndex >= 0 ? currentIndex : -1
-
-    if (allProfiles.length === 1) {
-      return {
-        success: false,
-        modelName: null,
-        previousModelName,
-        contextOverflow: false,
-        usagePercentage: 0,
-        currentContextTokens,
-      }
-    }
-
-    const maxOffsets =
-      startIndex === -1 ? allProfiles.length : allProfiles.length - 1
-    const skippedModels: NonNullable<
-      ReturnType<
-        ModelManager['switchToNextModelWithContextCheck']
-      >['skippedModels']
-    > = []
-
-    let selected: ModelProfile | null = null
-    let selectedUsagePercentage = 0
-
-    for (let offset = 1; offset <= maxOffsets; offset++) {
-      const candidateIndex =
-        (startIndex + offset + allProfiles.length) % allProfiles.length
-      const candidate = allProfiles[candidateIndex]
-      if (!candidate) continue
-
-      const { budgetTokens, usagePercentage, compatible } =
-        budgetForModel(candidate)
-      if (compatible) {
-        selected = candidate
-        selectedUsagePercentage = usagePercentage
-        break
-      }
-      skippedModels.push({
-        name: candidate.name,
-        provider: candidate.provider,
-        contextLength: candidate.contextLength,
-        budgetTokens,
-        usagePercentage,
-      })
-    }
-
-    if (!selected) {
-      const firstSkipped = skippedModels[0]
-      return {
-        success: false,
-        modelName: null,
-        previousModelName,
-        contextOverflow: true,
-        usagePercentage: firstSkipped?.usagePercentage ?? 0,
-        currentContextTokens,
-        skippedModels,
-      }
-    }
-
-    if (!selected.isActive) {
-      selected.isActive = true
-    }
-
-    this.setPointer('main', selected.modelName)
-    this.updateLastUsed(selected.modelName)
-
-    return {
-      success: true,
-      modelName: selected.name,
-      previousModelName,
-      contextOverflow: false,
-      usagePercentage: selectedUsagePercentage,
+  switchToNextModelWithContextCheck(
+    currentContextTokens: number = 0,
+  ): SwitchWithContextResult {
+    return switchToNextModelWithContextCheckInternal({
+      allProfiles: this.getAllConfiguredModels(),
+      currentMainModelName: this.config.modelPointers?.main,
       currentContextTokens,
-      skippedModels,
-    }
+      setPointer: this.setPointer.bind(this),
+      updateLastUsed: this.updateLastUsed.bind(this),
+      findModelProfile: this.findModelProfile.bind(this),
+    })
   }
 
-  switchToNextModel(currentContextTokens: number = 0): {
-    success: boolean
-    modelName: string | null
-    blocked?: boolean
-    message?: string
-  } {
-    const result = this.switchToNextModelWithContextCheck(currentContextTokens)
-
-    const formatTokens = (tokens: number): string => {
-      if (!Number.isFinite(tokens)) return 'unknown'
-      if (tokens >= 1000) return `${Math.round(tokens / 1000)}k`
-      return String(Math.round(tokens))
-    }
-
-    const allModels = this.getAllConfiguredModels()
-    if (allModels.length === 0) {
-      return {
-        success: false,
-        modelName: null,
-        blocked: false,
-        message: `❌ No models configured. Edit ${GLOBAL_CONFIG_FILE} to add model profiles.`,
-      }
-    }
-    if (allModels.length === 1) {
-      return {
-        success: false,
-        modelName: null,
-        blocked: false,
-        message: `⚠️ Only one model configured (${allModels[0].modelName}). Add more profiles in ${GLOBAL_CONFIG_FILE} to enable switching.`,
-      }
-    }
-
-    const currentModel = this.findModelProfile(this.config.modelPointers?.main)
-    const modelsSorted = [...allModels].sort(
-      (a, b) => a.createdAt - b.createdAt,
-    )
-    const currentIndex = modelsSorted.findIndex(
-      m => m.modelName === currentModel?.modelName,
-    )
-    const totalModels = modelsSorted.length
-
-    if (result.success && result.modelName) {
-      const skippedCount = result.skippedModels?.length ?? 0
-      const skippedSuffix =
-        skippedCount > 0 ? ` · skipped ${skippedCount} incompatible` : ''
-      const contextSuffix =
-        currentModel?.contextLength && result.currentContextTokens
-          ? ` · context ~${formatTokens(result.currentContextTokens)}/${formatTokens(currentModel.contextLength)}`
-          : ''
-
-      return {
-        success: true,
-        modelName: result.modelName,
-        blocked: false,
-        message: `✅ Switched to ${result.modelName} (${currentIndex + 1}/${totalModels})${currentModel?.provider ? ` [${currentModel.provider}]` : ''}${skippedSuffix}${contextSuffix}`,
-      }
-    }
-
-    if (result.contextOverflow) {
-      const attempted = result.skippedModels?.[0]
-      const attemptedContext = attempted?.contextLength
-      const attemptedBudget = attempted?.budgetTokens
-      const currentLabel =
-        currentModel?.name || currentModel?.modelName || 'current model'
-
-      const attemptedText = attempted
-        ? `Can't switch to ${attempted.name}: current ~${formatTokens(result.currentContextTokens)} tokens exceeds safe budget (~${formatTokens(attemptedBudget ?? 0)} tokens, 90% of ${formatTokens(attemptedContext ?? 0)}).`
-        : `Can't switch models due to context size (~${formatTokens(result.currentContextTokens)} tokens).`
-
-      return {
-        success: false,
-        modelName: null,
-        blocked: true,
-        message: `⚠️ ${attemptedText} Keeping ${currentLabel}.`,
-      }
-    }
-
-    return {
-      success: false,
-      modelName: null,
-      blocked: false,
-      message: '❌ Failed to switch models',
-    }
+  switchToNextModel(currentContextTokens: number = 0): SwitchResult {
+    return switchToNextModelInternal({
+      allProfiles: this.getAllConfiguredModels(),
+      currentMainModelName: this.config.modelPointers?.main,
+      currentContextTokens,
+      setPointer: this.setPointer.bind(this),
+      updateLastUsed: this.updateLastUsed.bind(this),
+      findModelProfile: this.findModelProfile.bind(this),
+    })
   }
 
   revertToPreviousModel(previousModelName: string): boolean {
@@ -646,8 +447,8 @@ export class ModelManager {
   }
 
   private getDefaultModel(): ModelProfile | null {
-    if (this.config.defaultModelId) {
-      const profile = this.findModelProfile(this.config.defaultModelId)
+    if (this.config.defaultModelName) {
+      const profile = this.findModelProfile(this.config.defaultModelName)
       if (profile && profile.isActive) {
         return profile
       }
@@ -841,10 +642,7 @@ export const getModelManager = (): ModelManager => {
       const config = getGlobalConfig()
       if (!config) {
         debugLogger.warn('MODEL_MANAGER_GLOBAL_CONFIG_MISSING', {})
-        globalModelManager = new ModelManager({
-          modelProfiles: [],
-          modelPointers: { main: '', task: '', compact: '', quick: '' },
-        })
+        globalModelManager = new ModelManager(buildFallbackConfig())
       } else {
         globalModelManager = new ModelManager(config)
       }
@@ -855,10 +653,7 @@ export const getModelManager = (): ModelManager => {
     debugLogger.error('MODEL_MANAGER_CREATE_FAILED', {
       error: error instanceof Error ? error.message : String(error),
     })
-    return new ModelManager({
-      modelProfiles: [],
-      modelPointers: { main: '', task: '', compact: '', quick: '' },
-    })
+    return new ModelManager(buildFallbackConfig())
   }
 }
 

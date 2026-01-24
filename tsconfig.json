@@ -52,6 +52,7 @@
       "@commands": ["src/cli/commands/index.ts"],
       "@commands/*": ["src/cli/commands/*"],
       "@utils": ["src/core/utils"],
+      "@utils/error": ["src/core/utils/error/index.ts"],
       "@utils/*": ["src/core/utils/*"],
       "@constants": ["src/shared/constants"],
       "@constants/*": ["src/shared/constants/*"],
@@ -116,6 +117,7 @@
       "@agent/*": ["src/core/agent/*"],
       "@query": ["src/core/agent/query.ts"],
       "@messages": ["src/core/agent/messages.ts"],
+      "@entrypoints/*": ["src/entrypoints/*"],
       "*": ["node_modules/*", "src/core/types/*", "src/*"]
     },
     "types": ["bun-types", "node"],

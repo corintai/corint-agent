@@ -29,5 +29,8 @@ export function writeToFile(filePath: string, entry: LogEntry) {
       ) + ',\n'
 
     appendFileSync(filePath, logLine)
-  } catch (error) {}
+  } catch (error) {
+    // Silently ignore file write errors in debug logging to avoid disrupting main flow
+    // Common causes: disk full, permission denied, file locked
+  }
 }
