@@ -48,7 +48,7 @@ export function getDataSourceConfig(name: string): DataSourceConfig {
       : ''
 
   throw new Error(
-    `Data source ${name} not configured. Set repository/datasource.yaml, CORINT_DATA_SOURCES, or CORINT_DS_${normalized}_TYPE.${hint}`,
+    `Data source ${name} not configured. Set config/datasource.yaml, CORINT_DATA_SOURCES, or CORINT_DS_${normalized}_TYPE.${hint}`,
   )
 }
 
@@ -197,7 +197,7 @@ function resolveYamlPath(): string | undefined {
 function findUpwardsConfig(startDir: string): string | undefined {
   let current = startDir
   while (true) {
-    const candidate = path.join(current, 'repository', 'datasource.yaml')
+    const candidate = path.join(current, 'config', 'datasource.yaml')
     if (fs.existsSync(candidate)) {
       return candidate
     }

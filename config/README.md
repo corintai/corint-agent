@@ -1,12 +1,13 @@
-# Repository Assets
+# Config Directory
 
-This folder contains business configuration and knowledge assets for CORINT.
+This directory contains configuration files for CORINT Agent.
 
-## Layout
-- `datasource.yaml` Data source definitions
-- `knowledge/` Domain knowledge base
+## Files
 
-## Data source format
+- `datasource.yaml` - Data source definitions
+
+## Data Source Format
+
 `datasource.yaml` supports a map or a list under `datasource`, `data_sources`, or `datasources`:
 
 ```yaml
@@ -19,5 +20,6 @@ datasource:
 ```
 
 ## Notes
+
 - Secrets can be stored directly in YAML, or referenced via `${ENV_VAR}`.
-- The agent resolves `repository/datasource.yaml` by searching upwards from the current working directory.
+- The agent resolves `config/datasource.yaml` by searching upwards from the current working directory.

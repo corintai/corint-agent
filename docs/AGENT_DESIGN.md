@@ -114,8 +114,8 @@ CORINT Risk Agent is an AI-native assistant designed for risk management profess
 │  │  ┌──────────────────────────────────────────────┐  │     │
 │  │  │              Agent Tools                      │  │     │
 │  │  │  • Foundation Tools (Basic Access)            │  │     │
-│  │  │  • Domain Calculation Tools                   │  │     │
-│  │  │  • Domain Action Tools                        │  │     │
+│  │  │  • Domain Validation Tools (RDL)              │  │     │
+│  │  │  • Domain Action Tools (Deploy/Test)          │  │     │
 │  │  │  • MCP Extensions (External Data/Services)    │  │     │
 │  │  │  • User-defined Skills                        │  │     │
 │  │  └──────────────────────────────────────────────┘  │     │
@@ -154,13 +154,13 @@ CORINT Risk Agent is an AI-native assistant designed for risk management profess
   - **Domain Concepts**: DPD, overdue rate, KS, AUC, Vintage, flow rate definitions
   - **RDL Syntax**: CORINT DSL grammar, Rule/Ruleset/Pipeline templates
   - **Strategy Patterns**: Common rule patterns (multi-loan detection, high-risk region, credit limit tiers)
-  - **Feature Templates**: Behavioral, device, graph feature calculation logic
+  - **Code Templates**: Python/SQL templates for common calculations (metrics, vintage, DPD, flow rate, threshold simulation)
   - **Best Practices**: Threshold tuning experience, regulatory compliance constraints
   - **Self-Evolution**: Learn from user feedback via ADD/MODIFY/DELETE operations on knowledge
 - **Task Manager**: Converts plans into TODO lists with dependencies and status tracking.
 - **Sandbox Manager**: Allocates isolated cloud environments per session for safety and continuity.
 - **Parallel Executor**: Enables scale-out sub-tasks across multiple sandboxes with result aggregation.
-- **Agent Tools**: Managed by Execution Module; includes Foundation, Domain Calculation, Domain Action tools, MCP extensions, and user-defined Skills.
+- **Agent Tools**: Managed by Execution Module; includes Foundation Tools, Domain Validation Tools, Domain Action Tools, MCP extensions, and user-defined Skills.
 - **MCP Extensions**: Support Model Context Protocol for pluggable data sources and external services. MCP servers can be configured to provide additional tools dynamically.
 - **Dynamic Plan Revision**: Execution can trigger plan adjustments via two modes:
   - **decompose**: Break current task into smaller sub-tasks when complexity is discovered
@@ -208,9 +208,10 @@ Auto-save state before destructive operations, enabling rollback:
 - **LLM is responsible for**: Reasoning, analysis, recommendations, decisions, comparisons, attribution
 
 **Tool Selection Strategy**:
-- **Built-in Tools First**: Prioritize predefined domain tools to ensure execution efficiency and result consistency
-- **Code as Fallback**: When built-in tools cannot meet requirements, Agent can write code to solve long-tail problems
+- **Code First**: Leverage LLM's code generation capabilities for calculations and data transformations using Python/SQL
+- **Built-in Tools for Integration**: Use predefined tools only for external system access, DSL validation, and operations with side effects
 - **Sandbox Isolation**: All code executes in isolated sandboxes to ensure security
+- **Knowledge Base Support**: Provide code templates and best practices in Knowledge Base to guide LLM code generation
 
 **What Should NOT Be Tools**:
 - `root_cause_analysis` → LLM reasons from data itself
@@ -218,6 +219,12 @@ Auto-save state before destructive operations, enabling rollback:
 - `suggest_cleaning` → LLM suggests after seeing data issues
 - `detect_anomalies` → LLM judges after seeing statistical data
 - `compare_strategies` → LLM compares after seeing metrics from multiple strategies
+- `calculate_metrics` → LLM generates Python code using scikit-learn/scipy
+- `calculate_vintage` → LLM generates SQL or pandas code for pivot analysis
+- `calculate_dpd_distribution` → LLM generates SQL histogram queries
+- `calculate_flow_rate` → LLM generates SQL transition matrix queries
+- `simulate_threshold` → LLM generates Python code for threshold simulation
+- `simulate_strategy` → LLM generates Python code for multi-threshold analysis
 
 ### 3.2 Foundation Tools (Basic Access)
 
@@ -251,8 +258,12 @@ The most fundamental atomic tools, providing data access, file operations, searc
 
 | Tool | Purpose | Input | Output |
 |------|---------|-------|--------|
-| `execute_code` | Execute code in sandbox | `language`, `code` | Execution result |
-| `run_bash` | Execute Bash commands | `command`, `working_dir` | stdout / stderr |
+| `run_bash` | Execute commands in sandbox | `command`, `working_dir` | stdout / stderr |
+
+**Design Rationale**:
+- `run_bash` can execute code in any language: `python3 -c "code"`, `node -e "code"`, etc.
+- No need for separate `execute_code` tool - reduces complexity and maintenance
+- For complex scripts, write to file first then execute: `write_file` + `run_bash`
 
 #### 3.2.5 Web Tools
 
@@ -272,83 +283,120 @@ The most fundamental atomic tools, providing data access, file operations, searc
 - **Data Access**: LLM is responsible for generating correct SQL based on requirements; `fetch_web` is used to retrieve external documents or web pages
 - **File Operations**: `edit_file` uses precise string matching for replacement, avoiding rewriting entire files; `read_file` supports paginated reading of large files
 - **Search Tools**: `glob_files` for quick file location, `grep_content` for searching code content; combining both reduces token consumption
-- **Execution Tools**: `execute_code` prefers Python (rich data analysis ecosystem) for handling long-tail requirements not covered by built-in tools; `run_shell` for executing system commands, must run in sandbox environment
+- **Execution Tools**: `run_bash` handles all code execution needs - Python (`python3 -c "code"`), Node.js (`node -e "code"`), or any shell command; for complex scripts, use `write_file` first then execute
 - **Agent Tools**:
   - `spawn_agent` creates isolated sub-sessions, supports parallel execution of multiple sub-tasks, sub-agents have independent context and token budgets
   - `todo_write` for UI state management, displays task progress to users in real-time, not file write operations
 
-### 3.3 Domain Calculation Tools
+### 3.3 Domain Validation Tools
 
-Encapsulates **deterministic calculation logic** in the risk control domain that LLM cannot complete on its own.
+Encapsulates **RDL-specific validation logic** that requires deep integration with the CORINT decision engine.
 
-| Tool | Purpose | Input | Output |
-|------|---------|-------|--------|
-| `calculate_metrics` | Calculate model evaluation metrics | `predictions`, `labels`, `metrics[]` | KS / AUC / PSI / IV / Gini |
-| `calculate_vintage` | Calculate vintage analysis matrix | `loan_data`, `observation_months` | Vintage Matrix |
-| `calculate_dpd_distribution` | Calculate DPD overdue distribution | `repayment_data`, `bucket_days[]` | DPD Histogram |
-| `calculate_flow_rate` | Calculate flow rate | `collection_data`, `periods` | Flow Rate Matrix |
-| `simulate_threshold` | Simulate single threshold effect | `score_data`, `threshold` | PassRate / BadRate / Volume |
-| `simulate_strategy` | Simulate multi-threshold strategy effect | `score_data`, `strategy_config` | Segment-level metrics |
-| `backtest_rule` | Backtest rule on historical data | `rule_definition`, `historical_data` | HitRate / Precision / Recall |
-| `validate_rdl` | RDL syntax validation | `rdl_content` | Valid / Syntax Errors |
-| `validate_semantics` | RDL semantic validation | `rdl_content`, `schema` | Valid / Semantic Errors |
+| Tool | Purpose | Input | Output | Rationale |
+|------|---------|-------|--------|-----------|
+| `validate_rdl` | RDL syntax validation | `rdl_content` | Valid / Syntax Errors | Requires RDL parser and grammar rules |
+| `validate_semantics` | RDL semantic validation | `rdl_content`, `schema` | Valid / Semantic Errors | Requires schema access and type checking |
+| `backtest_rule` | Backtest rule on historical data | `rule_definition`, `historical_data` | HitRate / Precision / Recall | Requires RDL rule engine execution |
+
+**Design Rationale**:
+- These tools require deep integration with CORINT's RDL engine and cannot be easily replicated with generic code
+- For all other calculations (metrics, vintage, DPD, flow rate, simulations), LLM generSQL code using standard libraries
+- Code generation approach provides:
+  - **Infinite extensibility**: Support any new metric without tool updates
+  - **Transparency**: Users see and understand the calculation logic
+  - **Lower maintenance**: No need to maintain calculation implementations
+  - **Flexibility**: Easy to customize calculations for specific use cases
 
 ### 3.4 Domain Action Tools
 
 Execute domain operations with side effects, typically requiring user confirmation.
 
-| Tool | Purpose | Input | Output |
-|------|---------|-------|--------|
-| `deploy_config` | Deploy configuration to repository | `config`, `env`, `version` | Deployment Result |
-| `rollback_config` | Rollback to specified version | `config_name`, `target_version` | Rollback Result |
-| `create_ab_test` | Create A/B test | `variants[]`, `traffic_split` | Experiment ID |
-| `stop_ab_test` | Stop A/B test | `experiment_id` | Stop Result |
-| `export_report` | Export report file | `content`, `format`, `path` | File Path |
+| Tool | Purpose | Input | Output | Rationale |
+|------|---------|-------|--------|-----------|
+| `deploy_config` | Deploy configuration to repository | `config`, `env`, `version` | Deployment Result | Requires CORINT Engine API integration |
+| `rollback_config` | Rollback to specified version | `config_name`, `target_version` | Rollback Result | Requires version control system access |
+| `create_ab_test` | Create A/B test | `variants[]`, `traffic_split` | Experiment ID | Requires experiment platform integration |
+| `stop_ab_test` | Stop A/B test | `experiment_id` | Stop Result | Requires experiment platform integration |
+
+**Design Rationale**:
+- These tools involve external system integration and operations with side effects
+- Cannot be replaced by simple code generation
+- Require proper authentication, authorization, and audit logging
+- Note: `export_report` removed - can be handled by `write_file` tool
 
 ### 3.5 Tool Execution Flow
 
 ```
-User Request
+User Request: "Calculate KS and AUC for this model, then optimize the threshold"
     │
     ▼
 ┌─────────────────────────────────────────────────────────┐
 │                        LLM                               │
 │  1. Understand user intent                               │
 │  2. Plan execution steps                                 │
-│  3. Generate SQL / Select tools                          │
-│  4. Interpret tool results                               │
+│  3. Generate SQL / Python code                           │
+│  4. Interpret results                                    │
 │  5. Reason, analyze, provide recommendations             │
 └─────────────────────────────────────────────────────────┘
     │
     ▼ (Tool Calls)
 ┌─────────────────────────────────────────────────────────┐
 │               Foundation Tools                           │
-│  query_sql → Fetch raw data                              │
-│  explore_schema → Understand data structure              │
+│  query_sql → Fetch predictions and labels                │
+│  write_file → Save Python script to /tmp/calc_ks.py     │
+│  run_bash → Execute: python3 /tmp/calc_ks.py            │
+│    # calc_ks.py content:                                │
+│    from sklearn.metrics import roc_auc_score, roc_curve │
+│    auc = roc_auc_score(labels, predictions)             │
+│    fpr, tpr, _ = roc_curve(labels, predictions)         │
+│    ks = max(tpr - fpr)                                  │
+│    print(f"KS: {ks:.4f}, AUC: {auc:.4f}")              │
 └─────────────────────────────────────────────────────────┘
     │
-    ▼ (If complex calculation needed)
+    ▼ (If threshold simulation needed)
 ┌─────────────────────────────────────────────────────────┐
-│            Domain Calculation Tools                      │
-│  calculate_metrics → Get KS/AUC                          │
-│  simulate_threshold → Get threshold effects              │
-│  backtest_rule → Get rule backtest results               │
+│            Foundation Tools (Code Generation)            │
+│  write_file → Save simulation script                     │
+│  run_bash → Execute: python3 /tmp/simulate.py           │
+│    # simulate.py content:                               │
+│    for t in [0.5, 0.55, 0.6, 0.65, 0.7]:               │
+│        passed = df[df['score'] >= t]                    │
+│        metrics[t] = {                                   │
+│            'pass_rate': len(passed) / len(df),          │
+│            'bad_rate': passed['is_bad'].mean()          │
+│        }                                                │
+└─────────────────────────────────────────────────────────┘
+    │
+    ▼ (If RDL validation needed)
+┌─────────────────────────────────────────────────────────┐
+│            Domain Validation Tools                       │
+│  validate_rdl → Validate RDL syntax                      │
+│  backtest_rule → Test rule on historical data           │
 └─────────────────────────────────────────────────────────┘
     │
     ▼ (LLM analyzes results, provides recommendations)
 ┌─────────────────────────────────────────────────────────┐
 │                        LLM                               │
-│  "Based on backtest results, recommend adjusting         │
-│   threshold from 0.6 to 0.55, expect approval rate      │
-│   increase by 3%, bad debt rate only increase by 0.2%"  │
+│  "Based on simulation results:                           │
+│   - Current KS: 0.42, AUC: 0.78                         │
+│   - Recommend threshold 0.55 (vs current 0.6)           │
+│   - Expected: approval rate +3%, bad rate +0.2%"        │
 └─────────────────────────────────────────────────────────┘
     │
     ▼ (After user confirmation)
 ┌─────────────────────────────────────────────────────────┐
 │              Domain Action Tools                         │
-│  deploy_config → Deploy new strategy                     │
+│  deploy_config → Deploy new strategy to CORINT Engine   │
 └─────────────────────────────────────────────────────────┘
 ```
+
+**Key Changes from Original Design**:
+- Removed 6 specialized calculation tools (calculate_metrics, calculate_vintage, etc.)
+- Removed `execute_code` tool - `run_bash` handles all execution needs
+- LLM now generates Python/SQL code for all calculations using `write_file` + `run_bash` or `query_sql`
+- Only 3 domain validation tools remain (validate_rdl, validate_semantics, backtest_rule)
+- 4 domain action tools for external system integration
+- Total reduction: 10 tools → 7 tools (30% fewer tools, 70% less maintenance)
 
 ## 4. Skills Design
 
@@ -359,7 +407,7 @@ User Request
 | Source | Built-in system | User-defined |
 | Granularity | Atomic operations | Composite workflows |
 | Extensibility | Requires development | Markdown configuration |
-| Examples | query_sql, backtest_rule | Daily report generation, rule optimization process |
+| Examples | query_sql, validate_rdl, deploy_config | Daily report generation, rule optimization process |
 
 ### 4.2 Built-in Skills
 
@@ -407,7 +455,7 @@ corint-cognition/
 │   │   └── evaluator.ts          # Evaluation Module
 │   ├── agent-tools/              # Tool implementations
 │   │   ├── foundation/           # Foundation tools
-│   │   ├── calculation/          # Domain calculation tools
+│   │   ├── validation/           # Domain validation tools (RDL)
 │   │   ├── action/               # Domain action tools
 │   │   └── mcp/                  # MCP protocol extensions
 │   ├── agent-skills/             # Skills registry and executor
@@ -525,6 +573,6 @@ corint-cognition/
 
 ---
 
-**Document Version**: 1.0
-**Last Updated**: 2026-01-12
-**Status**: Design Phase
+**Document Version**: 2.0
+**Last Updated**: 2026-01-24
+**Status**: Design Phase - Optimized (Code-First Approach)
