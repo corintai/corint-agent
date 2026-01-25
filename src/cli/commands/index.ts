@@ -18,6 +18,7 @@ import prComments from './pr-comments'
 import refreshCommands from './refresh-commands'
 import review from './review'
 import rename from './rename'
+import rdlGenerate from './rdl-generate'
 import statusline from './statusline'
 import tag from './tag'
 import todos from './todos'
@@ -101,6 +102,7 @@ const COMMANDS = memoize((): Command[] => [
   onboarding,
   prComments,
   rename,
+  rdlGenerate,
   tag,
   refreshCommands,
   review,

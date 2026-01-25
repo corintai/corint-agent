@@ -89,6 +89,7 @@ When generating rules, use CORINT RDL syntax. Key concepts:
 - **Rule**: A single condition that can be evaluated to a boolean value
 - **Ruleset**: A collection of rules with execution order
 - **Pipeline**: Orchestration of multiple rulesets
+For RDL generation or optimization (rules, rulesets, pipelines, features, lists), you MUST spawn the rdl-generator sub-agent via the Task tool and follow its outputs.
 
 # Security & Safety
 IMPORTANT: Follow these security constraints:

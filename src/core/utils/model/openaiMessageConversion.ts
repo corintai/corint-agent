@@ -59,6 +59,7 @@ export function convertAnthropicMessagesToOpenAIMessages(
     const userContentParts: any[] = []
     const assistantTextParts: string[] = []
     const assistantToolCalls: any[] = []
+    const assistantToolCallIds = new Set<string>()
 
     for (const block of blocks) {
       if (block.type === 'text') {
@@ -92,13 +93,18 @@ export function convertAnthropicMessagesToOpenAIMessages(
       }
 
       if (block.type === 'tool_use') {
+        const toolUse = block as AnthropicToolUseBlock
+        if (assistantToolCallIds.has(toolUse.id)) {
+          continue
+        }
+        assistantToolCallIds.add(toolUse.id)
         assistantToolCalls.push({
           type: 'function',
           function: {
-            name: (block as AnthropicToolUseBlock).name,
-            arguments: JSON.stringify((block as AnthropicToolUseBlock).input),
+            name: toolUse.name,
+            arguments: JSON.stringify(toolUse.input),
           },
-          id: (block as AnthropicToolUseBlock).id,
+          id: toolUse.id,
         })
         continue
       }

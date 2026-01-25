@@ -332,6 +332,25 @@ function isPosixSubpath(base: string, target: string): boolean {
   return true
 }
 
+function isCandidateInWorkingDirectories(
+  candidate: string,
+  roots: Set<string>,
+): boolean {
+  return Array.from(roots).some(root => {
+    const resolvedCandidate = resolveLikeCliPath(candidate)
+    const resolvedRoot = resolveLikeCliPath(root)
+    const candidatePosix = normalizeMacPrivatePrefix(
+      toPosixPath(resolvedCandidate),
+    )
+    const rootPosix = normalizeMacPrivatePrefix(toPosixPath(resolvedRoot))
+    const relative = posixRelative(toLower(rootPosix), toLower(candidatePosix))
+    if (relative === '') return true
+    if (hasParentTraversalSegment(relative)) return false
+    if (POSIX.isAbsolute(relative)) return false
+    return true
+  })
+}
+
 export function isPathInWorkingDirectories(
   inputPath: string,
   context: ToolPermissionContext,
@@ -341,24 +360,20 @@ export function isPathInWorkingDirectories(
     ...Array.from(context.additionalWorkingDirectories.keys()),
   ])
 
-  return expandSymlinkPaths(inputPath).every(candidate => {
-    return Array.from(roots).some(root => {
-      const resolvedCandidate = resolveLikeCliPath(candidate)
-      const resolvedRoot = resolveLikeCliPath(root)
-      const candidatePosix = normalizeMacPrivatePrefix(
-        toPosixPath(resolvedCandidate),
-      )
-      const rootPosix = normalizeMacPrivatePrefix(toPosixPath(resolvedRoot))
-      const relative = posixRelative(
-        toLower(rootPosix),
-        toLower(candidatePosix),
-      )
-      if (relative === '') return true
-      if (hasParentTraversalSegment(relative)) return false
-      if (POSIX.isAbsolute(relative)) return false
-      return true
-    })
-  })
+  return expandSymlinkPaths(inputPath).every(candidate =>
+    isCandidateInWorkingDirectories(candidate, roots),
+  )
+}
+
+export function isRawPathInWorkingDirectories(
+  inputPath: string,
+  context: ToolPermissionContext,
+): boolean {
+  const roots = new Set<string>([
+    getOriginalCwd(),
+    ...Array.from(context.additionalWorkingDirectories.keys()),
+  ])
+  return isCandidateInWorkingDirectories(inputPath, roots)
 }
 
 function operationToolName(
@@ -719,6 +734,25 @@ export function getSpecialAllowedReadReason(args: {
     absPosix.startsWith(`${tasksDirPosix}${POSIX_SEP}`)
   ) {
     return 'Project temp directory files are allowed for reading'
+  }
+
+  const projectRoot = resolveLikeCliPath(getOriginalCwd())
+  const knowledgeDir = resolveLikeCliPath(
+    path.join(projectRoot, 'knowledge', 'rdl'),
+  )
+  const knowledgePosix = toPosixPath(knowledgeDir)
+  if (isPosixSubpath(knowledgePosix, absPosix)) {
+    return 'Project RDL knowledge files are allowed for reading'
+  }
+
+  try {
+    const realKnowledgeDir = realpathSync(knowledgeDir)
+    const realKnowledgePosix = toPosixPath(realKnowledgeDir)
+    if (isPosixSubpath(realKnowledgePosix, absPosix)) {
+      return 'Symlinked RDL knowledge files are allowed for reading'
+    }
+  } catch {
+    // ignore resolution errors
   }
 
   return null

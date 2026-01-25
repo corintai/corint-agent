@@ -31,7 +31,10 @@ import {
 import { getTaskTools, getPrompt } from './prompt'
 import { TOOL_NAME } from './constants'
 import type { PermissionMode } from '@kode-types/permissionMode'
-import type { ToolPermissionContext } from '@kode-types/toolPermissionContext'
+import {
+  createDefaultToolPermissionContext,
+  type ToolPermissionContext,
+} from '@kode-types/toolPermissionContext'
 
 const inputSchema = z.object({
   description: z
@@ -471,8 +474,13 @@ export const TaskTool = {
     const agentPermissionMode = normalizeAgentPermissionMode(
       (agentConfig as any).permissionMode,
     )
+    const baseToolPermissionContext =
+      toolUseContext.options?.toolPermissionContext ??
+      createDefaultToolPermissionContext({
+        isBypassPermissionsModeAvailable: !safeMode,
+      })
     const toolPermissionContext = applyAgentPermissionMode(
-      toolUseContext.options?.toolPermissionContext,
+      baseToolPermissionContext,
       { agentPermissionMode, safeMode },
     )
 

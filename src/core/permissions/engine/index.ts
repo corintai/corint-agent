@@ -44,6 +44,7 @@ import {
   getWriteSafetyCheckForPath,
   hasSuspiciousWindowsPathPattern,
   isPathInWorkingDirectories,
+  isRawPathInWorkingDirectories,
   isPlanFileForContext,
   matchPermissionRuleForPath,
   suggestFilePermissionUpdates,
@@ -554,7 +555,8 @@ export const hasPermissionsToUseTool: CanUseToolFn = async (
         }
 
         if (
-          isPathInWorkingDirectories(toolPath, effectiveToolPermissionContext)
+          isPathInWorkingDirectories(toolPath, effectiveToolPermissionContext) ||
+          isRawPathInWorkingDirectories(toolPath, effectiveToolPermissionContext)
         ) {
           return { result: true }
         }

@@ -6,6 +6,7 @@ import { getSessionPlugins } from '@utils/session/sessionPlugins'
 import { isSettingSourceEnabled } from '@utils/config/settingSources'
 import { debug as debugLogger } from '@utils/log/debugLogger'
 import { logError } from '@utils/log'
+import { RDL_GENERATOR_SYSTEM_PROMPT } from './rdlGeneratorPrompt'
 import {
   findProjectAgentDirs,
   getClaudePolicyBaseDir,
@@ -231,6 +232,18 @@ Suggested approach:
   baseDir: 'built-in',
 }
 
+const BUILTIN_RDL_GENERATOR: AgentConfig = {
+  agentType: 'rdl-generator',
+  whenToUse:
+    'Generate or optimize RDL rules, rulesets, pipelines, features, or lists based on requirements and repository context',
+  tools: ['Read', 'Write', 'Glob', 'Grep'],
+  systemPrompt: RDL_GENERATOR_SYSTEM_PROMPT,
+  permissionMode: 'acceptEdits',
+  source: 'built-in',
+  location: 'built-in',
+  baseDir: 'built-in',
+}
+
 async function loadAllAgents(): Promise<{
   activeAgents: AgentConfig[]
   allAgents: AgentConfig[]
@@ -240,6 +253,7 @@ async function loadAllAgents(): Promise<{
     BUILTIN_STATUSLINE_SETUP,
     BUILTIN_EXPLORE,
     BUILTIN_PLAN,
+    BUILTIN_RDL_GENERATOR,
   ]
 
   const seenInodes = new Map<string, AgentSource>()
