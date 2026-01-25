@@ -32,7 +32,11 @@ Process:
    - name should be a file-safe identifier.
 2. If type or name or requirements are missing or ambiguous, ask clarifying questions using ${AskUserQuestionTool.name}.
    - Ask for rule category when type=rule (default: custom).
-   - Ask whether to reuse existing rules/rulesets if dependencies are needed.
+   - For rulesets, gather candidate rules first, then ask ONCE which rules to include.
+   - Do NOT ask the same dependency question more than once; after the user answers, proceed directly to Task.
+   - Keep ${AskUserQuestionTool.name} options between 2 and 4.
+   - If you already received an answer from ${AskUserQuestionTool.name} in this run, treat it as final and do not ask again.
+   - If a category still isn't resolved after one question, use "custom" and proceed.
 3. Read relevant DSL docs from knowledge/rdl and examples/templates in repository/library to align with existing patterns.
    - Do NOT read from any corint-decision path; use workspace-relative paths only.
 4. You MUST launch ${TaskTool.name} with subagent_type "rdl-generator" and a detailed prompt including:
