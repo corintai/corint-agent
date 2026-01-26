@@ -19,9 +19,16 @@ CORINT Risk Agent is an AI-native assistant designed for risk management profess
 - **Credit Risk Management** (Priority): Credit approval, limit management, overdue prediction
 - **Fraud Detection**: Transaction fraud, account takeover, identity fraud
 
-**User Experience**:
-- **Web UI**: Manus-like conversational interface
-- **CLI**: Claude Code-style interactive terminal
+**Interaction Channels**:
+
+*Primary Channels*:
+- **Web UI**: Manus-like conversational interface with rich visualizations, real-time progress updates, and interactive result exploration. Optimized for complex analysis workflows and collaborative decision-making.
+- **CLI**: Claude Code-style REPL (Read-Eval-Print Loop) for power users and automation. Supports scripting, batch operations, and integration with local development workflows.
+
+*Auxiliary Channels*:
+- **IM Integration**: Slack / WeChat / WhatsApp integrations for notifications, alerts, and lightweight queries. Users can trigger reports, check metrics, or get anomaly alerts directly in their messaging apps.
+- **Email**: Scheduled reports, batch analysis results, and approval requests delivered via email. Supports asynchronous workflows for non-urgent tasks.
+- **Webhook / Ticket Systems** (Future): Integration with JIRA, ServiceNow, or custom approval systems for enterprise workflows. Enables automated ticket creation, status updates, and audit trails.
 
 ---
 
@@ -65,17 +72,24 @@ CORINT Risk Agent is an AI-native assistant designed for risk management profess
 ## 2. Architecture Overview
 
 ```
-┌─────────────────────────────────────────────────────────────┐
-│                    User Interface Layer                      │
-│                                                               │
-│       ┌─────────────────┐       ┌─────────────────┐         │
-│       │    CLI Tool     │       │     Web UI      │         │
-│       │ (Claude Code)   │       │ (Manus-like)    │         │
-│       └────────┬────────┘       └────────┬────────┘         │
-│                │                         │                   │
-└────────────────┼─────────────────────────┼───────────────────┘
-                 │                         │
-                 └────────────┬────────────┘
+┌─────────────────────────────────────────────────────────────────────────┐
+│                         User Interface Layer                             │
+│                                                                           │
+│  Primary Channels:                                                       │
+│  ┌─────────────────┐       ┌─────────────────┐                          │
+│  │    Web UI       │       │    CLI REPL     │                          │
+│  │  (Primary)      │       │   (Power User)  │                          │
+│  └────────┬────────┘       └────────┬────────┘                          │
+│           │                         │                                    │
+│  Auxiliary Channels:                                                     │
+│  ┌─────────────────┐  ┌──────────────┐  ┌────────────────────┐         │
+│  │  IM Integration │  │    Email     │  │ Webhook / Ticket   │         │
+│  │ (Slack/WeChat)  │  │              │  │    (Future)        │         │
+│  └────────┬────────┘  └──────┬───────┘  └─────────┬──────────┘         │
+│           │                  │                     │                     │
+└───────────┼──────────────────┼─────────────────────┼─────────────────────┘
+            │                  │                     │
+            └──────────────────┴─────────────────────┘
                               ▼
 ┌─────────────────────────────────────────────────────────────┐
 │                  CORINT Risk Agent Core                      │
