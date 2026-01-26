@@ -94,6 +94,10 @@ async function executeQuery(
     if (rows.length > 0) {
       columns = Object.keys(rows[0])
     }
+  } else if (client.type === 'databricks') {
+    const result = await executeDatabricksQuery(client.client, limitedSql)
+    columns = result.columns
+    rows = result.rows
   }
 
   return {
@@ -102,6 +106,74 @@ async function executeQuery(
     rowCount: rows.length,
     executionTimeMs: Date.now() - startTime,
   }
+}
+
+async function executeDatabricksQuery(
+  client: { host: string; accessToken: string; httpPath: string; catalog?: string; schema?: string },
+  sql: string,
+): Promise<{ columns: string[]; rows: Record<string, unknown>[] }> {
+  const url = `${client.host}/api/2.0/sql/statements`
+
+  const requestBody: Record<string, unknown> = {
+    statement: sql,
+    warehouse_id: extractWarehouseId(client.httpPath),
+    wait_timeout: '30s',
+    disposition: 'INLINE',
+  }
+
+  if (client.catalog) {
+    requestBody.catalog = client.catalog
+  }
+  if (client.schema) {
+    requestBody.schema = client.schema
+  }
+
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${client.accessToken}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(requestBody),
+  })
+
+  if (!response.ok) {
+    const errorText = await response.text()
+    throw new Error(`Databricks API error (${response.status}): ${errorText}`)
+  }
+
+  const result = await response.json() as {
+    status?: { state?: string }
+    manifest?: { schema?: { columns?: Array<{ name: string }> } }
+    result?: { data_array?: unknown[][] }
+  }
+
+  if (result.status?.state !== 'SUCCEEDED') {
+    throw new Error(`Query failed with state: ${result.status?.state}`)
+  }
+
+  const schemaColumns = result.manifest?.schema?.columns || []
+  const columns = schemaColumns.map(col => col.name)
+  const dataArray = result.result?.data_array || []
+
+  const rows = dataArray.map(row => {
+    const rowObj: Record<string, unknown> = {}
+    columns.forEach((col, idx) => {
+      rowObj[col] = row[idx]
+    })
+    return rowObj
+  })
+
+  return { columns, rows }
+}
+
+function extractWarehouseId(httpPath: string): string {
+  // Extract warehouse ID from http_path like "/sql/1.0/warehouses/abc123"
+  const match = httpPath.match(/\/warehouses\/([^/]+)/)
+  if (!match) {
+    throw new Error(`Invalid http_path format: ${httpPath}. Expected format: /sql/1.0/warehouses/{warehouse_id}`)
+  }
+  return match[1]
 }
 
 function ensureLimit(sql: string, limit: number): string {

@@ -3,7 +3,15 @@ import type { Pool as MySQLPool } from 'mysql2/promise'
 import type { ClickHouseClient } from '@clickhouse/client'
 import type { Database } from 'bun:sqlite'
 
-export type DataSourceType = 'postgres' | 'mysql' | 'clickhouse' | 'sqlite'
+export type DataSourceType = 'postgres' | 'mysql' | 'clickhouse' | 'sqlite' | 'databricks'
+
+export interface DatabricksClient {
+  host: string
+  accessToken: string
+  httpPath: string
+  catalog?: string
+  schema?: string
+}
 
 export interface DataSourceConfig {
   type: DataSourceType
@@ -15,6 +23,10 @@ export interface DataSourceConfig {
   database?: string
   ssl?: boolean
   maxConnections?: number
+  accessToken?: string
+  httpPath?: string
+  catalog?: string
+  schema?: string
 }
 
 export type DataSourceClient =
@@ -22,6 +34,7 @@ export type DataSourceClient =
   | { type: 'mysql'; client: MySQLPool; config: DataSourceConfig }
   | { type: 'clickhouse'; client: ClickHouseClient; config: DataSourceConfig }
   | { type: 'sqlite'; client: Database; config: DataSourceConfig }
+  | { type: 'databricks'; client: DatabricksClient; config: DataSourceConfig }
 
 export interface DataSourceSummary {
   name: string

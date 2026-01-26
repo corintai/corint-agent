@@ -92,6 +92,13 @@ export async function getDataSourceClient(
         client: buildSQLiteClient(config),
       }
       break
+    case 'databricks':
+      client = {
+        type: 'databricks',
+        config,
+        client: buildDatabricksClient(config),
+      }
+      break
     default:
       throw new Error(`Unsupported data source type: ${config.type}`)
   }
@@ -397,6 +404,16 @@ function normalizeConfig(input: Record<string, unknown>): DataSourceConfig {
         extractOption(input.options, 'maxConnections') ??
         input.max_connections,
     ),
+    accessToken: asString(input.access_token) || asString(input.accessToken),
+    httpPath:
+      asString(input.http_path) ||
+      asString(input.httpPath) ||
+      asString(extractOption(input.options, 'http_path')) ||
+      asString(extractOption(input.options, 'httpPath')),
+    catalog:
+      asString(input.catalog) || asString(extractOption(input.options, 'catalog')),
+    schema:
+      asString(input.schema) || asString(extractOption(input.options, 'schema')),
   }
 }
 
@@ -485,6 +502,32 @@ function buildSQLiteClient(config: DataSourceConfig): Database {
   return new Database(dbPath, { readonly: true })
 }
 
+function buildDatabricksClient(config: DataSourceConfig): {
+  host: string
+  accessToken: string
+  httpPath: string
+  catalog?: string
+  schema?: string
+} {
+  if (!config.host) {
+    throw new Error('Databricks requires host')
+  }
+  if (!config.accessToken) {
+    throw new Error('Databricks requires access_token')
+  }
+  if (!config.httpPath) {
+    throw new Error('Databricks requires http_path (SQL Warehouse path)')
+  }
+
+  return {
+    host: config.host,
+    accessToken: config.accessToken,
+    httpPath: config.httpPath,
+    catalog: config.catalog,
+    schema: config.schema,
+  }
+}
+
 function normalizeName(name: string): string {
   return name.toUpperCase().replace(/[^A-Z0-9]/g, '_')
 }
@@ -565,6 +608,9 @@ function resolveProviderType(input: Record<string, unknown>): DataSourceType {
   if (raw === 'sqlite' || raw === 'sqlite3') {
     return 'sqlite'
   }
+  if (raw === 'databricks') {
+    return 'databricks'
+  }
   return raw as DataSourceType
 }
 
@@ -586,6 +632,8 @@ export async function closeAllConnections(): Promise<void> {
         await client.client.close()
       } else if (client.type === 'sqlite') {
         client.client.close()
+      } else if (client.type === 'databricks') {
+        // Databricks REST API client doesn't need explicit cleanup
       }
     } catch (error) {
       console.error(`Failed to close connection for ${name}:`, error)
