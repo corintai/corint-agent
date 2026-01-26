@@ -1,6 +1,7 @@
 import { z } from 'zod'
 import type { Tool } from '@tool'
 import { listDataSources, type DataSourceSummary } from '@services/datasource'
+import { PROMPT } from './prompt'
 
 export const inputSchema = z.strictObject({})
 
@@ -14,16 +15,7 @@ export const ListDataSourcesTool: Tool<typeof inputSchema, Output> = {
     return 'List all configured data sources available for querying'
   },
   async prompt() {
-    return `List all configured data sources.
-
-This tool shows all available database connections that can be used with QuerySQL and ExploreSchema tools.
-
-Data sources can be configured via:
-- repository/datasource.yaml file
-- CORINT_DATA_SOURCES environment variable (JSON)
-- CORINT_DS_<NAME>_TYPE environment variables
-
-Use this tool first to discover available data sources before running queries.`
+    return PROMPT
   },
   isReadOnly() {
     return true

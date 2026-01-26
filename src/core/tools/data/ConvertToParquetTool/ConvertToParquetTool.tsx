@@ -10,6 +10,7 @@ import {
   hasWritePermission,
 } from '@utils/permissions/filesystem'
 import { execFileNoThrow } from '@utils/system/execFileNoThrow'
+import { PROMPT } from './prompt'
 let duckdbModule: any | null = null
 let duckdbLoadError: unknown | null = null
 
@@ -277,19 +278,7 @@ export const ConvertToParquetTool: Tool<typeof inputSchema, Output> = {
     return 'Convert CSV/JSON/JSONL files to Parquet for faster analysis'
   },
   async prompt() {
-    return `Convert CSV, JSON, or JSONL files to Parquet using DuckDB.
-
-Guidelines:
-- Use for files larger than 100MB
-- Parquet is faster and smaller than CSV/JSON
-- Use zstd compression for best size/performance
-
-Example:
-ConvertToParquet({
-  inputPath: '/data/sales.csv',
-  outputPath: '/data/sales.parquet',
-  compression: 'zstd'
-})`
+    return PROMPT
   },
   inputSchema,
   isReadOnly() {

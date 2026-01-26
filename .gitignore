@@ -29,7 +29,7 @@ risk_demo.db
 
 # directories for temporary files
 output/
-data/
+dataset/
 config/
 
 # Symlinks (do not commit)

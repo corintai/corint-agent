@@ -10,6 +10,7 @@ import {
   hasWritePermission,
 } from '@utils/permissions/filesystem'
 import * as XLSX from 'xlsx'
+import { PROMPT } from './prompt'
 
 const inputSchema = z.strictObject({
   inputPath: z.string().describe('Input Excel file path (.xlsx or .xls)'),
@@ -112,18 +113,7 @@ export const ConvertExcelToCSVTool: Tool<typeof inputSchema, Output> = {
     return 'Convert Excel files to CSV for faster analysis'
   },
   async prompt() {
-    return `Convert Excel files to CSV.
-
-Guidelines:
-- Use for .xlsx or .xls files
-- Convert all sheets when needed
-- Follow CSV rules for further analysis
-
-Example:
-ConvertExcelToCSV({
-  inputPath: '/data/report.xlsx',
-  outputPath: '/data/report.csv'
-})`
+    return PROMPT
   },
   inputSchema,
   isReadOnly() {

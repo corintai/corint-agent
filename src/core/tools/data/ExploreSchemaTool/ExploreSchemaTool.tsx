@@ -7,6 +7,7 @@ import {
   type TableInfo,
   type ColumnInfo,
 } from '@services/datasource'
+import { getExploreSchemaPrompt } from './prompt'
 
 export const inputSchema = z.strictObject({
   datasource: z.string().describe('Name of the data source to explore'),
@@ -252,23 +253,7 @@ export const ExploreSchemaTool: Tool<typeof inputSchema, Output> = {
     return 'Explore database schema - list tables or get detailed column information'
   },
   async prompt() {
-    const sources = listDataSources()
-    const sourceList =
-      sources.length > 0
-        ? sources.map(s => `- ${s.name} (${s.type})`).join('\n')
-        : 'No data sources configured'
-
-    return `Explore database schema to understand table structures.
-
-Available data sources:
-${sourceList}
-
-Usage:
-- List all tables: ExploreSchema(datasource="risk_db")
-- Get table details: ExploreSchema(datasource="risk_db", table="applications")
-- Explore specific schema: ExploreSchema(datasource="risk_db", schema="analytics")
-
-This tool helps you understand the database structure before writing queries.`
+    return getExploreSchemaPrompt(listDataSources())
   },
   isReadOnly() {
     return true

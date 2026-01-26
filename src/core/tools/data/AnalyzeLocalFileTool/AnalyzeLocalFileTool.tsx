@@ -6,6 +6,7 @@ import { normalizeFilePath } from '@utils/fs/file'
 import { getCwd } from '@utils/state'
 import { hasReadPermission } from '@utils/permissions/filesystem'
 import { execFileNoThrow } from '@utils/system/execFileNoThrow'
+import { PROMPT } from './prompt'
 
 let duckdbModule: any | null = null
 let duckdbLoadError: unknown | null = null
@@ -212,21 +213,7 @@ export const AnalyzeLocalFileTool: Tool<typeof inputSchema, Output> = {
     return 'Analyze local CSV/Parquet/JSON/JSONL files using DuckDB'
   },
   async prompt() {
-    return `Analyze local CSV, Parquet, JSON, or JSONL files with SQL using DuckDB.
-
-Guidelines:
-- Provide an absolute file path
-- Start with a preview query (e.g. LIMIT 20) to inspect columns and types
-- Use FROM data in your query to reference the file
-- Always set a reasonable LIMIT for large files
-- Use this tool for local files (not configured data sources)
-
-Example:
-AnalyzeLocalFile({
-  filePath: '/data/sales.csv',
-  query: 'SELECT category, SUM(amount) FROM data GROUP BY category',
-  limit: 100
-})`
+    return PROMPT
   },
   inputSchema,
   isReadOnly() {
