@@ -76,6 +76,7 @@
     "cli-highlight": "^2.1.11",
     "cli-table3": "^0.6.5",
     "commander": "^13.1.0",
+    "csv-parse": "6.1.0",
     "debug": "^4.4.1",
     "diff": "^7.0.0",
     "dotenv": "^16.6.1",

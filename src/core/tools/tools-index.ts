@@ -31,6 +31,13 @@ import { ListDataSourcesTool } from './data/ListDataSourcesTool/ListDataSourcesT
 import { AnalyzeLocalFileTool } from './data/AnalyzeLocalFileTool/AnalyzeLocalFileTool'
 import { ConvertToParquetTool } from './data/ConvertToParquetTool/ConvertToParquetTool'
 import { ConvertExcelToCSVTool } from './data/ConvertExcelToCSVTool/ConvertExcelToCSVTool'
+// Credit modeling tools
+import { ProfileDatasetTool } from './credit/ProfileDatasetTool/ProfileDatasetTool'
+import { ComputeMissingRateTool } from './credit/ComputeMissingRateTool/ComputeMissingRateTool'
+import { ComputePsiTool } from './credit/ComputePsiTool/ComputePsiTool'
+import { ComputeIvTool } from './credit/ComputeIvTool/ComputeIvTool'
+import { ComputeCoverageTool } from './credit/ComputeCoverageTool/ComputeCoverageTool'
+import { DetectSingleValueTool } from './credit/DetectSingleValueTool/DetectSingleValueTool'
 
 export const getAllTools = (): Tool[] => [
   TaskTool as unknown as Tool,
@@ -63,6 +70,13 @@ export const getAllTools = (): Tool[] => [
   AnalyzeLocalFileTool as unknown as Tool,
   ConvertToParquetTool as unknown as Tool,
   ConvertExcelToCSVTool as unknown as Tool,
+  // Credit modeling tools
+  ProfileDatasetTool as unknown as Tool,
+  ComputeMissingRateTool as unknown as Tool,
+  ComputePsiTool as unknown as Tool,
+  ComputeIvTool as unknown as Tool,
+  ComputeCoverageTool as unknown as Tool,
+  DetectSingleValueTool as unknown as Tool,
 ]
 
 export const getTools = memoize(
