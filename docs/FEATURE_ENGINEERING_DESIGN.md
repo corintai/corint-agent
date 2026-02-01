@@ -645,6 +645,49 @@ m_cnt_province_txn_24h
 
 ## 核心工具设计
 
+### 工具分类与流程
+
+```
+┌─────────────────────────────────────────────────────────┐
+│  配置层                                                  │
+│  └─ DefineFeaturePrimitivesTool                         │
+└─────────────────────────────────────────────────────────┘
+                        ↓
+┌─────────────────────────────────────────────────────────┐
+│  效率优化层（三道闸门）                                  │
+│  ├─ Gate 1: SemanticPruningTool (210K → 50K)           │
+│  ├─ Gate 2: ProxyEvaluationTool (50K → 5K)             │
+│  └─ Gate 3: BeamSearchFeaturesTool (5K → 500)          │
+└─────────────────────────────────────────────────────────┘
+                        ↓
+┌─────────────────────────────────────────────────────────┐
+│  特征生成层                                              │
+│  ├─ GenerateWindowFeaturesTool (基础统计)               │
+│  ├─ GenerateLifecycleFeaturesTool (生命周期)            │
+│  ├─ ComputeNetworkFeaturesTool (网络关系)               │
+│  ├─ GenerateTrendFeaturesTool (趋势变化)                │
+│  ├─ GenerateWeightedFeaturesTool (时间加权)             │
+│  ├─ GenerateRatioFeaturesTool (比率派生)                │
+│  └─ GenerateCrossFeaturesTool (交叉组合)                │
+└─────────────────────────────────────────────────────────┘
+                        ↓
+┌─────────────────────────────────────────────────────────┐
+│  特征增强层                                              │
+│  ├─ TargetEncodingTool (类别编码)                       │
+│  └─ EmbeddingTool (序列/文本)                           │
+└─────────────────────────────────────────────────────────┘
+                        ↓
+┌─────────────────────────────────────────────────────────┐
+│  质量保障层                                              │
+│  ├─ FeatureRefinementAgent (自动诊断重构)               │
+│  └─ CostAwareSelectionTool (成本优化)                   │
+└─────────────────────────────────────────────────────────┘
+```
+
+---
+
+## 一、配置层
+
 ### 1. DefineFeaturePrimitivesTool
 
 **目的**：定义特征工程的基础规则和约束
@@ -653,66 +696,11 @@ m_cnt_province_txn_24h
 ```typescript
 {
   anchorTime: string              // 时间锚点字段
-
-  // 多主体支持
-  subjects: {
-    type: string                  // 'id_card' | 'mobile' | 'device'
-    prefix: string                // 'i_' | 'm_' | 'd_'
-    joinKey?: string              // 关联字段
-  }[]
-
-  // 时间窗口（默认单位: day）
-  windows: number[]               // [7, 30, 90]
-
-  // 行为类型定义（可按行为配置维度）
-  behaviorTypes: {
-    name: string                  // 行为名称 (e.g., 'login', 'transaction')
-    table: string                 // 数据表
-    timestampColumn: string       // 时间戳字段
-    valueColumn?: string          // 数值字段 (可选)
-    categoryColumn?: string       // 分类字段 (可选)
-    dimensions?: {                // 行为级维度 (可选)
-      industry?: string[]         // 行业维度
-      productType?: string[]      // 产品类型
-      interestLevel?: string[]    // 利率档位
-      riskLabel?: string[]        // 风险标签
-      custom?: Record<string, string[]>  // 自定义维度
-    }
-  }[]
-
-  // 维度定义（全局可选，行为级 dimensions 优先）
-  dimensions?: {
-    industry?: string[]           // 行业维度
-    productType?: string[]        // 产品类型
-    interestLevel?: string[]      // 利率档位
-    riskLabel?: string[]          // 风险标签
-    custom?: Record<string, string[]>  // 自定义维度
-  }
-
-  // 统计量类型
-  aggregations: {
-    basic: string[]               // count, sum, mean, max, min, std
-    ratio?: string[]              // ratio, rate
-    trend?: string[]              // mom, gradient, slope, incr
-    weighted?: string[]           // weighted, decay
-    lifecycle?: string[]          // life period types
-    network?: string[]            // network algorithms
-    distribution?: string[]       // tfidf, etc.
-  }
-
-  // 命名规范
-  namingConvention?: {
-    template: string              // 命名模板
-    separator: string             // 分隔符 (default: '_')
-    maxLength: number             // 最大长度
-  }
-
-  constraints: {
-    maxFeatures?: number
-    minSampleSize?: number
-    excludeColumns?: string[]
-    realtime?: boolean
-  }
+  subjects: Subject[]             // 主体定义（身份证/手机号/设备等）
+  windows: number[]               // 时间窗口
+  events: Event[]                 // 事件类型
+  aggregations: Aggregation[]     // 统计量类型
+  constraints: Constraints        // 约束条件
 }
 ```
 
@@ -721,22 +709,24 @@ m_cnt_province_txn_24h
 {
   primitiveId: string
   summary: {
-    totalCombinations: number
-    estimatedFeatures: number
-    featuresByType: Record<string, number>  // 按类型统计
-  },
-  namingRules: {
-    pattern: string
-    examples: string[]
+    totalCombinations: number     // 理论组合数
+    estimatedFeatures: number     // 预估特征数
   }
 }
 ```
 
 ---
 
+## 二、效率优化层（三道闸门）
+
 ### 2. SemanticPruningTool（Gate 1）
 
-**目的**：语义剪枝，在零算力下过滤不合理组合
+**目的**：语义剪枝，零算力过滤不合理组合
+
+**为什么需要**：
+- 很多组合在语义上不合理（如：设备 × 3年窗口）
+- 在计算前就能判断，无需浪费算力
+- **剪枝效果**：210K → 50K（76%）
 
 **输入**：
 ```typescript
@@ -746,24 +736,7 @@ m_cnt_province_txn_24h
   pruningRules: {
     hardConstraints: boolean      // 启用硬约束剪枝
     businessRules: boolean        // 启用业务规则剪枝
-    customRules?: PruningRule[]   // 自定义规则
   }
-}
-
-interface FeatureCandidate {
-  subject: string
-  event?: string
-  metric: string
-  object: string
-  calculation?: string
-  dimension?: string
-  window: string
-}
-
-interface PruningRule {
-  condition: (f: FeatureCandidate) => boolean
-  reason: string
-  action: 'PRUNE' | 'WARN'
 }
 ```
 
@@ -774,24 +747,30 @@ interface PruningRule {
   pruned: {
     candidate: FeatureCandidate
     reason: string
-    rule: string
   }[]
   statistics: {
     totalInput: number
     totalPassed: number
-    totalPruned: number
     pruneRate: number
-    prunedByHardConstraints: number
-    prunedByBusinessRules: number
   }
 }
 ```
+
+**剪枝规则示例**：
+- 低稳定性主体 + 长窗口 → 剪枝
+- 生命周期 + 短窗口（< 90d）→ 剪枝
+- 比率 + 超短窗口（<= 7d）→ 剪枝
 
 ---
 
 ### 3. ProxyEvaluationTool（Gate 2）
 
 **目的**：小样本代理评估，快速淘汰低质量候选
+
+**为什么需要**：
+- 不想全量计算 50K 特征
+- 用 1-5% 样本快速判断特征质量
+- **剪枝效果**：50K → 5K（90%）
 
 **输入**：
 ```typescript
@@ -801,17 +780,15 @@ interface PruningRule {
   sampleTable: string
   candidates: FeatureCandidate[]
   samplingStrategy: {
-    method: 'random' | 'recent' | 'active'  // 采样方法
-    sampleRate: number                      // 采样比例 (0.01-0.05)
-    timeRange?: string                      // 时间范围 (e.g., '30d')
-    topN?: number                           // Top-N 活跃主体
+    method: 'random' | 'recent' | 'active'
+    sampleRate: number            // 0.01-0.05
   }
   thresholds: {
-    max_missing_rate: number                // 最大缺失率 (default: 0.8)
-    min_variance: number                    // 最小方差 (default: 1e-6)
-    min_entropy: number                     // 最小熵 (default: 1.0)
-    max_quantile_collapse: number           // 最大分位数坍缩 (default: 0.9)
-    min_temporal_consistency: number        // 最小时间一致性 (default: 0.3)
+    max_missing_rate: 0.8
+    min_variance: 1e-6
+    min_entropy: 1.0
+    max_quantile_collapse: 0.9
+    min_temporal_consistency: 0.3
   }
 }
 ```
@@ -823,28 +800,29 @@ interface PruningRule {
     candidate: FeatureCandidate
     proxyMetrics: {
       missing_rate: number
-      coverage: number
       variance: number
       entropy: number
       quantile_collapse: number
       temporal_consistency: number
     }
-    proxyScore: number                      // 综合代理分数 (0-1)
+    proxyScore: number            // 综合代理分数 (0-1)
   }[]
   rejected: {
     candidate: FeatureCandidate
     reason: string
-    failedMetric: string
   }[]
   statistics: {
-    totalInput: number
-    totalPassed: number
-    totalRejected: number
-    rejectRate: number
-    computeCost: number                     // 计算成本（相对全量）
+    computeCost: number           // 计算成本（相对全量）
   }
 }
 ```
+
+**代理指标说明**：
+- **缺失率**：> 80% 淘汰
+- **方差**：接近 0 淘汰（常量）
+- **熵**：< 1.0 淘汰（信息量低）
+- **分位数坍缩**：> 90% 淘汰（分布集中）
+- **时间一致性**：< 30% 淘汰（不稳定）
 
 ---
 
@@ -852,24 +830,29 @@ interface PruningRule {
 
 **目的**：预算约束下的 Beam Search 特征生成
 
+**为什么需要**：
+- 不能穷举 5K 候选（仍然太多）
+- 需要在预算内找到最优子集
+- **搜索效果**：5K → 500，复杂度 O(210K) → O(150)
+
 **输入**：
 ```typescript
 {
   primitiveId: string
   datasource: string
   sampleTable: string
-  candidates: FeatureCandidate[]            // 通过 Gate 2 的候选
-  beamWidth: number                         // Beam 宽度 (default: 50)
+  candidates: FeatureCandidate[]  // 通过 Gate 2 的候选
+  beamWidth: number               // Beam 宽度 (default: 50)
   budget: {
-    total: number                           // 总特征数上限
-    per_subject?: Record<string, number>    // 每个主体的预算
-    per_family?: Record<string, number>     // 每个特征族的预算
-    per_window?: Record<string, number>     // 每个窗口类型的预算
+    total: number                 // 总特征数上限
+    per_subject?: Record<string, number>
+    per_family?: Record<string, number>
+    per_window?: Record<string, number>
   }
   searchStrategy: {
-    rounds: number                          // 搜索轮数 (default: 3)
-    derivation: boolean                     // 是否派生特征 (ratio, trend)
-    crossFeatures: boolean                  // 是否生成交叉特征
+    rounds: number                // 搜索轮数 (default: 3)
+    derivation: boolean           // 是否派生特征
+    crossFeatures: boolean        // 是否生成交叉特征
   }
 }
 ```
@@ -882,71 +865,30 @@ interface PruningRule {
     formula: string
     importance: number
     family: string
-    subject: string
-    window: string
-  }[]
-  searchTrace: {
-    round: number
-    candidates: number
-    selected: number
-    topFeatures: string[]
   }[]
   budgetUsage: {
     total: { used: number, limit: number }
     per_subject: Record<string, { used: number, limit: number }>
-    per_family: Record<string, { used: number, limit: number }>
-    per_window: Record<string, { used: number, limit: number }>
   }
   statistics: {
-    totalCandidates: number
-    finalFeatures: number
-    selectionRate: number
-    computeCost: string                     // 相对穷举的成本
+    computeCost: string           // 相对穷举的成本
   }
 }
 ```
 
+**搜索策略**：
+1. 第一轮：保留 Top-K 基础特征
+2. 第二轮：在 Top-K 上派生（ratio, trend）
+3. 第三轮：全量精算 Top-K
+4. 应用预算约束
+
 ---
+
+## 三、特征生成层
 
 ### 5. GenerateWindowFeaturesTool
 
-**目的**：基于定义的原语自动生成时间窗口统计特征
-
-**输入**：
-```typescript
-{
-  primitiveId: string             // 原语配置ID
-  datasource: string              // 数据源
-  sampleTable: string             // 样本表 (包含anchor_time和样本ID)
-  outputTable?: string            // 输出表名 (可选，默认临时表)
-  parallel?: boolean              // 是否并行计算 (default: true)
-}
-```
-
-**输出**：
-```typescript
-{
-  outputTable: string             // 生成的特征表
-  features: {
-    name: string                  // 特征名称
-    description: string           // 特征描述
-    type: 'numeric' | 'categorical'
-    formula: string               // 计算公式
-    reasoning?: string            // 特征业务解释（可选）
-  }[]
-  statistics: {
-    totalGenerated: number        // 生成特征数
-    executionTime: number         // 执行时间(秒)
-    sampleSize: number            // 样本量
-  }
-}
-```
-
----
-
-### 3. GenerateLifecycleFeaturesTool（核心）
-
-**目的**：生成生命周期特征（占真实模型52.3%），支持参数自适应
+**目的**：生成基础时间窗口统计特征
 
 **输入**：
 ```typescript
@@ -954,12 +896,47 @@ interface PruningRule {
   primitiveId: string
   datasource: string
   sampleTable: string
-  metric: string                  // 用于判断周期的指标 (e.g., 'partner_count')
+  outputTable?: string
+  parallel?: boolean
+}
+```
+
+**输出**：
+```typescript
+{
+  outputTable: string
+  features: {
+    name: string
+    description: string
+    type: 'numeric' | 'categorical'
+    formula: string
+    reasoning?: string            // 特征业务解释
+  }[]
+  statistics: {
+    totalGenerated: number
+    executionTime: number
+  }
+}
+```
+
+---
+
+### 6. GenerateLifecycleFeaturesTool
+
+**目的**：生成生命周期特征（占真实模型 52.3%），支持参数自适应
+
+**输入**：
+```typescript
+{
+  primitiveId: string
+  datasource: string
+  sampleTable: string
+  metric: string                  // 用于判断周期的指标
   algorithm: {
-    method: 'threshold' | 'changepoint' | 'hmm'  // 周期检测算法
+    method: 'threshold' | 'changepoint' | 'hmm'
     params: Record<string, any>
-    autoTune?: boolean            // 是否启用参数自适应 (default: false)
-    optimizationMetric?: 'iv' | 'auc' | 'ks'  // 优化目标 (启用autoTune时必需)
+    autoTune?: boolean            // 是否启用参数自适应
+    optimizationMetric?: 'iv' | 'auc' | 'ks'
   }
 }
 ```
@@ -968,59 +945,41 @@ interface PruningRule {
 ```typescript
 {
   features: {
-    // 周期个数
-    cnt_up_life_period
-    cnt_down_life_period
-    cnt_stable_life_period
-    cnt_zero_life_period
-
-    // 周期统计
-    mean_k_up_life_period          // 上升期斜率均值
-    mean_freq_record_stable_life_period  // 稳定期记录数均值
-    max_duration_month_zero_life_period  // 休眠期最大持续月数
-
-    // 周期组合
-    cnt_up_down_life_period        // 上升-下降组合次数
-    ratio_cnt_down_life_period     // 下降期占比
+    cnt_up_life_period            // 上升期个数
+    cnt_down_life_period          // 下降期个数
+    mean_k_up_life_period         // 上升期斜率均值
+    // ...
   }[]
-
-  // 参数自适应结果（如果启用）
-  tuningResult?: {
+  tuningResult?: {                // 参数自适应结果
     bestParams: Record<string, any>
     optimizationScore: number
-    searchHistory: {
-      params: Record<string, any>
-      score: number
-    }[]
   }
 }
 ```
 
 ---
 
-### 4. ComputeNetworkFeaturesTool
+### 7. ComputeNetworkFeaturesTool
 
-**目的**：生成复杂网络特征（占真实模型7.3%），支持时序图分析
+**目的**：生成复杂网络特征（占真实模型 7.3%），支持时序图分析
 
 **输入**：
 ```typescript
 {
-  graphSource: string             // 图数据源
-  nodeType: string                // 节点类型
-  relationTypes: string[]         // 关系类型
+  graphSource: string
+  nodeType: string
+  relationTypes: string[]
   algorithms: {
     degree: boolean               // 度数统计
     community: boolean            // 社群检测
     labelPropagation: boolean     // 标签传播
     pagerank: boolean             // PageRank
-    temporal?: {                  // 时序图分析（可选）
-      enabled: boolean
-      changeInCentrality: boolean  // 中心度变化率
-      communityEvolution: boolean  // 社群演变
-      dynamicLinkPrediction: boolean  // 动态链接预测
+    temporal?: {                  // 时序图分析
+      changeInCentrality: boolean
+      communityEvolution: boolean
+      dynamicLinkPrediction: boolean
     }
   }
-  timeWindows?: number[]          // 时间窗口（用于时序分析）
 }
 ```
 
@@ -1030,70 +989,39 @@ interface PruningRule {
   features: {
     // 静态网络特征
     cnt_node_dist1                // 一度关联节点数
-    cnt_node_dist2                // 二度关联节点数
     is_grey_node                  // 是否灰名单节点
 
-    // 社群特征
-    cnt_grp_partner               // 社群合作方数
-    ratio_cnt_grp_id              // 社群身份证数占比
-    ratio_cnt_grp_reject_review   // 社群拒绝审核占比
-
-    // 风险传播
-    cnt_node_dist1_grey           // 一度关联灰名单数
-    ratio_cnt_node_reject         // 关联节点拒绝占比
-
-    // 时序网络特征（如果启用）
+    // 时序网络特征
     change_in_centrality_30d      // 30天中心度变化率
     community_split_cnt_90d       // 90天社群分裂次数
-    community_merge_cnt_90d       // 90天社群合并次数
-    predicted_link_risk_score     // 预测链接风险分
   }[]
 }
 ```
 
 ---
 
-### 5. GenerateTrendFeaturesTool
+### 8. GenerateTrendFeaturesTool
 
-**目的**：生成趋势特征（占真实模型4.9%）
+**目的**：生成趋势特征（占真实模型 4.9%）
 
 **输入**：
 ```typescript
 {
   featureTable: string
-  baseFeatures: string[]          // 基础特征
+  baseFeatures: string[]
   trendTypes: {
-    mom: boolean                  // 环比 (Month-over-Month)
+    mom: boolean                  // 环比
     gradient: boolean             // 变化度
     slope: boolean                // 斜率
     incr: boolean                 // 增量
-  },
-  windowPairs: [number, number][] // 窗口对比 [[30, 90], [180, 365]]
-}
-```
-
-**输出**：
-```typescript
-{
-  features: {
-    // 环比特征
-    mom_cnt_90daypartner_v4_all_all_360day  // 360天内90日平台数环比
-
-    // 变化度特征
-    gradient_cnt_partner_weight_clt1v4_Loan_all_1095day  // 时间加权月申贷机构数变化度
-
-    // 斜率特征
-    slope_freq_record_weight_clt1v4_Loan_Consumfin_365day  // 月申请次数斜率
-
-    // 增量特征
-    incr_set_recent90daypartner_v4_all_LoanAssistPlat_270day  // 近90日新增平台数
-  }[]
+  }
+  windowPairs: [number, number][] // 窗口对比
 }
 ```
 
 ---
 
-### 5. GenerateWeightedFeaturesTool（新增）
+### 9. GenerateWeightedFeaturesTool
 
 **目的**：生成时间加权特征
 
@@ -1104,24 +1032,32 @@ interface PruningRule {
   baseFeatures: string[]
   weightFunction: {
     type: 'linear' | 'exponential' | 'custom'
-    decay: number                 // 衰减系数
+    decay: number
   }
-}
-```
-
-**输出**：
-```typescript
-{
-  features: {
-    cnt_weight_interestLevel_two_clt1v4_Loan_all_1095day  // 时间加权申请机构数
-    freq_weight_interestLevel_three_clt1v4_Loan_all_730day  // 时间加权申请次数
-  }[]
 }
 ```
 
 ---
 
-### 6. GenerateCrossFeaturesTool
+### 10. GenerateRatioFeaturesTool
+
+**目的**：生成比率特征
+
+**输入**：
+```typescript
+{
+  featureTable: string
+  ratioRules: {
+    numerator: string
+    denominator: string
+  }[]
+  autoGenerate?: boolean          // 自动生成常见比率
+}
+```
+
+---
+
+### 11. GenerateCrossFeaturesTool
 
 **目的**：生成交叉特征，支持语义校验
 
@@ -1130,13 +1066,10 @@ interface PruningRule {
 {
   featureTable: string
   crossRules: {
-    features: string[]            // 要交叉的特征
+    features: string[]
     method: 'multiply' | 'divide' | 'subtract' | 'interaction'
-    name?: string
   }[]
-  maxOrder?: number               // 最大交叉阶数 (default: 2)
-  autoSelect?: boolean            // 自动选择高IV特征交叉 (default: true)
-  semanticValidation?: boolean    // 启用语义校验 (default: false)
+  semanticValidation?: boolean    // 启用语义校验
 }
 ```
 
@@ -1146,106 +1079,22 @@ interface PruningRule {
   features: {
     name: string
     formula: string
-    baseFeatures: string[]
     semanticScore?: number        // 语义合理性评分 (0-1)
     reasoning?: string            // 交叉特征的业务解释
   }[]
-  addedCount: number
   rejectedBySemantic?: number     // 被语义校验拒绝的数量
 }
 ```
 
 **语义校验示例**：
-```typescript
-// ✅ 通过语义校验
-{
-  name: "income_loan_ratio",
-  formula: "income / loan_amount",
-  reasoning: "收入与贷款金额的比率，反映负债能力，比率越高风险越低"
-}
-
-// ❌ 被语义校验拒绝
-{
-  name: "height_interest_product",
-  formula: "height * interest_rate",
-  reasoning: "身高与利率的乘积无业务含义，被拒绝"
-}
-```
+- ✅ `income / loan_amount` → 通过（负债率，有业务含义）
+- ❌ `height * interest_rate` → 拒绝（无业务含义）
 
 ---
 
-### 7. DetectSubjectInconsistencyTool
+## 四、特征增强层
 
-**目的**：检测多主体特征不一致性（反欺诈）
-
-**输入**：
-```typescript
-{
-  featureTable: string
-  subjectPairs: ['i_', 'm_'][]    // 主体对
-  threshold: number               // 不一致阈值
-}
-```
-
-**输出**：
-```typescript
-{
-  inconsistencies: {
-    feature: string
-    idCardValue: number
-    mobileValue: number
-    diff: number
-    diffRate: number
-    suspicious: boolean
-  }[]
-}
-```
-
----
-
-### 8. GenerateFeatureDocumentationTool
-
-**目的**：自动生成特征文档，包含业务解释
-
-**输入**：
-```typescript
-{
-  features: string[]
-  includeFormula: boolean
-  includeStatistics: boolean
-  includeBusinessMeaning: boolean
-  autoReasoning?: boolean         // 使用LLM自动生成业务解释 (default: false)
-}
-```
-
-**输出**：
-```typescript
-{
-  documentation: {
-    feature: string
-    name: string                  // 解析后的可读名称
-    formula: string               // 计算公式
-    dataSource: string            // 数据来源
-    updateFrequency: string       // 更新频率
-    businessMeaning: string       // 业务含义
-    riskHypothesis?: string       // 风险假设（autoReasoning启用时）
-    importance: number            // 重要性
-    cost: number                  // 计算成本
-  }[]
-}
-```
-
-**自动推理示例**：
-```typescript
-{
-  feature: "i_ratio_cnt_loan_1h_24h",
-  riskHypothesis: "该特征捕捉了短期内的突发借贷行为。在历史欺诈样本中，欺诈分子往往会在短时间内高频攻击，因此该比率飙升通常意味着高风险。"
-}
-```
-
----
-
-### 9. TargetEncodingTool（新增）
+### 12. TargetEncodingTool
 
 **目的**：处理高基数类别特征，防止数据泄漏
 
@@ -1253,11 +1102,11 @@ interface PruningRule {
 ```typescript
 {
   featureTable: string
-  categoricalFeatures: string[]   // 类别特征列表
-  target: string                  // 目标变量
+  categoricalFeatures: string[]
+  target: string
   method: 'mean' | 'woe' | 'frequency'
-  smoothing?: number              // 平滑参数 (default: 1.0)
-  kfold?: number                  // K折交叉编码 (default: 5)
+  smoothing?: number
+  kfold?: number                  // K-fold 交叉编码
 }
 ```
 
@@ -1266,7 +1115,7 @@ interface PruningRule {
 {
   encodedFeatures: {
     original: string
-    encoded: string               // 编码后的特征名
+    encoded: string
     mapping: Record<string, number>
   }[]
   leakageCheck: {
@@ -1278,7 +1127,7 @@ interface PruningRule {
 
 ---
 
-### 10. EmbeddingTool（新增）
+### 13. EmbeddingTool
 
 **目的**：处理序列和文本特征
 
@@ -1287,10 +1136,10 @@ interface PruningRule {
 {
   featureTable: string
   sequenceFeatures: {
-    name: string                  // 特征名 (e.g., 'app_list', 'device_model')
+    name: string
     type: 'sequence' | 'text'
-    embeddingModel?: string       // 预训练模型 (default: 'bert-base')
-    dimension?: number            // 嵌入维度 (default: 128)
+    embeddingModel?: string       // 预训练模型
+    dimension?: number            // 嵌入维度
   }[]
 }
 ```
@@ -1300,7 +1149,7 @@ interface PruningRule {
 {
   embeddingFeatures: {
     original: string
-    embeddings: string[]          // 嵌入特征名列表 (e.g., 'app_list_emb_0', 'app_list_emb_1', ...)
+    embeddings: string[]          // 嵌入特征名列表
     dimension: number
   }[]
 }
@@ -1308,7 +1157,54 @@ interface PruningRule {
 
 ---
 
-### 11. CostAwareSelectionTool（新增）
+## 五、质量保障层
+
+### 14. FeatureRefinementAgent
+
+**目的**：特征质量不达标时的自动诊断和重构
+
+**输入**：
+```typescript
+{
+  primitiveId: string
+  featureTable: string
+  qualityReport: {
+    totalGenerated: number
+    passedSelection: number
+    failureReasons: {
+      lowIV: number
+      highPSI: number
+      highMissing: number
+    }
+  }
+  target: string
+}
+```
+
+**输出**：
+```typescript
+{
+  diagnosis: {
+    rootCause: string             // 根本原因分析
+    recommendations: {
+      action: 'expand_window' | 'change_aggregation' | 'adjust_threshold'
+      reason: string
+      expectedImprovement: string
+    }[]
+  }
+  shouldRetry: boolean
+}
+```
+
+**诊断示例**：
+- 问题：缺失率 45%
+- 原因：7天窗口数据稀疏
+- 建议：扩大到 30 天
+- 预期：缺失率降至 20%
+
+---
+
+### 15. CostAwareSelectionTool
 
 **目的**：成本感知的特征筛选
 
@@ -1322,7 +1218,7 @@ interface PruningRule {
     source: 'internal' | 'external'
   }[]
   target: string
-  budget?: number                 // 预算限制（元/样本）
+  budget?: number                 // 预算限制
   correlationThreshold?: number   // 相关性阈值 (default: 0.95)
 }
 ```
@@ -1346,433 +1242,71 @@ interface PruningRule {
 }
 ```
 
----
-
-### 12. FeatureRefinementAgent（新增）
-
-**目的**：特征质量不达标时的自动诊断和重构
-
-**输入**：
-```typescript
-{
-  primitiveId: string
-  featureTable: string
-  qualityReport: {
-    totalGenerated: number
-    passedSelection: number
-    failureReasons: {
-      lowIV: number
-      highPSI: number
-      highMissing: number
-      highCollinearity: number
-    }
-  }
-  target: string
-}
-```
-
-**输出**：
-```typescript
-{
-  diagnosis: {
-    rootCause: string             // 根本原因分析
-    recommendations: {
-      action: 'expand_window' | 'change_aggregation' | 'add_cross' | 'adjust_threshold'
-      reason: string
-      expectedImprovement: string
-    }[]
-  }
-  refinedPrimitives?: {
-    primitiveId: string
-    changes: string[]
-  }
-  shouldRetry: boolean
-}
-```
-
-**诊断示例**：
-```typescript
-{
-  diagnosis: {
-    rootCause: "特征缺失率过高（平均45%），导致大量特征被过滤",
-    recommendations: [
-      {
-        action: "expand_window",
-        reason: "当前7天窗口数据稀疏，建议扩大到30天",
-        expectedImprovement: "预计缺失率降低至20%"
-      },
-      {
-        action: "change_aggregation",
-        reason: "count统计量对稀疏数据敏感，建议改用ratio",
-        expectedImprovement: "预计有效特征数增加30%"
-      }
-    ]
-  },
-  shouldRetry: true
-}
-```
+**示例**：
+- 付费特征 A（0.5元）vs 免费特征 B
+- 相关性：0.97
+- 建议：用 B 替换 A
+- 节省：0.5元/样本
 
 ---
 
-### 真实场景示例
+## 工具使用流程
+
+### 标准流程
 ```typescript
-// 基于真实信贷模型的特征原语定义
-await DefineFeaturePrimitivesTool.call({
-  anchorTime: 'application_time',
+// 1. 定义原语
+const primitives = await DefineFeaturePrimitivesTool.call({...})
 
-  // 真实使用的时间窗口
-  windows: [7, 10, 30, 60, 90, 180, 270, 360, 365, 730, 1095],
-
-  // 主体维度
-  subjects: [
-    { type: 'id_card', prefix: 'i_' },      // 身份证
-    { type: 'mobile', prefix: 'm_' }        // 手机号
-  ],
-
-  // 行为类型定义（基于第三方数据）
-  behaviorTypes: [
-    {
-      name: 'loan_application',
-      table: 'td_loan_records',
-      timestampColumn: 'apply_time',
-      dimensions: {
-        industry: ['Bank', 'Imbank', 'Consumfin', 'TopNet', 'LoanAssistPlat', 'all'],
-        interestLevel: ['one', 'two', 'three', 'four', 'five', 'six'],
-        productType: ['credit_account', 'small_amount', 'micro_amount', 'cardloan', 'cashloan']
-      }
-    },
-    {
-      name: 'risk_decision',
-      table: 'td_risk_records',
-      timestampColumn: 'decision_time',
-      valueColumn: 'risk_score',
-      categoryColumn: 'decision_result'
-    },
-    {
-      name: 'network_relation',
-      table: 'td_network_graph',
-      dimensions: {
-        nodeType: ['id', 'mobile', 'device'],
-        degree: ['dist1', 'dist2'],  // 一度、二度关联
-        riskLabel: ['grey', 'black', 'reject']
-      }
-    }
-  ],
-
-  // 统计量定义
-  aggregations: {
-    basic: ['count', 'sum', 'mean', 'max', 'min', 'std'],
-    ratio: ['ratio', 'rate'],
-    trend: ['mom', 'gradient', 'slope', 'incr'],
-    distribution: ['tfidf'],
-    lifecycle: ['up_life_period', 'down_life_period', 'stable_life_period', 'zero_life_period']
-  },
-
-  constraints: {
-    maxFeatures: 2000,
-    minSampleSize: 1000
-  }
+// 2. 语义剪枝（Gate 1）
+const pruned = await SemanticPruningTool.call({
+  primitiveId: primitives.id,
+  candidates: allCandidates
 })
-```
 
----
+// 3. 代理评估（Gate 2）
+const evaluated = await ProxyEvaluationTool.call({
+  candidates: pruned.passed,
+  samplingStrategy: { method: 'random', sampleRate: 0.05 }
+})
 
-### 2. GenerateWindowFeaturesTool
+// 4. Beam Search（Gate 3）
+const searched = await BeamSearchFeaturesTool.call({
+  candidates: evaluated.passed,
+  beamWidth: 50,
+  budget: { total: 500 }
+})
 
-**目的**：基于定义的原语自动生成时间窗口统计特征
+// 5. 生成特征
+const features = await GenerateWindowFeaturesTool.call({
+  primitiveId: primitives.id,
+  selectedFeatures: searched.selectedFeatures
+})
 
-**输入**：
-```typescript
-{
-  primitiveId: string             // 原语配置ID
-  datasource: string              // 数据源
-  sampleTable: string             // 样本表 (包含anchor_time和样本ID)
-  outputTable?: string            // 输出表名 (可选，默认临时表)
-  parallel?: boolean              // 是否并行计算 (default: true)
-}
-```
-
-**输出**：
-```typescript
-{
-  outputTable: string             // 生成的特征表
-  features: {
-    name: string                  // 特征名称
-    description: string           // 特征描述
-    type: 'numeric' | 'categorical'
-    formula: string               // 计算公式
-  }[]
-  statistics: {
-    totalGenerated: number        // 生成特征数
-    executionTime: number         // 执行时间(秒)
-    sampleSize: number            // 样本量
-  }
-}
-```
-
-**生成的特征示例**：
-```
-# 多头借贷特征
-i_cnt_partner_v4_Loan_Bank_365day              # 身份证365天银行申贷机构数
-i_freq_record_v4_Loan_all_30day                # 身份证30天全行业申贷次数
-i_ratio_freq_record_v4_Loan_Bank_30day         # 身份证30天银行申贷次数占比
-
-# 多头生命周期特征
-i_mean_k_down_life_period_clt1v4_Loan_Imbank_1095day    # 下降期每月减速多头数均值
-i_cnt_stable_life_period_clt1v4_Loan_Imbank_1095day     # 稳定期个数
-i_max_duration_month_zero_life_period_clt1v4_Loan_Imbank_365day  # 休眠期持续月份数最大值
-
-# 多头趋势特征
-i_mom_cnt_90daypartner_v4_all_all_360day       # 360天内90日平台数环比
-i_incr_set_recent90daypartner_v4_all_LoanAssistPlat_270day  # 270天助贷平台近90日新增平台数
-
-# 利率敏感特征
-m_mean_interestLevel_Loan_all_365day           # 手机号365天利率平均档
-i_differ_mean_interestLevel_Loan_all_180_365day  # 180天对比365天利率档位变化
-
-# 复杂网络特征
-i_is_grey_node_Loan_all_all                    # 身份证是否命中灰名单
-i_cnt_node_dist1_grey_Loan_all_all             # 一度关联节点灰名单数
-i_ratio_cnt_grp_id_Loan_all_all                # 社群节点身份证数占比
-
-# 决策风险特征
-i_min_riskscore_v4_all_Imbank_90day            # 90天非银行业最小风险分
-i_max_riskscore_v4_all_all_30day               # 30天全行业最大风险分
-
-# 助贷指标特征
-i_ratio_cnt_ecipartner_la_Loan_all_365day      # 365天去除资金方平台数占比
-i_ratio_cnt_cipartner_la_Loan_all_90day        # 90天资金方平台数占比
-```
-
----
-
-### 3. GenerateRatioFeaturesTool
-
-**目的**：生成比率类特征
-
-**输入**：
-```typescript
-{
-  featureTable: string            // 特征表
-  ratioRules: {
-    numerator: string             // 分子特征
-    denominator: string           // 分母特征
-    name?: string                 // 自定义名称
-    handleZero?: 'null' | 'zero' | 'epsilon'  // 除零处理
-  }[]
-  autoGenerate?: boolean          // 自动生成常见比率 (default: true)
-}
-```
-
-**输出**：
-```typescript
-{
-  features: {
-    name: string
-    formula: string
-    description: string
-  }[]
-  addedCount: number
-}
-```
-
-**自动生成的比率特征示例**：
-```
-# 时间窗口比率
-i_ratio_cnt_partner_7d_30d                     # 7天/30天申贷机构数比
-m_ratio_freq_record_30d_90d                    # 30天/90天申贷次数比
-
-# 行业占比
-i_ratio_cnt_partner_clt1v4_Loan_Bank_730day    # 730天银行机构数占比
-i_ratio_freq_record_v4_Loan_Imbank_365day      # 365天非银行申贷次数占比
-
-# 利率档位占比
-i_ratio_interestLevel_two_Loan_all_365day      # 365天利率二档申请比例
-i_ratio_interestLevel_four_Loan_all_180day     # 180天利率四档申请比例
-
-# 产品类型占比
-i_ratio_freq_record_weight_clt1v4_Loan_credit_account_all_180day  # 180天信贷账户产品申请次数占比
-i_ratio_freq_record_weight_clt1v4_Loan_small_amount_all_180day    # 180天小额产品申请次数占比
-
-# 决策结果占比
-i_ratio_freq_risk_Accept_v4_all_Consumfin_365day  # 365天消费金融Accept次数占比
-i_ratio_cnt_grp_reject_review_Loan_all_all        # 社群节点拒绝和审核数占比
-
-# 助贷指标占比
-i_ratio_cnt_ecipartner_la_Loan_all_365day      # 365天去除资金方平台数占比
-i_ratio_cnt_cipartner_la_Loan_all_90day        # 90天资金方平台数占比
-```
-
----
-
-### 4. GenerateCrossFeaturesTool
-
-**目的**：生成交叉特征
-
-**输入**：
-```typescript
-{
-  featureTable: string
-  crossRules: {
-    features: string[]            // 要交叉的特征
-    method: 'multiply' | 'divide' | 'subtract' | 'interaction'
-    name?: string
-  }[]
-  maxOrder?: number               // 最大交叉阶数 (default: 2)
-  autoSelect?: boolean            // 自动选择高IV特征交叉 (default: true)
-}
-```
-
-**输出**：
-```typescript
-{
-  features: {
-    name: string
-    formula: string
-    baseFeatures: string[]
-  }[]
-  addedCount: number
+// 6. 质量检查 + 自动重构
+if (features.passRate < 0.05) {
+  const refinement = await FeatureRefinementAgent.call({
+    qualityReport: features.qualityReport
+  })
+  // 应用改进建议，重新生成
 }
 ```
 
 ---
 
-### 5. ComputeFeatureStabilityTool
+## 效率对比
 
-**目的**：计算特征稳定性 (PSI)
+| 阶段 | 候选数 | 成本 | 工具 |
+|------|--------|------|------|
+| 初始 | 210,000 | - | DefineFeaturePrimitives |
+| Gate 1 | 50,000 | 零算力 | SemanticPruning |
+| Gate 2 | 5,000 | 1-5% 算力 | ProxyEvaluation |
+| Gate 3 | 500 | O(150) | BeamSearch |
+| 最终 | 500 | 可控 | 特征生成层 |
 
-**输入**：
-```typescript
-{
-  baselineTable: string           // 基准特征表
-  currentTable: string            // 当前特征表
-  features?: string[]             // 指定特征 (默认全部)
-  psiThreshold?: number           // PSI阈值 (default: 0.1)
-}
-```
-
-**输出**：
-```typescript
-{
-  stability: {
-    feature: string
-    psi: number
-    status: 'stable' | 'warning' | 'drift'
-  }[]
-  summary: {
-    stableCount: number
-    driftCount: number
-    stableFeatures: string[]      // 建议保留的稳定特征
-    unstableFeatures: string[]    // 建议剔除的不稳定特征
-  }
-}
-```
-
----
-
-### 6. SelectFeaturesByIvTool
-
-**目的**：基于IV值筛选特征
-
-**输入**：
-```typescript
-{
-  featureTable: string
-  target: string                  // 目标变量
-  ivThreshold?: number            // IV阈值 (default: 0.02)
-  maxFeatures?: number            // 最大特征数
-  excludeSuspicious?: boolean     // 排除可疑特征 (IV>0.5, default: true)
-}
-```
-
-**输出**：
-```typescript
-{
-  selectedFeatures: string[]
-  ivResults: IvResult[]           // 复用现有IvResult类型
-  summary: {
-    totalEvaluated: number
-    selected: number
-    rejected: number
-    suspiciousCount: number
-  }
-}
-```
-
----
-
-### 7. DetectFeatureCollinearityTool
-
-**目的**：检测特征共线性
-
-**输入**：
-```typescript
-{
-  featureTable: string
-  features: string[]
-  method: 'correlation' | 'vif'   // 相关系数 or 方差膨胀因子
-  threshold?: number              // 阈值 (correlation: 0.8, vif: 10)
-}
-```
-
-**输出**：
-```typescript
-{
-  collinearPairs: {
-    feature1: string
-    feature2: string
-    correlation: number
-    recommendation: 'keep_feature1' | 'keep_feature2' | 'review'
-  }[]
-  summary: {
-    totalPairs: number
-    highCollinearCount: number
-    recommendedKeep: string[]     // 建议保留特征
-    recommendedRemoval: string[]
-  }
-}
-```
-
----
-
-### 8. ValidateFeatureBusinessLogicTool
-
-**目的**：验证特征的业务合理性
-
-**输入**：
-```typescript
-{
-  featureTable: string
-  features: string[]
-  target: string
-  rules: {
-    feature: string
-    expectedDirection: 'positive' | 'negative' | 'neutral'
-    reason: string                // 业务解释
-  }[]
-}
-```
-
-**输出**：
-```typescript
-{
-  validation: {
-    feature: string
-    expectedDirection: string
-    actualDirection: string
-    consistent: boolean
-    warning?: string
-  }[]
-  summary: {
-    totalChecked: number
-    consistent: number
-    inconsistent: number
-    warnings: string[]
-  }
-}
-```
-
----
+**总体效率提升**：
+- 候选数减少：99.76%
+- 算力成本：O(210K) → O(150)
+- Token 消耗：最小化
 
 ## 特征工程工作流
 
