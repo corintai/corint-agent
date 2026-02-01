@@ -1,0 +1,616 @@
+# Feature Primitives Definition
+# Based on FEATURE_ENGINEERING_DESIGN.md
+# Version: 1.0
+
+version: "1.0"
+namespace: risk_agent
+
+# Subject Definitions
+# Format: {prefix}_{calculation}_{metric}_{object}_{event}_{dimension}_{window}
+subjects:
+  - id: id_card
+    name: ID Card
+    prefix: i
+    type: string
+    description: Identity card number as primary subject
+    stability: high                 # Stability level: high | medium | low
+    max_window: 1095d               # Maximum time window
+    allow_lifecycle: true           # Allow lifecycle features
+    allow_network: true             # Allow network features
+    allow_realtime: false           # Allow realtime windows (< 1h)
+
+  - id: mobile
+    name: Mobile Phone
+    prefix: m
+    type: string
+    description: Mobile phone number as subject
+    stability: medium
+    max_window: 365d
+    allow_lifecycle: true
+    allow_network: true
+    allow_realtime: true
+
+  - id: device
+    name: Device
+    prefix: d
+    type: string
+    description: Device fingerprint as subject
+    stability: low
+    max_window: 90d                 # Device stability is low, limit to 90 days
+    allow_lifecycle: false
+    allow_network: true
+    allow_realtime: true
+
+  - id: user
+    name: User
+    prefix: u
+    type: string
+    description: User account as subject
+    stability: high
+    max_window: 1095d
+    allow_lifecycle: true
+    allow_network: true
+    allow_realtime: true
+
+  - id: ip_address
+    name: IP Address
+    prefix: ip
+    type: string
+    description: IP address as subject
+    stability: low
+    max_window: 30d                 # IP changes frequently
+    allow_lifecycle: false
+    allow_network: true
+    allow_realtime: true
+
+# Time Window Definitions
+time_windows:
+  # Anti-fraud realtime windows (seconds)
+  realtime_seconds:
+    unit: s
+    values: [30, 60, 300]
+    description: Second-level windows for real-time fraud detection
+
+  # Anti-fraud short-term windows (minutes)
+  realtime_minutes:
+    unit: m
+    values: [5, 10, 30, 60]
+    description: Minute-level windows for short-term behavior
+
+  # Anti-fraud hourly windows
+  realtime_hours:
+    unit: h
+    values: [1, 3, 6, 12, 24]
+    description: Hour-level windows for daily behavior
+
+  # Credit short-term windows (days)
+  short_term:
+    unit: d
+    values: [1, 3, 7, 15, 30, 60, 90]
+    description: Day-level windows for short-term patterns
+
+  # Credit mid-term windows (days)
+  mid_term:
+    unit: d
+    values: [180, 270, 360, 365]
+    description: Day-level windows for mid-term patterns
+
+  # Credit long-term windows (days)
+  long_term:
+    unit: d
+    values: [730, 1095]
+    description: Day-level windows for long-term lifecycle
+
+  # Calendar weeks
+  calendar_weeks:
+    unit: w
+    values: [1, 2, 4, 12, 26, 52]
+    description: Calendar week windows (Monday to Sunday)
+
+  # Calendar months
+  calendar_months:
+    unit: mo
+    values: [1, 3, 6, 12, 18, 24, 36]
+    description: Calendar month windows (month start to end)
+
+  # Calendar years
+  calendar_years:
+    unit: y
+    values: [1, 2, 3, 5]
+    description: Calendar year windows (year start to end)
+
+# Event Type Definitions
+events:
+  - id: loan
+    name: Loan Application
+
+  - id: login
+    name: Login Event
+
+  - id: txn
+    name: Transaction Event
+
+  - id: repay
+    name: Repayment Event
+
+  - id: register
+    name: Registration Event
+
+  - id: withdraw
+    name: Withdrawal Event
+
+# Aggregation Definitions
+aggregations:
+  # Basic aggregations
+  basic:
+    - id: cnt
+      name: Count
+      description: Count of distinct entities
+      sql_template: "COUNT(DISTINCT {column})"
+      applicable_to: [entity, event]
+      output_type: integer
+
+    - id: freq
+      name: Frequency
+      description: Total frequency count
+      sql_template: "COUNT(*)"
+      applicable_to: [entity, event]
+      output_type: integer
+
+    - id: sum
+      name: Sum
+      description: Sum of numeric values
+      sql_template: "SUM({column})"
+      applicable_to: [numeric]
+      output_type: numeric
+
+    - id: mean
+      name: Mean
+      description: Average of numeric values
+      sql_template: "AVG({column})"
+      applicable_to: [numeric]
+      output_type: numeric
+
+    - id: max
+      name: Maximum
+      description: Maximum value
+      sql_template: "MAX({column})"
+      applicable_to: [numeric]
+      output_type: numeric
+
+    - id: min
+      name: Minimum
+      description: Minimum value
+      sql_template: "MIN({column})"
+      applicable_to: [numeric]
+      output_type: numeric
+
+    - id: std
+      name: Standard Deviation
+      description: Standard deviation of numeric values
+      sql_template: "STDDEV({column})"
+      applicable_to: [numeric]
+      output_type: numeric
+
+  # Ratio aggregations
+  ratio:
+    - id: ratio
+      name: Ratio
+      description: Ratio between numerator and denominator
+      requires: [numerator, denominator]
+      sql_template: "CAST({numerator} AS FLOAT) / NULLIF({denominator}, 0)"
+      output_type: numeric
+
+    - id: rate
+      name: Rate
+      description: Rate calculation (percentage)
+      requires: [numerator, denominator]
+      sql_template: "CAST({numerator} AS FLOAT) / NULLIF({denominator}, 0) * 100"
+      output_type: numeric
+
+  # Trend aggregations
+  trend:
+    - id: mom
+      name: Month-over-Month
+      description: Month-over-month change rate
+      requires: [current_window, previous_window]
+      sql_template: "({current} - {previous}) / NULLIF({previous}, 0)"
+      output_type: numeric
+
+    - id: yoy
+      name: Year-over-Year
+      description: Year-over-year change rate
+      requires: [current_window, year_ago_window]
+      sql_template: "({current} - {year_ago}) / NULLIF({year_ago}, 0)"
+      output_type: numeric
+
+    - id: grad
+      name: Gradient
+      description: Gradient of change over time
+      requires: [time_series]
+      algorithm: gradient_calculation
+      output_type: numeric
+
+    - id: slope
+      name: Slope
+      description: Linear regression slope
+      requires: [time_series]
+      algorithm: linear_regression
+      output_type: numeric
+
+    - id: incr
+      name: Increment
+      description: Incremental change
+      requires: [current_window, previous_window]
+      sql_template: "{current} - {previous}"
+      output_type: numeric
+
+    - id: diff
+      name: Difference
+      description: Difference between two values
+      requires: [value1, value2]
+      sql_template: "{value1} - {value2}"
+      output_type: numeric
+
+  # Weighted aggregations
+  weighted:
+    - id: weighted
+      name: Linear Weighted
+      description: Linear time decay weighting (weight = 1 - t/T)
+      weight_function: "1 - (days_ago / window_days)"
+      sql_template: "SUM({column} * {weight}) / NULLIF(SUM({weight}), 0)"
+      output_type: numeric
+
+    - id: decay
+      name: Exponential Decay
+      description: Exponential time decay weighting (weight = e^(-λt))
+      weight_function: "EXP(-0.033 * days_ago)"
+      sql_template: "SUM({column} * {weight}) / NULLIF(SUM({weight}), 0)"
+      output_type: numeric
+
+  # Lifecycle aggregations
+  lifecycle:
+    - id: up_life_period
+      name: Upward Life Period
+      description: Count of upward trend periods
+      algorithm: lifecycle_detection
+      period_type: up
+      output_type: integer
+      min_window: 90d                 # Minimum window for lifecycle features
+      incompatible_metrics: [cnt, freq]  # Lifecycle not suitable for discrete counts
+
+    - id: down_life_period
+      name: Downward Life Period
+      description: Count of downward trend periods
+      algorithm: lifecycle_detection
+      period_type: down
+      output_type: integer
+      min_window: 90d
+      incompatible_metrics: [cnt, freq]
+
+    - id: stable_life_period
+      name: Stable Life Period
+      description: Count of stable periods
+      algorithm: lifecycle_detection
+      period_type: stable
+      output_type: integer
+      min_window: 90d
+      incompatible_metrics: [cnt, freq]
+
+    - id: zero_life_period
+      name: Zero Life Period
+      description: Count of dormant/zero periods
+      algorithm: lifecycle_detection
+      period_type: zero
+      output_type: integer
+      min_window: 90d
+      incompatible_metrics: [cnt, freq]
+
+  # Distribution aggregations
+  distribution:
+    - id: tfidf
+      name: TF-IDF
+      description: Term frequency-inverse document frequency
+      algorithm: tfidf_calculation
+      output_type: numeric
+
+# Calculation Methods (optional prefix in feature name)
+calculation_methods:
+  - id: ratio
+    name: Ratio
+    description: Ratio calculation between two metrics
+    prefix: ratio
+
+  - id: mean
+    name: Mean
+    description: Average calculation
+    prefix: mean
+
+  - id: max
+    name: Maximum
+    description: Maximum value
+    prefix: max
+
+  - id: min
+    name: Minimum
+    description: Minimum value
+    prefix: min
+
+  - id: std
+    name: Standard Deviation
+    description: Standard deviation
+    prefix: std
+
+  - id: sum
+    name: Sum
+    description: Sum calculation
+    prefix: sum
+
+  - id: mom
+    name: Month-over-Month
+    description: Month-over-month comparison
+    prefix: mom
+
+  - id: yoy
+    name: Year-over-Year
+    description: Year-over-year comparison
+    prefix: yoy
+
+  - id: grad
+    name: Gradient
+    description: Gradient of change
+    prefix: grad
+
+  - id: slope
+    name: Slope
+    description: Slope calculation
+    prefix: slope
+
+  - id: incr
+    name: Increment
+    description: Incremental change
+    prefix: incr
+
+  - id: diff
+    name: Difference
+    description: Difference calculation
+    prefix: diff
+
+# Naming Convention (enforced)
+naming_convention:
+  # Standard template
+  template: "{subject}_{calculation}_{metric}_{object}_{event}_{dimension}_{window}"
+
+  # Required components
+  required:
+    - subject      # Must be one of subjects.prefix
+    - metric       # Must be one of aggregations
+    - object       # Must be one of event metrics
+    - window       # Must match time_window pattern
+
+  # Optional components
+  optional:
+    - calculation  # Optional calculation method prefix
+    - event        # Optional event type
+    - dimension    # Optional dimension value
+
+  # Separator
+  separator: "_"
+
+  # Maximum length
+  max_length: 200
+
+  # Validation rules
+  validation:
+    - rule: subject_must_exist
+      description: "Subject prefix must be defined in subjects"
+
+    - rule: metric_must_exist
+      description: "Metric must be defined in aggregations"
+
+    - rule: window_format_valid
+      description: "Window must match pattern: \\d+(s|m|h|d|w|mo|y)"
+
+    - rule: no_consecutive_underscores
+      description: "No consecutive underscores allowed"
+
+    - rule: lowercase_only
+      description: "All characters must be lowercase"
+
+    - rule: no_leading_trailing_underscores
+      description: "No leading or trailing underscores"
+
+  # Examples
+  examples:
+    - name: i_cnt_partner_loan_bank_365d
+      description: "ID card count of partners for loan events in bank industry over 365 days"
+      components:
+        subject: i
+        metric: cnt
+        object: partner
+        event: loan
+        dimension: bank
+        window: 365d
+
+    - name: m_ratio_freq_login_night_30d
+      description: "Mobile ratio of login frequency during night time over 30 days"
+      components:
+        subject: m
+        calculation: ratio
+        metric: freq
+        object: login
+        event: login
+        dimension: night
+        window: 30d
+
+    - name: ip_cnt_user_login_1h
+      description: "IP address count of users for login events over 1 hour"
+      components:
+        subject: ip
+        metric: cnt
+        object: user
+        event: login
+        window: 1h
+
+    - name: i_mom_cnt_partner_90d
+      description: "ID card month-over-month change of partner count over 90 days"
+      components:
+        subject: i
+        calculation: mom
+        metric: cnt
+        object: partner
+        window: 90d
+
+    - name: i_cnt_partner_loan_weighted_365d
+      description: "ID card count of partners for loan events with linear weighting over 365 days"
+      components:
+        subject: i
+        metric: cnt
+        object: partner
+        event: loan
+        dimension: weighted
+        window: 365d
+
+# Constraints
+constraints:
+  # Feature generation limits
+  max_features: 2000
+  min_sample_size: 1000
+
+  # Feature budget (for Beam Search)
+  feature_budget:
+    total: 500                      # Total feature limit
+
+    per_subject:
+      id_card: 200                  # Max features per subject
+      mobile: 150
+      device: 100
+      user: 100
+      ip_address: 50
+
+    per_family:
+      basic: 200                    # Max features per family
+      ratio: 100
+      trend: 80
+      lifecycle: 60
+      network: 40
+      cross: 20
+
+    per_window:
+      realtime: 50                  # Max features per window type
+      short_term: 200
+      mid_term: 150
+      long_term: 100
+
+  # Feature selection thresholds
+  selection:
+    min_iv: 0.02
+    max_iv: 0.50  # Suspicious if too high
+    min_ks: 0.05
+    max_psi: 0.10
+    max_correlation: 0.80
+
+  # Proxy evaluation thresholds (Gate 2)
+  proxy_thresholds:
+    max_missing_rate: 0.80          # Maximum missing rate
+    min_variance: 0.000001          # Minimum variance (1e-6)
+    min_entropy: 1.0                # Minimum entropy
+    max_quantile_collapse: 0.90     # Maximum quantile collapse
+    min_temporal_consistency: 0.30  # Minimum temporal consistency
+
+  # Business rules for semantic pruning (Gate 1)
+  business_rules:
+    - condition: "ratio && window <= 7d"
+      reason: "Short window ratios have high noise"
+      action: PRUNE
+
+    - condition: "device && window > 90d"
+      reason: "Device stability insufficient for long windows"
+      action: PRUNE
+
+    - condition: "lifecycle && window < 90d"
+      reason: "Lifecycle features require at least 90 days"
+      action: PRUNE
+
+    - condition: "network && window < 1h"
+      reason: "Graph computation not suitable for realtime"
+      action: PRUNE
+
+    - condition: "mom && window < 30d"
+      reason: "Month-over-month requires sufficient history"
+      action: PRUNE
+
+  # Excluded columns (security)
+  exclude_columns:
+    - password
+    - secret_key
+    - api_key
+    - token
+    - internal_id
+    - ssn
+    - credit_card_no
+
+  # Performance constraints
+  performance:
+    max_execution_time_seconds: 3600
+    max_memory_gb: 16
+    enable_parallel: true
+    max_parallel_jobs: 10
+
+# Advanced Features Configuration
+advanced_features:
+  # Parameter auto-tuning for lifecycle features
+  auto_tuning:
+    enabled: false                    # Enable parameter auto-tuning
+    optimization_metric: iv           # iv | auc | ks
+    max_iterations: 10
+    early_stopping_rounds: 3
+
+  # Semantic validation for cross features
+  semantic_validation:
+    enabled: false                    # Enable semantic validation
+    min_semantic_score: 0.6           # Minimum semantic score (0-1)
+    auto_reasoning: false             # Auto-generate business reasoning
+
+  # Temporal graph analysis
+  temporal_graph:
+    enabled: false                    # Enable temporal graph features
+    algorithms:
+      - change_in_centrality          # Track centrality changes
+      - community_evolution           # Track community evolution
+      - dynamic_link_prediction       # Predict future links
+
+  # Target encoding
+  target_encoding:
+    enabled: false                    # Enable target encoding
+    method: mean                      # mean | woe | frequency
+    smoothing: 1.0
+    kfold: 5                          # K-fold cross encoding
+
+  # Embedding extraction
+  embedding:
+    enabled: false                    # Enable embedding features
+    model: bert-base                  # Pretrained model
+    dimension: 128                    # Embedding dimension
+
+  # Cost-aware selection
+  cost_aware:
+    enabled: false                    # Enable cost-aware selection
+    budget_per_sample: null           # Budget limit (yuan/sample)
+    correlation_threshold: 0.95       # Replace expensive features if correlation > threshold
+
+  # Reflection loop
+  reflection:
+    enabled: false                    # Enable reflection loop
+    max_attempts: 3                   # Maximum refinement attempts
+    min_pass_rate: 0.05               # Minimum feature pass rate (5%)
+    auto_apply_recommendations: true  # Auto-apply refinement recommendations
+
+# Metadata
+metadata:
+  created_at: "2026-02-01"
+  created_by: "Risk Agent"
+  version: "1.0"
+  last_updated: "2026-02-01"
+  description: "Feature primitives definition for credit risk and anti-fraud modeling"
+  reference_doc: "FEATURE_ENGINEERING_DESIGN.md"
