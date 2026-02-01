@@ -649,8 +649,8 @@ m_cnt_province_txn_24h
 
 ```
 ┌─────────────────────────────────────────────────────────┐
-│  配置层                                                  │
-│  └─ DefineFeaturePrimitivesTool                         │
+│  配置文件                                                │
+│  └─ feature_primitives.yaml                             │
 └─────────────────────────────────────────────────────────┘
                         ↓
 ┌─────────────────────────────────────────────────────────┐
@@ -686,40 +686,9 @@ m_cnt_province_txn_24h
 
 ---
 
-## 一、配置层
+## 一、效率优化层（三道闸门）
 
-### 1. DefineFeaturePrimitivesTool
-
-**目的**：定义特征工程的基础规则和约束
-
-**输入**：
-```typescript
-{
-  anchorTime: string              // 时间锚点字段
-  subjects: Subject[]             // 主体定义（身份证/手机号/设备等）
-  windows: number[]               // 时间窗口
-  events: Event[]                 // 事件类型
-  aggregations: Aggregation[]     // 统计量类型
-  constraints: Constraints        // 约束条件
-}
-```
-
-**输出**：
-```typescript
-{
-  primitiveId: string
-  summary: {
-    totalCombinations: number     // 理论组合数
-    estimatedFeatures: number     // 预估特征数
-  }
-}
-```
-
----
-
-## 二、效率优化层（三道闸门）
-
-### 2. SemanticPruningTool（Gate 1）
+### 1. SemanticPruningTool（Gate 1）
 
 **目的**：语义剪枝，零算力过滤不合理组合
 
@@ -731,7 +700,7 @@ m_cnt_province_txn_24h
 **输入**：
 ```typescript
 {
-  primitiveId: string
+  primitives: FeaturePrimitives   // 从 feature_primitives.yaml 加载
   candidates: FeatureCandidate[]  // 候选特征列表
   pruningRules: {
     hardConstraints: boolean      // 启用硬约束剪枝
@@ -775,7 +744,7 @@ m_cnt_province_txn_24h
 **输入**：
 ```typescript
 {
-  primitiveId: string
+  primitives: FeaturePrimitives
   datasource: string
   sampleTable: string
   candidates: FeatureCandidate[]
@@ -838,7 +807,7 @@ m_cnt_province_txn_24h
 **输入**：
 ```typescript
 {
-  primitiveId: string
+  primitives: FeaturePrimitives
   datasource: string
   sampleTable: string
   candidates: FeatureCandidate[]  // 通过 Gate 2 的候选
@@ -893,7 +862,7 @@ m_cnt_province_txn_24h
 **输入**：
 ```typescript
 {
-  primitiveId: string
+  primitives: FeaturePrimitives
   datasource: string
   sampleTable: string
   outputTable?: string
@@ -928,7 +897,7 @@ m_cnt_province_txn_24h
 **输入**：
 ```typescript
 {
-  primitiveId: string
+  primitives: FeaturePrimitives
   datasource: string
   sampleTable: string
   metric: string                  // 用于判断周期的指标
@@ -1166,7 +1135,7 @@ m_cnt_province_txn_24h
 **输入**：
 ```typescript
 {
-  primitiveId: string
+  primitives: FeaturePrimitives
   featureTable: string
   qualityReport: {
     totalGenerated: number
@@ -1254,23 +1223,25 @@ m_cnt_province_txn_24h
 
 ### 标准流程
 ```typescript
-// 1. 定义原语
-const primitives = await DefineFeaturePrimitivesTool.call({...})
+// 1. 加载配置
+const primitives = loadPrimitives('feature_primitives.yaml')
 
 // 2. 语义剪枝（Gate 1）
 const pruned = await SemanticPruningTool.call({
-  primitiveId: primitives.id,
+  primitives: primitives,
   candidates: allCandidates
 })
 
 // 3. 代理评估（Gate 2）
 const evaluated = await ProxyEvaluationTool.call({
+  primitives: primitives,
   candidates: pruned.passed,
   samplingStrategy: { method: 'random', sampleRate: 0.05 }
 })
 
 // 4. Beam Search（Gate 3）
 const searched = await BeamSearchFeaturesTool.call({
+  primitives: primitives,
   candidates: evaluated.passed,
   beamWidth: 50,
   budget: { total: 500 }
@@ -1278,13 +1249,14 @@ const searched = await BeamSearchFeaturesTool.call({
 
 // 5. 生成特征
 const features = await GenerateWindowFeaturesTool.call({
-  primitiveId: primitives.id,
+  primitives: primitives,
   selectedFeatures: searched.selectedFeatures
 })
 
 // 6. 质量检查 + 自动重构
 if (features.passRate < 0.05) {
   const refinement = await FeatureRefinementAgent.call({
+    primitives: primitives,
     qualityReport: features.qualityReport
   })
   // 应用改进建议，重新生成
@@ -1297,7 +1269,7 @@ if (features.passRate < 0.05) {
 
 | 阶段 | 候选数 | 成本 | 工具 |
 |------|--------|------|------|
-| 初始 | 210,000 | - | DefineFeaturePrimitives |
+| 配置 | - | - | feature_primitives.yaml |
 | Gate 1 | 50,000 | 零算力 | SemanticPruning |
 | Gate 2 | 5,000 | 1-5% 算力 | ProxyEvaluation |
 | Gate 3 | 500 | O(150) | BeamSearch |
