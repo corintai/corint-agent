@@ -25,6 +25,9 @@ async function tryLoadDuckDb(): Promise<any | null> {
 }
 
 const MAX_LIMIT = 1000
+const DEFAULT_TIMEOUT_MS = 30000
+const MAX_TIMEOUT_MS = 300000
+const MAX_RENDER_ROWS = 50
 
 const inputSchema = z.strictObject({
   filePath: z
@@ -41,6 +44,11 @@ const inputSchema = z.strictObject({
     .optional()
     .default('auto')
     .describe('File format (auto-detect by default)'),
+  timeoutMs: z
+    .number()
+    .optional()
+    .default(DEFAULT_TIMEOUT_MS)
+    .describe('Query timeout in milliseconds (default: 30000, max: 300000)'),
 })
 
 type Input = z.infer<typeof inputSchema>
@@ -91,6 +99,28 @@ function ensureLimit(sql: string, limit: number): string {
   return `${sql.trim().replace(/;$/, '')} LIMIT ${capped}`
 }
 
+async function withTimeout<T>(
+  promise: Promise<T>,
+  timeoutMs: number,
+  onTimeout?: () => void,
+): Promise<T> {
+  const bounded = Math.min(Math.max(timeoutMs, 1000), MAX_TIMEOUT_MS)
+  let timeoutId: ReturnType<typeof setTimeout> | null = null
+  const timeoutPromise = new Promise<never>((_, reject) => {
+    timeoutId = setTimeout(() => {
+      try {
+        onTimeout?.()
+      } catch {}
+      reject(new Error(`Query timed out after ${bounded}ms`))
+    }, bounded)
+  })
+  try {
+    return await Promise.race([promise, timeoutPromise])
+  } finally {
+    if (timeoutId) clearTimeout(timeoutId)
+  }
+}
+
 function buildQuery(query: string, sourceExpression: string, limit: number): string {
   const trimmed = query.trim()
   if (!trimmed) {
@@ -137,12 +167,13 @@ function runAll(conn: any, sql: string): Promise<QueryResult> {
 async function runDuckDbCli(
   sql: string,
   abortSignal?: AbortSignal,
+  timeoutMs: number = DEFAULT_TIMEOUT_MS,
 ): Promise<QueryResult> {
   const result = await execFileNoThrow(
     'duckdb',
     ['-json', ':memory:', '-c', sql],
     abortSignal,
-    30000, // 30 second timeout
+    timeoutMs,
   )
 
   if (result.code !== 0) {
@@ -171,6 +202,7 @@ async function executeQuery(
   query: string,
   limit: number,
   format: FileFormat,
+  timeoutMs: number,
   abortSignal?: AbortSignal,
 ): Promise<Output> {
   const startTime = Date.now()
@@ -179,7 +211,7 @@ async function executeQuery(
   const fullQuery = buildQuery(query, sourceExpression, limit)
 
   if (!duckdb) {
-    const rows = await runDuckDbCli(fullQuery, abortSignal)
+    const rows = await runDuckDbCli(fullQuery, abortSignal, timeoutMs)
     const columns = rows.length > 0 ? Object.keys(rows[0]) : []
     return {
       columns,
@@ -193,7 +225,16 @@ async function executeQuery(
   const conn = db.connect()
 
   try {
-    const rows = await runAll(conn, fullQuery)
+    const rows = await withTimeout(
+      runAll(conn, fullQuery),
+      timeoutMs,
+      () => {
+        try {
+          conn.close()
+          db.close()
+        } catch {}
+      },
+    )
     const columns = rows.length > 0 ? Object.keys(rows[0]) : []
 
     return {
@@ -234,7 +275,7 @@ export const AnalyzeLocalFileTool: Tool<typeof inputSchema, Output> = {
     return !hasReadPermission(fullPath)
   },
   async validateInput(
-    { filePath, query }: Input,
+    { filePath, query, timeoutMs }: Input,
     _context?: ToolUseContext,
   ): Promise<ValidationResult> {
     const fullPath = normalizeFilePath(filePath)
@@ -280,6 +321,10 @@ export const AnalyzeLocalFileTool: Tool<typeof inputSchema, Output> = {
       }
     }
 
+    if (timeoutMs !== undefined && timeoutMs <= 0) {
+      return { result: false, message: 'timeoutMs must be a positive number' }
+    }
+
     return { result: true }
   },
   renderToolUseMessage({ filePath, query, limit }: Input, { verbose }) {
@@ -299,11 +344,16 @@ export const AnalyzeLocalFileTool: Tool<typeof inputSchema, Output> = {
       return `${header}\n${columns}\n\nNo data returned.`
     }
 
-    const rowsJson = JSON.stringify(output.rows, null, 2)
-    return `${header}\n${columns}\n\nData:\n${rowsJson}`
+    const previewRows = output.rows.slice(0, MAX_RENDER_ROWS)
+    const rowsJson = JSON.stringify(previewRows, null, 2)
+    const truncationNote =
+      output.rows.length > MAX_RENDER_ROWS
+        ? `\n\nShowing first ${MAX_RENDER_ROWS} rows.`
+        : ''
+    return `${header}\n${columns}\n\nData:\n${rowsJson}${truncationNote}`
   },
   async *call(
-    { filePath, query, limit, format }: Input,
+    { filePath, query, limit, format, timeoutMs }: Input,
     { abortController },
   ) {
     try {
@@ -326,6 +376,7 @@ export const AnalyzeLocalFileTool: Tool<typeof inputSchema, Output> = {
         query,
         limit || MAX_LIMIT,
         format || 'auto',
+        timeoutMs ?? DEFAULT_TIMEOUT_MS,
         abortController.signal,
       )
 
