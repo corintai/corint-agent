@@ -112,7 +112,6 @@ function writeLLMLogToFile(context: {
       logContent += `${JSON.stringify(responseContent, null, 2)}\n`
     }
 
-    logContent += `\nStop Reason: ${context.response?.stop_reason || context.response?.finish_reason || 'unknown'}\n`
     logContent += `\nRaw Response JSON:\n`
     logContent += `${subSeparator}\n`
     logContent += `${JSON.stringify(context.response, null, 2)}\n`
