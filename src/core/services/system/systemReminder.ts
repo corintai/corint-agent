@@ -66,7 +66,7 @@ class SystemReminderService {
     contextPresent: false,
     reminderCount: 0,
     config: {
-      todoEmptyReminder: true,
+      todoEmptyReminder: false,
       securityReminder: true,
       performanceReminder: true,
       maxRemindersPerSession: 10,

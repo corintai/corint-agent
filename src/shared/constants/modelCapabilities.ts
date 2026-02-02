@@ -55,6 +55,14 @@ const CHAT_COMPLETIONS_CAPABILITIES: ModelCapabilities = {
   },
 }
 
+const CHAT_COMPLETIONS_WITH_REASONING: ModelCapabilities = {
+  ...CHAT_COMPLETIONS_CAPABILITIES,
+  parameters: {
+    ...CHAT_COMPLETIONS_CAPABILITIES.parameters,
+    supportsReasoningEffort: true,
+  },
+}
+
 export const MODEL_CAPABILITIES_REGISTRY: Record<string, ModelCapabilities> = {
   'gpt-5': GPT5_CAPABILITIES,
   'gpt-5-mini': GPT5_CAPABILITIES,
@@ -123,6 +131,10 @@ export function inferModelCapabilities(
         supportsAllowedTools: false,
       },
     }
+  }
+
+  if (lowerName.includes('kimi') || lowerName.includes('moonshot')) {
+    return CHAT_COMPLETIONS_WITH_REASONING
   }
 
   if (lowerName.startsWith('o1') || lowerName.includes('o1-')) {

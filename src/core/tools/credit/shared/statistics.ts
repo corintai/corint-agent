@@ -14,11 +14,15 @@ export function median(values: number[]): number {
     : sorted[mid]
 }
 
-export function std(values: number[]): number {
+export function variance(values: number[]): number {
   if (values.length === 0) return 0
   const avg = mean(values)
   const squareDiffs = values.map(v => Math.pow(v - avg, 2))
-  return Math.sqrt(mean(squareDiffs))
+  return mean(squareDiffs)
+}
+
+export function std(values: number[]): number {
+  return Math.sqrt(variance(values))
 }
 
 export function quantile(values: number[], q: number): number {

@@ -186,13 +186,29 @@ export const getGitStatus = memoize(async (): Promise<string | null> => {
   }
 })
 
+export interface ContextOptions {
+  includeGitStatus?: boolean
+  includeDirectoryStructure?: boolean
+  includeReadme?: boolean
+  includeProjectDocs?: boolean
+}
+
 export const getContext = memoize(
-  async (): Promise<{
+  async (options?: ContextOptions): Promise<{
     [k: string]: string
   }> => {
     const codeStyle = getCodeStyle()
     const projectConfig = getCurrentProjectConfig()
     const dontCrawl = projectConfig.dontCrawlDirectory
+
+    // Default: include all context
+    const opts = {
+      includeGitStatus: options?.includeGitStatus ?? true,
+      includeDirectoryStructure: options?.includeDirectoryStructure ?? true,
+      includeReadme: options?.includeReadme ?? true,
+      includeProjectDocs: options?.includeProjectDocs ?? true,
+    }
+
     const [
       gitStatus,
       directoryStructure,
@@ -200,11 +216,15 @@ export const getContext = memoize(
       readme,
       projectDocs,
     ] = await Promise.all([
-      getGitStatus(),
-      dontCrawl ? Promise.resolve('') : getDirectoryStructure(),
-      dontCrawl ? Promise.resolve('') : getInstructionFilesNote(),
-      getReadme(),
-      getProjectDocs(),
+      opts.includeGitStatus ? getGitStatus() : Promise.resolve(null),
+      opts.includeDirectoryStructure && !dontCrawl
+        ? getDirectoryStructure()
+        : Promise.resolve(''),
+      opts.includeDirectoryStructure && !dontCrawl
+        ? getInstructionFilesNote()
+        : Promise.resolve(''),
+      opts.includeReadme ? getReadme() : Promise.resolve(null),
+      opts.includeProjectDocs ? getProjectDocs() : Promise.resolve(null),
     ])
     return {
       ...projectConfig.context,

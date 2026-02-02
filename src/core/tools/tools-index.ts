@@ -38,6 +38,19 @@ import { ComputePsiTool } from './credit/ComputePsiTool/ComputePsiTool'
 import { ComputeIvTool } from './credit/ComputeIvTool/ComputeIvTool'
 import { ComputeCoverageTool } from './credit/ComputeCoverageTool/ComputeCoverageTool'
 import { DetectSingleValueTool } from './credit/DetectSingleValueTool/DetectSingleValueTool'
+import { ComputeVarianceTool } from './credit/ComputeVarianceTool/ComputeVarianceTool'
+import { ComputeEntropyTool } from './credit/ComputeEntropyTool/ComputeEntropyTool'
+import { ComputeQuantileCollapseTool } from './credit/ComputeQuantileCollapseTool/ComputeQuantileCollapseTool'
+import { ComputeTemporalConsistencyTool } from './credit/ComputeTemporalConsistencyTool/ComputeTemporalConsistencyTool'
+import { DetectCollinearityTool } from './credit/DetectCollinearityTool/DetectCollinearityTool'
+import { DefineFeaturePrimitivesTool } from './credit/featureEngineering/DefineFeaturePrimitivesTool/DefineFeaturePrimitivesTool'
+import { SemanticPruningTool } from './credit/featureEngineering/SemanticPruningTool/SemanticPruningTool'
+import { ProxyEvaluationTool } from './credit/featureEngineering/ProxyEvaluationTool/ProxyEvaluationTool'
+import { BeamSearchFeaturesTool } from './credit/featureEngineering/BeamSearchFeaturesTool/BeamSearchFeaturesTool'
+import { GenerateWindowFeaturesTool } from './credit/featureEngineering/GenerateWindowFeaturesTool/GenerateWindowFeaturesTool'
+import { GenerateRatioFeaturesTool } from './credit/featureEngineering/GenerateRatioFeaturesTool/GenerateRatioFeaturesTool'
+import { GenerateCrossFeaturesTool } from './credit/featureEngineering/GenerateCrossFeaturesTool/GenerateCrossFeaturesTool'
+import { GenerateCreditFeaturesTool } from './credit/featureEngineering/GenerateCreditFeaturesTool/GenerateCreditFeaturesTool'
 
 export const getAllTools = (): Tool[] => [
   TaskTool as unknown as Tool,
@@ -77,6 +90,20 @@ export const getAllTools = (): Tool[] => [
   ComputeIvTool as unknown as Tool,
   ComputeCoverageTool as unknown as Tool,
   DetectSingleValueTool as unknown as Tool,
+  ComputeVarianceTool as unknown as Tool,
+  ComputeEntropyTool as unknown as Tool,
+  ComputeQuantileCollapseTool as unknown as Tool,
+  ComputeTemporalConsistencyTool as unknown as Tool,
+  DetectCollinearityTool as unknown as Tool,
+  // Feature engineering tools
+  DefineFeaturePrimitivesTool as unknown as Tool,
+  SemanticPruningTool as unknown as Tool,
+  ProxyEvaluationTool as unknown as Tool,
+  BeamSearchFeaturesTool as unknown as Tool,
+  GenerateWindowFeaturesTool as unknown as Tool,
+  GenerateRatioFeaturesTool as unknown as Tool,
+  GenerateCrossFeaturesTool as unknown as Tool,
+  GenerateCreditFeaturesTool as unknown as Tool,
 ]
 
 export const getTools = memoize(

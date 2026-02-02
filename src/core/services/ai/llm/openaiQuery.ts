@@ -24,6 +24,7 @@ import { normalizeContentFromAPI } from '@utils/messages'
 import { zodToJsonSchema } from 'zod-to-json-schema'
 import type { ToolUseContext } from '@tool'
 import { getCLISyspromptPrefix } from '@constants/prompts'
+import { getModelCapabilities } from '@constants/modelCapabilities'
 
 import { ModelAdapterFactory } from '../modelAdapterFactory'
 import { UnifiedRequestParams } from '@kode-types/modelCapabilities'
@@ -55,11 +56,29 @@ const SONNET_COST_PER_MILLION_PROMPT_CACHE_READ_TOKENS = 0.3
 
 function convertAnthropicMessagesToOpenAIMessages(
   messages: (UserMessage | AssistantMessage)[],
+  options?: {
+    includeReasoningContent?: boolean
+  },
 ): (
   | OpenAI.ChatCompletionMessageParam
   | OpenAI.ChatCompletionToolMessageParam
 )[] {
-  return convertAnthropicMessagesToOpenAIMessagesUtil(messages as any)
+  return convertAnthropicMessagesToOpenAIMessagesUtil(messages as any, options)
+}
+
+function shouldIncludeReasoningContent(
+  modelProfile: ModelProfile | null | undefined,
+  reasoningEffort: 'low' | 'medium' | 'high' | null,
+): boolean {
+  if (!reasoningEffort || !modelProfile) return false
+  const provider = modelProfile.provider?.toLowerCase()
+  if (provider === 'kimi' || provider === 'moonshot') return true
+  const modelName = modelProfile.modelName?.toLowerCase() || ''
+  if (modelName.includes('kimi') || modelName.includes('moonshot')) {
+    return true
+  }
+  const baseURL = modelProfile.baseURL?.toLowerCase() || ''
+  return baseURL.includes('moonshot')
 }
 
 function messageReducer(
@@ -464,7 +483,14 @@ export async function queryOpenAI(
       }) as OpenAI.ChatCompletionMessageParam,
   )
 
-  const openaiMessages = convertAnthropicMessagesToOpenAIMessages(messages)
+  const reasoningEffort = await getReasoningEffort(modelProfile, messages)
+  const includeReasoningContent = shouldIncludeReasoningContent(
+    modelProfile,
+    reasoningEffort,
+  )
+  const openaiMessages = convertAnthropicMessagesToOpenAIMessages(messages, {
+    includeReasoningContent,
+  })
 
   logSystemPromptConstruction({
     basePrompt: systemPrompt.join('\n'),
@@ -506,7 +532,6 @@ export async function queryOpenAI(
 
       if (shouldUseResponses) {
         const adapter = ModelAdapterFactory.createAdapter(modelProfile)
-        const reasoningEffort = await getReasoningEffort(modelProfile, messages)
 
         let verbosity: 'low' | 'medium' | 'high' = 'medium'
         const modelNameLower = modelProfile.modelName.toLowerCase()
@@ -644,8 +669,8 @@ export async function queryOpenAI(
           opts.tools = toolSchemas
           opts.tool_choice = 'auto'
         }
-        const reasoningEffort = await getReasoningEffort(modelProfile, messages)
-        if (reasoningEffort) {
+        const capabilities = getModelCapabilities(modelProfile?.modelName || model)
+        if (reasoningEffort && capabilities.parameters.supportsReasoningEffort) {
           opts.reasoning_effort = reasoningEffort
         }
         requestPayload = opts

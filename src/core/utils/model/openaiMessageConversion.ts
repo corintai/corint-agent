@@ -36,11 +36,15 @@ type AnthropicLikeMessage = {
 
 export function convertAnthropicMessagesToOpenAIMessages(
   messages: AnthropicLikeMessage[],
+  options?: {
+    includeReasoningContent?: boolean
+  },
 ): (
   | OpenAI.ChatCompletionMessageParam
   | OpenAI.ChatCompletionToolMessageParam
 )[] {
   const openaiMessages: any[] = []
+  const includeReasoningContent = options?.includeReasoningContent ?? false
 
   const toolResults: Record<string, OpenAI.ChatCompletionToolMessageParam> = {}
 
@@ -60,6 +64,7 @@ export function convertAnthropicMessagesToOpenAIMessages(
     const assistantTextParts: string[] = []
     const assistantToolCalls: any[] = []
     const assistantToolCallIds = new Set<string>()
+    const assistantReasoningParts: string[] = []
 
     for (const block of blocks) {
       if (block.type === 'text') {
@@ -70,6 +75,17 @@ export function convertAnthropicMessagesToOpenAIMessages(
           userContentParts.push({ type: 'text', text })
         } else if (role === 'assistant') {
           assistantTextParts.push(text)
+        }
+        continue
+      }
+
+      if (block.type === 'thinking') {
+        const thinking =
+          typeof (block as any).thinking === 'string'
+            ? (block as any).thinking
+            : ''
+        if (thinking && includeReasoningContent && role === 'assistant') {
+          assistantReasoningParts.push(thinking)
         }
         continue
       }
@@ -142,16 +158,27 @@ export function convertAnthropicMessagesToOpenAIMessages(
 
     if (role === 'assistant') {
       const text = assistantTextParts.filter(Boolean).join('\n')
+      const reasoningContent = assistantReasoningParts
+        .filter(Boolean)
+        .join('\n\n')
       if (assistantToolCalls.length > 0) {
-        openaiMessages.push({
+        const assistantMessage: any = {
           role: 'assistant',
           content: text ? text : undefined,
           tool_calls: assistantToolCalls,
-        } as any)
+        }
+        if (includeReasoningContent) {
+          assistantMessage.reasoning_content = reasoningContent || ''
+        }
+        openaiMessages.push(assistantMessage as any)
         continue
       }
       if (text) {
-        openaiMessages.push({ role: 'assistant', content: text } as any)
+        const assistantMessage: any = { role: 'assistant', content: text }
+        if (includeReasoningContent && reasoningContent) {
+          assistantMessage.reasoning_content = reasoningContent
+        }
+        openaiMessages.push(assistantMessage as any)
       }
     }
   }

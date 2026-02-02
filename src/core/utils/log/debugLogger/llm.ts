@@ -46,16 +46,41 @@ function writeLLMLogToFile(context: {
     if (context.usage) {
       logContent += ` | Tokens: ${context.usage.inputTokens} in → ${context.usage.outputTokens} out`
     }
+    logContent += '\n'
+
+    // Extract and display user prompt
+    const userMessages = context.messages.filter((msg: any) => msg.role === 'user')
+    if (userMessages.length > 0) {
+      const lastUserMessage = userMessages[userMessages.length - 1]
+      let userPrompt = ''
+      if (typeof lastUserMessage.content === 'string') {
+        userPrompt = lastUserMessage.content
+      } else if (Array.isArray(lastUserMessage.content)) {
+        const textBlocks = lastUserMessage.content.filter((block: any) => block.type === 'text')
+        if (textBlocks.length > 0) {
+          userPrompt = textBlocks[0].text || ''
+        }
+      }
+      // Remove system-reminder tags and their content
+      if (userPrompt) {
+        userPrompt = userPrompt.replace(/<system-reminder>[\s\S]*?<\/system-reminder>/g, '').trim()
+      }
+      if (userPrompt) {
+        logContent += `\n${subSeparator}\n`
+        logContent += `User Prompt:\n${userPrompt}\n`
+      }
+    }
+
     const requestPayload =
       context.request ?? {
         systemPrompt: context.systemPrompt,
         messages: context.messages,
       }
-    logContent += `${separator}\n`
+    logContent += `\n${subSeparator}\n`
     logContent += `REQUEST RAW JSON:\n`
-    logContent += `${separator}\n`
+    logContent += `${subSeparator}\n`
     logContent += `${JSON.stringify(requestPayload, null, 2)}\n`
-    logContent += `${separator}\n\n`
+    logContent += `${subSeparator}\n\n`
 
     // Response
     logContent += `\n${subSeparator}\n`
