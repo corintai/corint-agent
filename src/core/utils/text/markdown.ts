@@ -4,6 +4,8 @@ import chalk from 'chalk'
 import { EOL } from 'os'
 import { highlight, supportsLanguage } from 'cli-highlight'
 import { logError } from '@utils/log'
+import stripAnsi from 'strip-ansi'
+import Table from 'cli-table3'
 
 export function applyMarkdown(content: string): string {
   return marked
@@ -66,6 +68,8 @@ function format(
       return `[Image: ${token.title}: ${token.href}]`
     case 'link':
       return chalk.blue(token.href)
+    case 'table':
+      return formatTable(token)
     case 'list': {
       return token.items
         .map((_: Token, index: number) =>
@@ -208,4 +212,50 @@ function getListNumber(listDepth: number, orderedListNumber: number): string {
     default:
       return orderedListNumber.toString()
   }
+}
+
+function formatTable(token: Token): string {
+  const table = token as any
+  const headerCells = (table.header || []).map((cell: any) =>
+    renderTableCell(cell),
+  )
+  const rowCells = (table.rows || []).map((row: any[]) =>
+    row.map(cell => renderTableCell(cell)),
+  )
+  const aligns: Array<'left' | 'center' | 'right' | null> = table.align || []
+  const colAligns = aligns.map(alignment => alignment || 'left')
+
+  const tableView = new Table({
+    head: headerCells,
+    colAligns,
+    style: { head: ['bold'] },
+    chars: {
+      mid: '─',
+      'left-mid': '├',
+      'mid-mid': '┼',
+      'right-mid': '┤',
+    },
+  })
+
+  for (const row of rowCells) {
+    tableView.push(row)
+  }
+
+  return `${tableView.toString()}${EOL}`
+}
+
+function renderTableCell(cell: any): string {
+  if (Array.isArray(cell?.tokens) && cell.tokens.length > 0) {
+    return normalizeTableCell(
+      cell.tokens.map((token: Token) => format(token)).join(''),
+    )
+  }
+  if (typeof cell?.text === 'string') {
+    return normalizeTableCell(cell.text)
+  }
+  return ''
+}
+
+function normalizeTableCell(text: string): string {
+  return stripAnsi(text).replace(/\s*\n\s*/g, ' ').trim()
 }
