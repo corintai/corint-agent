@@ -86,75 +86,147 @@ export const ComputeVarianceTool: Tool<typeof inputSchema, Output> = {
     { datasource, filePath }: Input,
     _context?: ToolUseContext,
   ): Promise<ValidationResult> {
-    return validateDataSource(datasource, filePath)
+    const validation = validateDataSource(datasource, filePath)
+    if (!validation.valid) {
+      return { result: false, message: validation.error }
+    }
+    return { result: true }
   },
-  async execute(input: Input, _context?: ToolUseContext): Promise<Output> {
+  renderToolUseMessage(
+    { datasource, table, filePath, features }: Input,
+    { verbose },
+  ) {
+    const source = datasource ? `${datasource}.${table}` : filePath
+    if (verbose) {
+      return `ComputeVariance: ${source} (${features.length} features)`
+    }
+    return 'ComputeVariance'
+  },
+  renderResultForAssistant(output: Output): string {
+    return [
+      `Variance Analysis:`,
+      `- Constant: ${output.summary.constantCount}`,
+      `- Low variance: ${output.summary.lowVarianceCount}`,
+      `- Normal: ${output.summary.normalCount}`,
+    ].join('\n')
+  },
+  async *call(input: Input, { abortController }) {
+    if (abortController.signal.aborted) {
+      const emptyResult: Output = {
+        variance: [],
+        summary: {
+          totalFeatures: 0,
+          constantCount: 0,
+          lowVarianceCount: 0,
+          normalCount: 0,
+          constantFeatures: [],
+          lowVarianceFeatures: [],
+        },
+      }
+      yield {
+        type: 'result' as const,
+        data: emptyResult,
+        resultForAssistant: 'Operation cancelled',
+      }
+      return
+    }
+
     const { datasource, table, filePath, features, threshold = 1e-6 } = input
 
     // Load data
-    const data = await loadData({ datasource, table, filePath })
+    try {
+      const data = await loadData({ datasource, table, filePath })
 
-    const results: VarianceResult[] = []
-    let constantCount = 0
-    let lowVarianceCount = 0
-    let normalCount = 0
-    const constantFeatures: string[] = []
-    const lowVarianceFeatures: string[] = []
+      const results: VarianceResult[] = []
+      let constantCount = 0
+      let lowVarianceCount = 0
+      let normalCount = 0
+      const constantFeatures: string[] = []
+      const lowVarianceFeatures: string[] = []
 
-    for (const feature of features) {
-      const values = getColumnValues(data, feature)
-      const numericValues = values.map(parseNumeric).filter((v): v is number => v !== null)
+      for (const feature of features) {
+        const values = getColumnValues(data, feature)
+        const numericValues = values
+          .map(parseNumeric)
+          .filter((v): v is number => v !== null)
 
-      if (numericValues.length === 0) {
+        if (numericValues.length === 0) {
+          results.push({
+            feature,
+            variance: 0,
+            std: 0,
+            mean: 0,
+            status: 'constant',
+            recommendation: 'Drop - no valid numeric values',
+          })
+          constantCount++
+          constantFeatures.push(feature)
+          continue
+        }
+
+        const meanValue = mean(numericValues)
+        const varianceValue = variance(numericValues)
+        const stdValue = std(numericValues)
+        const status = getVarianceStatus(varianceValue, threshold)
+        const recommendation = getRecommendation(status)
+
         results.push({
           feature,
-          variance: 0,
-          std: 0,
-          mean: 0,
-          status: 'constant',
-          recommendation: 'Drop - no valid numeric values',
+          variance: varianceValue,
+          std: stdValue,
+          mean: meanValue,
+          status,
+          recommendation,
         })
-        constantCount++
-        constantFeatures.push(feature)
-        continue
+
+        if (status === 'constant') {
+          constantCount++
+          constantFeatures.push(feature)
+        } else if (status === 'low_variance') {
+          lowVarianceCount++
+          lowVarianceFeatures.push(feature)
+        } else {
+          normalCount++
+        }
       }
 
-      const meanValue = mean(numericValues)
-      const varianceValue = variance(numericValues)
-      const stdValue = std(numericValues)
-      const status = getVarianceStatus(varianceValue, threshold)
-      const recommendation = getRecommendation(status)
-
-      results.push({
-        feature,
-        variance: varianceValue,
-        std: stdValue,
-        mean: meanValue,
-        status,
-        recommendation,
-      })
-
-      if (status === 'constant') {
-        constantCount++
-        constantFeatures.push(feature)
-      } else if (status === 'low_variance') {
-        lowVarianceCount++
-        lowVarianceFeatures.push(feature)
-      } else {
-        normalCount++
+      const result: Output = {
+        variance: results,
+        summary: {
+          totalFeatures: features.length,
+          constantCount,
+          lowVarianceCount,
+          normalCount,
+          constantFeatures,
+          lowVarianceFeatures,
+        },
       }
-    }
 
-    return {
-      variance: results,
-      summary: {
-        totalFeatures: features.length,
-        constantCount,
-        lowVarianceCount,
-        normalCount,
-        constantFeatures,
-        lowVarianceFeatures,
-      },
+      yield {
+        type: 'result' as const,
+        data: result,
+        resultForAssistant: this.renderResultForAssistant(result),
+      }
+    } catch (error: unknown) {
+      const errorMessage =
+        error instanceof Error ? error.message : 'Unknown error'
+      const errorResult: Output = {
+        variance: [],
+        summary: {
+          totalFeatures: 0,
+          constantCount: 0,
+          lowVarianceCount: 0,
+          normalCount: 0,
+          constantFeatures: [],
+          lowVarianceFeatures: [],
+        },
+      }
+
+      yield {
+        type: 'result' as const,
+        data: errorResult,
+        resultForAssistant: `Variance computation failed: ${errorMessage}`,
+      }
     }
   },
 }

@@ -1,5 +1,7 @@
+import { randomUUID } from 'crypto'
 import type { Tool } from '@tool'
-import type { Message } from '@agent/orchestrator'
+import type { Message, UserMessage } from '@query'
+import type { UUID } from '@kode-types/common'
 import { queryLLM } from '@services/llmLazy'
 import { debug } from '@utils/log/debugLogger'
 import {
@@ -19,14 +21,17 @@ interface ToolSelectionResult {
  * Extract text content from a message
  */
 function extractTextContent(message: Message): string {
-  if (!message?.message?.content) return ''
+  const payload =
+    message.type === 'progress' ? message.content.message : message.message
 
-  if (typeof message.message.content === 'string') {
-    return message.message.content
+  if (!payload?.content) return ''
+
+  if (typeof payload.content === 'string') {
+    return payload.content
   }
 
-  if (Array.isArray(message.message.content)) {
-    const textBlocks = message.message.content.filter((b: any) => b.type === 'text')
+  if (Array.isArray(payload.content)) {
+    const textBlocks = payload.content.filter((b: any) => b.type === 'text')
     return textBlocks.map((b: any) => b.text || '').join('\n')
   }
 
@@ -44,8 +49,8 @@ export async function selectToolsForRequest(
   const startTime = Date.now()
 
   // Separate core and optional tools
-  const coreTools = allTools.filter(t => CORE_TOOLS.includes(t.name as any))
-  const optionalTools = allTools.filter(t => !CORE_TOOLS.includes(t.name as any))
+  const coreTools = allTools.filter(t => CORE_TOOLS.includes(t.name))
+  const optionalTools = allTools.filter(t => !CORE_TOOLS.includes(t.name))
 
   // Extract recent conversation context (last 3 rounds = 6 messages)
   const recentMessages = messages.slice(-6)
@@ -61,9 +66,12 @@ export async function selectToolsForRequest(
     .join('\n')
 
   // Build category summary for quick model
-  const categorySummary = Object.entries(TOOL_CATEGORIES).map(([category, tools]) => ({
+  const categoryEntries = Object.entries(TOOL_CATEGORIES) as Array<
+    [ToolCategory, readonly string[]]
+  >
+  const categorySummary = categoryEntries.map(([category, tools]) => ({
     category,
-    description: getCategoryDescription(category as ToolCategory),
+    description: getCategoryDescription(category),
     toolCount: tools.length,
     examples: tools.slice(0, 3).join(', '),
   }))
@@ -93,17 +101,17 @@ Examples:
 Return only valid JSON, no other text.`
 
   try {
+    const selectorMessage: UserMessage = {
+      type: 'user',
+      uuid: randomUUID() as UUID,
+      message: {
+        role: 'user',
+        content: prompt,
+      },
+    }
+
     const response = await queryLLM(
-      [
-        {
-          type: 'user',
-          uuid: 'tool-selector',
-          message: {
-            role: 'user',
-            content: prompt,
-          },
-        },
-      ],
+      [selectorMessage],
       ['You are a tool category selector. Analyze user requests and return only JSON.'],
       0,
       [],
@@ -117,21 +125,13 @@ Return only valid JSON, no other text.`
 
     // Extract content from response
     let content = ''
-    if (response.message?.content) {
-      content = typeof response.message.content === 'string'
-        ? response.message.content
-        : Array.isArray(response.message.content)
-          ? response.message.content.find((b: any) => b.type === 'text')?.text || '{}'
+    const responseContent = response.message?.content
+    content =
+      typeof responseContent === 'string'
+        ? responseContent
+        : Array.isArray(responseContent)
+          ? responseContent.find((b: any) => b.type === 'text')?.text || '{}'
           : '{}'
-    } else if (response.content) {
-      content = typeof response.content === 'string'
-        ? response.content
-        : Array.isArray(response.content)
-          ? response.content.find((b: any) => b.type === 'text')?.text || '{}'
-          : '{}'
-    } else {
-      content = '{}'
-    }
 
     // Extract JSON from response
     const jsonMatch = content.match(/\{[\s\S]*\}/)
@@ -142,10 +142,10 @@ Return only valid JSON, no other text.`
 
     // Filter tools by selected categories
     const selectedOptionalTools = optionalTools.filter(tool => {
-      const category = Object.entries(TOOL_CATEGORIES).find(([_, tools]) =>
-        tools.includes(tool.name as any),
+      const category = categoryEntries.find(([_, tools]) =>
+        tools.includes(tool.name),
       )?.[0]
-      return category && selectedCategories.includes(category as ToolCategory)
+      return category ? selectedCategories.includes(category) : false
     })
 
     const selectedTools = [...coreTools, ...selectedOptionalTools]

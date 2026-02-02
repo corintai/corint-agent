@@ -118,9 +118,49 @@ export const ComputeTemporalConsistencyTool: Tool<typeof inputSchema, Output> = 
     { datasource, filePath }: Input,
     _context?: ToolUseContext,
   ): Promise<ValidationResult> {
-    return validateDataSource(datasource, filePath)
+    const validation = validateDataSource(datasource, filePath)
+    if (!validation.valid) {
+      return { result: false, message: validation.error }
+    }
+    return { result: true }
   },
-  async execute(input: Input, _context?: ToolUseContext): Promise<Output> {
+  renderToolUseMessage(
+    { datasource, table, filePath, features, timeColumn }: Input,
+    { verbose },
+  ) {
+    const source = datasource ? `${datasource}.${table}` : filePath
+    if (verbose) {
+      return `ComputeTemporalConsistency: ${source} (${features.length} features, time=${timeColumn})`
+    }
+    return 'ComputeTemporalConsistency'
+  },
+  renderResultForAssistant(output: Output): string {
+    return [
+      `Temporal Consistency Analysis:`,
+      `- Inconsistent: ${output.summary.inconsistentCount}/${output.summary.totalFeatures}`,
+      `- Avg correlation: ${output.summary.avgCorrelation.toFixed(3)}`,
+    ].join('\n')
+  },
+  async *call(input: Input, { abortController }) {
+    if (abortController.signal.aborted) {
+      const emptyResult: Output = {
+        temporalConsistency: [],
+        summary: {
+          totalFeatures: 0,
+          inconsistentCount: 0,
+          consistentCount: 0,
+          inconsistentFeatures: [],
+          avgCorrelation: 0,
+        },
+      }
+      yield {
+        type: 'result' as const,
+        data: emptyResult,
+        resultForAssistant: 'Operation cancelled',
+      }
+      return
+    }
+
     const {
       datasource,
       table,
@@ -133,111 +173,145 @@ export const ComputeTemporalConsistencyTool: Tool<typeof inputSchema, Output> = 
     } = input
 
     // Load data
-    const data = await loadData({ datasource, table, filePath })
+    try {
+      const data = await loadData({ datasource, table, filePath })
 
-    // Parse timestamps
-    const timestamps = getColumnValues(data, timeColumn)
-      .map(parseDate)
-      .filter((d): d is Date => d !== null)
+      // Parse timestamps
+      const timestamps = getColumnValues(data, timeColumn)
+        .map(parseDate)
+        .filter((d): d is Date => d !== null)
 
-    if (timestamps.length === 0) {
-      throw new Error(`No valid timestamps found in column: ${timeColumn}`)
-    }
+      if (timestamps.length === 0) {
+        throw new Error(`No valid timestamps found in column: ${timeColumn}`)
+      }
 
-    const maxDate = new Date(Math.max(...timestamps.map(d => d.getTime())))
-    const shortWindowStart = new Date(maxDate.getTime() - shortWindow * 24 * 60 * 60 * 1000)
-    const longWindowStart = new Date(maxDate.getTime() - longWindow * 24 * 60 * 60 * 1000)
+      const maxDate = new Date(Math.max(...timestamps.map(d => d.getTime())))
+      const shortWindowStart = new Date(
+        maxDate.getTime() - shortWindow * 24 * 60 * 60 * 1000,
+      )
+      const longWindowStart = new Date(
+        maxDate.getTime() - longWindow * 24 * 60 * 60 * 1000,
+      )
 
-    const results: TemporalConsistencyResult[] = []
-    let inconsistentCount = 0
-    let consistentCount = 0
-    const inconsistentFeatures: string[] = []
-    let totalCorrelation = 0
+      const results: TemporalConsistencyResult[] = []
+      let inconsistentCount = 0
+      let consistentCount = 0
+      const inconsistentFeatures: string[] = []
+      let totalCorrelation = 0
 
-    for (const feature of features) {
-      const featureValues = getColumnValues(data, feature)
-      const timeValues = getColumnValues(data, timeColumn)
+      for (const feature of features) {
+        const featureValues = getColumnValues(data, feature)
+        const timeValues = getColumnValues(data, timeColumn)
 
-      // Split into short and long windows
-      const shortWindowValues: number[] = []
-      const longWindowValues: number[] = []
+        // Split into short and long windows
+        const shortWindowValues: number[] = []
+        const longWindowValues: number[] = []
 
-      for (let i = 0; i < timeValues.length; i++) {
-        const date = parseDate(timeValues[i])
-        const value = parseNumeric(featureValues[i])
+        for (let i = 0; i < timeValues.length; i++) {
+          const date = parseDate(timeValues[i])
+          const value = parseNumeric(featureValues[i])
 
-        if (date && value !== null) {
-          if (date >= shortWindowStart) {
-            shortWindowValues.push(value)
+          if (date && value !== null) {
+            if (date >= shortWindowStart) {
+              shortWindowValues.push(value)
+            }
+            if (date >= longWindowStart) {
+              longWindowValues.push(value)
+            }
           }
-          if (date >= longWindowStart) {
-            longWindowValues.push(value)
-          }
+        }
+
+        if (shortWindowValues.length < 2 || longWindowValues.length < 2) {
+          results.push({
+            feature,
+            correlation: 0,
+            shortWindowMean: 0,
+            longWindowMean: 0,
+            shortWindowStd: 0,
+            longWindowStd: 0,
+            status: 'inconsistent',
+            recommendation: 'Drop - insufficient data in time windows',
+          })
+          inconsistentCount++
+          inconsistentFeatures.push(feature)
+          continue
+        }
+
+        // Compute statistics
+        const shortMean = mean(shortWindowValues)
+        const longMean = mean(longWindowValues)
+        const shortStd = std(shortWindowValues)
+        const longStd = std(longWindowValues)
+
+        // Compute correlation (using overlapping samples)
+        const minLength = Math.min(
+          shortWindowValues.length,
+          longWindowValues.length,
+        )
+        const correlation = pearsonCorrelation(
+          shortWindowValues.slice(0, minLength),
+          longWindowValues.slice(0, minLength),
+        )
+
+        const status = getConsistencyStatus(correlation, threshold)
+        const recommendation = getRecommendation(status)
+
+        results.push({
+          feature,
+          correlation,
+          shortWindowMean: shortMean,
+          longWindowMean: longMean,
+          shortWindowStd: shortStd,
+          longWindowStd: longStd,
+          status,
+          recommendation,
+        })
+
+        totalCorrelation += Math.abs(correlation)
+
+        if (status === 'inconsistent') {
+          inconsistentCount++
+          inconsistentFeatures.push(feature)
+        } else {
+          consistentCount++
         }
       }
 
-      if (shortWindowValues.length < 2 || longWindowValues.length < 2) {
-        results.push({
-          feature,
-          correlation: 0,
-          shortWindowMean: 0,
-          longWindowMean: 0,
-          shortWindowStd: 0,
-          longWindowStd: 0,
-          status: 'inconsistent',
-          recommendation: 'Drop - insufficient data in time windows',
-        })
-        inconsistentCount++
-        inconsistentFeatures.push(feature)
-        continue
+      const result: Output = {
+        temporalConsistency: results,
+        summary: {
+          totalFeatures: features.length,
+          inconsistentCount,
+          consistentCount,
+          inconsistentFeatures,
+          avgCorrelation:
+            features.length > 0 ? totalCorrelation / features.length : 0,
+        },
       }
 
-      // Compute statistics
-      const shortMean = mean(shortWindowValues)
-      const longMean = mean(longWindowValues)
-      const shortStd = std(shortWindowValues)
-      const longStd = std(longWindowValues)
-
-      // Compute correlation (using overlapping samples)
-      const minLength = Math.min(shortWindowValues.length, longWindowValues.length)
-      const correlation = pearsonCorrelation(
-        shortWindowValues.slice(0, minLength),
-        longWindowValues.slice(0, minLength),
-      )
-
-      const status = getConsistencyStatus(correlation, threshold)
-      const recommendation = getRecommendation(status)
-
-      results.push({
-        feature,
-        correlation,
-        shortWindowMean: shortMean,
-        longWindowMean: longMean,
-        shortWindowStd: shortStd,
-        longWindowStd: longStd,
-        status,
-        recommendation,
-      })
-
-      totalCorrelation += Math.abs(correlation)
-
-      if (status === 'inconsistent') {
-        inconsistentCount++
-        inconsistentFeatures.push(feature)
-      } else {
-        consistentCount++
+      yield {
+        type: 'result' as const,
+        data: result,
+        resultForAssistant: this.renderResultForAssistant(result),
       }
-    }
-
-    return {
-      temporalConsistency: results,
-      summary: {
-        totalFeatures: features.length,
-        inconsistentCount,
-        consistentCount,
-        inconsistentFeatures,
-        avgCorrelation: features.length > 0 ? totalCorrelation / features.length : 0,
-      },
+    } catch (error: unknown) {
+      const errorMessage =
+        error instanceof Error ? error.message : 'Unknown error'
+      const errorResult: Output = {
+        temporalConsistency: [],
+        summary: {
+          totalFeatures: 0,
+          inconsistentCount: 0,
+          consistentCount: 0,
+          inconsistentFeatures: [],
+          avgCorrelation: 0,
+        },
+      }
+      yield {
+        type: 'result' as const,
+        data: errorResult,
+        resultForAssistant: `Temporal consistency computation failed: ${errorMessage}`,
+      }
     }
   },
 }

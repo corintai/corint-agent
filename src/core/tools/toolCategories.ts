@@ -3,7 +3,7 @@
  * Core tools are always included, optional tools are selected based on user intent
  */
 
-export const CORE_TOOLS = [
+export const CORE_TOOLS: readonly string[] = [
   // File operations (essential)
   'Read',
   'Edit',
@@ -40,7 +40,7 @@ export const CORE_TOOLS = [
   // Network operations
   'WebSearch',
   'WebFetch',
-] as const
+]
 
 export const TOOL_CATEGORIES = {
   // Data query and analysis
@@ -90,12 +90,15 @@ export const TOOL_CATEGORIES = {
 export type ToolCategory = keyof typeof TOOL_CATEGORIES
 
 export function getToolCategory(toolName: string): ToolCategory | 'core' | null {
-  if (CORE_TOOLS.includes(toolName as any)) {
+  if (CORE_TOOLS.includes(toolName)) {
     return 'core'
   }
 
-  for (const [category, tools] of Object.entries(TOOL_CATEGORIES)) {
-    if (tools.includes(toolName as any)) {
+  const entries = Object.entries(TOOL_CATEGORIES) as Array<
+    [ToolCategory, readonly string[]]
+  >
+  for (const [category, tools] of entries) {
+    if (tools.includes(toolName)) {
       return category as ToolCategory
     }
   }

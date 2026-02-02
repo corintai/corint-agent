@@ -116,78 +116,148 @@ export const DetectCollinearityTool: Tool<typeof inputSchema, Output> = {
     { datasource, filePath }: Input,
     _context?: ToolUseContext,
   ): Promise<ValidationResult> {
-    return validateDataSource(datasource, filePath)
+    const validation = validateDataSource(datasource, filePath)
+    if (!validation.valid) {
+      return { result: false, message: validation.error }
+    }
+    return { result: true }
   },
-  async execute(input: Input, _context?: ToolUseContext): Promise<Output> {
+  renderToolUseMessage(
+    { datasource, table, filePath, features }: Input,
+    { verbose },
+  ) {
+    const source = datasource ? `${datasource}.${table}` : filePath
+    if (verbose) {
+      return `DetectCollinearity: ${source} (${features.length} features)`
+    }
+    return 'DetectCollinearity'
+  },
+  renderResultForAssistant(output: Output): string {
+    return [
+      `Collinearity Analysis:`,
+      `- High correlation pairs: ${output.summary.highCollinearCount}`,
+      `- Recommended removals: ${output.summary.recommendedRemoval.length}`,
+    ].join('\n')
+  },
+  async *call(input: Input, { abortController }) {
+    if (abortController.signal.aborted) {
+      const emptyResult: Output = {
+        collinearPairs: [],
+        summary: {
+          totalPairs: 0,
+          highCollinearCount: 0,
+          recommendedKeep: [],
+          recommendedRemoval: [],
+        },
+      }
+      yield {
+        type: 'result' as const,
+        data: emptyResult,
+        resultForAssistant: 'Operation cancelled',
+      }
+      return
+    }
+
     const { datasource, table, filePath, features, threshold = 0.8 } = input
 
     // Load data
-    const data = await loadData({ datasource, table, filePath })
+    try {
+      const data = await loadData({ datasource, table, filePath })
 
-    // Parse all features
-    const featureData: Map<string, number[]> = new Map()
+      // Parse all features
+      const featureData: Map<string, number[]> = new Map()
 
-    for (const feature of features) {
-      const values = getColumnValues(data, feature)
-      const numericValues = values.map(parseNumeric).filter((v): v is number => v !== null)
+      for (const feature of features) {
+        const values = getColumnValues(data, feature)
+        const numericValues = values
+          .map(parseNumeric)
+          .filter((v): v is number => v !== null)
 
-      if (numericValues.length > 0) {
-        featureData.set(feature, numericValues)
+        if (numericValues.length > 0) {
+          featureData.set(feature, numericValues)
+        }
       }
-    }
 
-    // Compute pairwise correlations
-    const collinearPairs: CollinearityPair[] = []
-    const featureList = Array.from(featureData.keys())
-    const toRemove = new Set<string>()
+      // Compute pairwise correlations
+      const collinearPairs: CollinearityPair[] = []
+      const featureList = Array.from(featureData.keys())
+      const toRemove = new Set<string>()
 
-    for (let i = 0; i < featureList.length; i++) {
-      for (let j = i + 1; j < featureList.length; j++) {
-        const feature1 = featureList[i]
-        const feature2 = featureList[j]
+      for (let i = 0; i < featureList.length; i++) {
+        for (let j = i + 1; j < featureList.length; j++) {
+          const feature1 = featureList[i]
+          const feature2 = featureList[j]
 
-        const values1 = featureData.get(feature1)!
-        const values2 = featureData.get(feature2)!
+          const values1 = featureData.get(feature1)!
+          const values2 = featureData.get(feature2)!
 
-        // Align lengths
-        const minLength = Math.min(values1.length, values2.length)
-        const correlation = pearsonCorrelation(
-          values1.slice(0, minLength),
-          values2.slice(0, minLength),
-        )
+          // Align lengths
+          const minLength = Math.min(values1.length, values2.length)
+          const correlation = pearsonCorrelation(
+            values1.slice(0, minLength),
+            values2.slice(0, minLength),
+          )
 
-        if (Math.abs(correlation) >= threshold) {
-          const { recommendation, reason } = getRecommendation(feature1, feature2, correlation)
+          if (Math.abs(correlation) >= threshold) {
+            const { recommendation, reason } = getRecommendation(
+              feature1,
+              feature2,
+              correlation,
+            )
 
-          collinearPairs.push({
-            feature1,
-            feature2,
-            correlation,
-            recommendation,
-            reason,
-          })
+            collinearPairs.push({
+              feature1,
+              feature2,
+              correlation,
+              recommendation,
+              reason,
+            })
 
-          // Track features to remove
-          if (recommendation === 'keep_feature1') {
-            toRemove.add(feature2)
-          } else if (recommendation === 'keep_feature2') {
-            toRemove.add(feature1)
+            // Track features to remove
+            if (recommendation === 'keep_feature1') {
+              toRemove.add(feature2)
+            } else if (recommendation === 'keep_feature2') {
+              toRemove.add(feature1)
+            }
           }
         }
       }
-    }
 
-    const recommendedKeep = featureList.filter(f => !toRemove.has(f))
-    const recommendedRemoval = Array.from(toRemove)
+      const recommendedKeep = featureList.filter(f => !toRemove.has(f))
+      const recommendedRemoval = Array.from(toRemove)
 
-    return {
-      collinearPairs,
-      summary: {
-        totalPairs: collinearPairs.length,
-        highCollinearCount: collinearPairs.length,
-        recommendedKeep,
-        recommendedRemoval,
-      },
+      const result: Output = {
+        collinearPairs,
+        summary: {
+          totalPairs: collinearPairs.length,
+          highCollinearCount: collinearPairs.length,
+          recommendedKeep,
+          recommendedRemoval,
+        },
+      }
+
+      yield {
+        type: 'result' as const,
+        data: result,
+        resultForAssistant: this.renderResultForAssistant(result),
+      }
+    } catch (error: unknown) {
+      const errorMessage =
+        error instanceof Error ? error.message : 'Unknown error'
+      const errorResult: Output = {
+        collinearPairs: [],
+        summary: {
+          totalPairs: 0,
+          highCollinearCount: 0,
+          recommendedKeep: [],
+          recommendedRemoval: [],
+        },
+      }
+      yield {
+        type: 'result' as const,
+        data: errorResult,
+        resultForAssistant: `Collinearity detection failed: ${errorMessage}`,
+      }
     }
   },
 }

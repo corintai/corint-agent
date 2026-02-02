@@ -87,90 +87,157 @@ export const ComputeQuantileCollapseTool: Tool<typeof inputSchema, Output> = {
     { datasource, filePath }: Input,
     _context?: ToolUseContext,
   ): Promise<ValidationResult> {
-    return validateDataSource(datasource, filePath)
+    const validation = validateDataSource(datasource, filePath)
+    if (!validation.valid) {
+      return { result: false, message: validation.error }
+    }
+    return { result: true }
   },
-  async execute(input: Input, _context?: ToolUseContext): Promise<Output> {
+  renderToolUseMessage(
+    { datasource, table, filePath, features }: Input,
+    { verbose },
+  ) {
+    const source = datasource ? `${datasource}.${table}` : filePath
+    if (verbose) {
+      return `ComputeQuantileCollapse: ${source} (${features.length} features)`
+    }
+    return 'ComputeQuantileCollapse'
+  },
+  renderResultForAssistant(output: Output): string {
+    return [
+      `Quantile Collapse Analysis:`,
+      `- Collapsed: ${output.summary.collapsedCount}/${output.summary.totalFeatures}`,
+      `- Avg collapse rate: ${output.summary.avgCollapseRate.toFixed(3)}`,
+    ].join('\n')
+  },
+  async *call(input: Input, { abortController }) {
+    if (abortController.signal.aborted) {
+      const emptyResult: Output = {
+        quantileCollapse: [],
+        summary: {
+          totalFeatures: 0,
+          collapsedCount: 0,
+          normalCount: 0,
+          collapsedFeatures: [],
+          avgCollapseRate: 0,
+        },
+      }
+      yield {
+        type: 'result' as const,
+        data: emptyResult,
+        resultForAssistant: 'Operation cancelled',
+      }
+      return
+    }
+
     const { datasource, table, filePath, features, threshold = 0.1 } = input
 
     // Load data
-    const data = await loadData({ datasource, table, filePath })
+    try {
+      const data = await loadData({ datasource, table, filePath })
 
-    const results: QuantileCollapseResult[] = []
-    let collapsedCount = 0
-    let normalCount = 0
-    const collapsedFeatures: string[] = []
-    let totalCollapseRate = 0
+      const results: QuantileCollapseResult[] = []
+      let collapsedCount = 0
+      let normalCount = 0
+      const collapsedFeatures: string[] = []
+      let totalCollapseRate = 0
 
-    for (const feature of features) {
-      const values = getColumnValues(data, feature)
-      const numericValues = values
-        .map(parseNumeric)
-        .filter((v): v is number => v !== null)
-        .sort((a, b) => a - b)
+      for (const feature of features) {
+        const values = getColumnValues(data, feature)
+        const numericValues = values
+          .map(parseNumeric)
+          .filter((v): v is number => v !== null)
+          .sort((a, b) => a - b)
 
-      if (numericValues.length === 0) {
+        if (numericValues.length === 0) {
+          results.push({
+            feature,
+            collapseRate: 0,
+            iqr: 0,
+            range: 0,
+            q25: 0,
+            q75: 0,
+            min: 0,
+            max: 0,
+            status: 'collapsed',
+            recommendation: 'Drop - no valid numeric values',
+          })
+          collapsedCount++
+          collapsedFeatures.push(feature)
+          continue
+        }
+
+        const min = numericValues[0]
+        const max = numericValues[numericValues.length - 1]
+        const q25 = quantile(numericValues, 0.25)
+        const q75 = quantile(numericValues, 0.75)
+        const iqr = q75 - q25
+        const range = max - min
+
+        // Avoid division by zero
+        const collapseRate = range > 0 ? iqr / range : 0
+
+        const status = getCollapseStatus(collapseRate, threshold)
+        const recommendation = getRecommendation(status)
+
         results.push({
           feature,
-          collapseRate: 0,
-          iqr: 0,
-          range: 0,
-          q25: 0,
-          q75: 0,
-          min: 0,
-          max: 0,
-          status: 'collapsed',
-          recommendation: 'Drop - no valid numeric values',
+          collapseRate,
+          iqr,
+          range,
+          q25,
+          q75,
+          min,
+          max,
+          status,
+          recommendation,
         })
-        collapsedCount++
-        collapsedFeatures.push(feature)
-        continue
+
+        totalCollapseRate += collapseRate
+
+        if (status === 'collapsed') {
+          collapsedCount++
+          collapsedFeatures.push(feature)
+        } else {
+          normalCount++
+        }
       }
 
-      const min = numericValues[0]
-      const max = numericValues[numericValues.length - 1]
-      const q25 = quantile(numericValues, 0.25)
-      const q75 = quantile(numericValues, 0.75)
-      const iqr = q75 - q25
-      const range = max - min
-
-      // Avoid division by zero
-      const collapseRate = range > 0 ? iqr / range : 0
-
-      const status = getCollapseStatus(collapseRate, threshold)
-      const recommendation = getRecommendation(status)
-
-      results.push({
-        feature,
-        collapseRate,
-        iqr,
-        range,
-        q25,
-        q75,
-        min,
-        max,
-        status,
-        recommendation,
-      })
-
-      totalCollapseRate += collapseRate
-
-      if (status === 'collapsed') {
-        collapsedCount++
-        collapsedFeatures.push(feature)
-      } else {
-        normalCount++
+      const result: Output = {
+        quantileCollapse: results,
+        summary: {
+          totalFeatures: features.length,
+          collapsedCount,
+          normalCount,
+          collapsedFeatures,
+          avgCollapseRate:
+            features.length > 0 ? totalCollapseRate / features.length : 0,
+        },
       }
-    }
 
-    return {
-      quantileCollapse: results,
-      summary: {
-        totalFeatures: features.length,
-        collapsedCount,
-        normalCount,
-        collapsedFeatures,
-        avgCollapseRate: features.length > 0 ? totalCollapseRate / features.length : 0,
-      },
+      yield {
+        type: 'result' as const,
+        data: result,
+        resultForAssistant: this.renderResultForAssistant(result),
+      }
+    } catch (error: unknown) {
+      const errorMessage =
+        error instanceof Error ? error.message : 'Unknown error'
+      const errorResult: Output = {
+        quantileCollapse: [],
+        summary: {
+          totalFeatures: 0,
+          collapsedCount: 0,
+          normalCount: 0,
+          collapsedFeatures: [],
+          avgCollapseRate: 0,
+        },
+      }
+      yield {
+        type: 'result' as const,
+        data: errorResult,
+        resultForAssistant: `Quantile collapse computation failed: ${errorMessage}`,
+      }
     }
   },
 }

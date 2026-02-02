@@ -97,102 +97,178 @@ export const ComputeEntropyTool: Tool<typeof inputSchema, Output> = {
     { datasource, filePath }: Input,
     _context?: ToolUseContext,
   ): Promise<ValidationResult> {
-    return validateDataSource(datasource, filePath)
+    const validation = validateDataSource(datasource, filePath)
+    if (!validation.valid) {
+      return { result: false, message: validation.error }
+    }
+    return { result: true }
   },
-  async execute(input: Input, _context?: ToolUseContext): Promise<Output> {
+  renderToolUseMessage(
+    { datasource, table, filePath, features }: Input,
+    { verbose },
+  ) {
+    const source = datasource ? `${datasource}.${table}` : filePath
+    if (verbose) {
+      return `ComputeEntropy: ${source} (${features.length} features)`
+    }
+    return 'ComputeEntropy'
+  },
+  renderResultForAssistant(output: Output): string {
+    return [
+      `Entropy Analysis:`,
+      `- Low entropy features: ${output.summary.lowEntropyCount}/${output.summary.totalFeatures}`,
+      `- Avg entropy: ${output.summary.avgEntropy.toFixed(3)}`,
+    ].join('\n')
+  },
+  async *call(input: Input, { abortController }) {
+    if (abortController.signal.aborted) {
+      const emptyResult: Output = {
+        entropy: [],
+        summary: {
+          totalFeatures: 0,
+          lowEntropyCount: 0,
+          normalCount: 0,
+          lowEntropyFeatures: [],
+          avgEntropy: 0,
+        },
+      }
+      yield {
+        type: 'result' as const,
+        data: emptyResult,
+        resultForAssistant: 'Operation cancelled',
+      }
+      return
+    }
+
     const { datasource, table, filePath, features, bins = 10, threshold = 1.0 } = input
 
     // Load data
-    const data = await loadData({ datasource, table, filePath })
+    try {
+      const data = await loadData({ datasource, table, filePath })
 
-    const results: EntropyResult[] = []
-    let lowEntropyCount = 0
-    let normalCount = 0
-    const lowEntropyFeatures: string[] = []
-    let totalEntropy = 0
+      const results: EntropyResult[] = []
+      let lowEntropyCount = 0
+      let normalCount = 0
+      const lowEntropyFeatures: string[] = []
+      let totalEntropy = 0
 
-    for (const feature of features) {
-      const values = getColumnValues(data, feature)
-      const validValues = values.filter(v => isValidValue(v))
+      for (const feature of features) {
+        const values = getColumnValues(data, feature)
+        const validValues = values.filter(v => isValidValue(v))
 
-      if (validValues.length === 0) {
+        if (validValues.length === 0) {
+          results.push({
+            feature,
+            entropy: 0,
+            bins: 0,
+            uniqueValues: 0,
+            status: 'low_entropy',
+            recommendation: 'Drop - no valid values',
+          })
+          lowEntropyCount++
+          lowEntropyFeatures.push(feature)
+          continue
+        }
+
+        // Try to parse as numeric
+        const numericValues = validValues
+          .map(parseNumeric)
+          .filter((v): v is number => v !== null)
+
+        let distribution: number[]
+        let binsUsed: number
+        let uniqueValues: number
+
+        if (numericValues.length > validValues.length * 0.8) {
+          // Numeric feature - use binning
+          const binResult = createBins(numericValues, {
+            method: 'quantile',
+            bins,
+          })
+          if (binResult.length === 0) {
+            distribution = [numericValues.length]
+            binsUsed = 1
+          } else {
+            distribution = new Array(binResult.length).fill(0)
+            numericValues.forEach(v => {
+              const binIndex = binResult.findIndex(
+                bin => v > bin.min && v <= bin.max,
+              )
+              if (binIndex >= 0) {
+                distribution[binIndex]++
+              }
+            })
+            binsUsed = binResult.length
+          }
+          uniqueValues = new Set(numericValues).size
+        } else {
+          // Categorical feature - use actual values
+          const valueCounts = new Map<any, number>()
+          validValues.forEach(v => {
+            valueCounts.set(v, (valueCounts.get(v) || 0) + 1)
+          })
+          distribution = Array.from(valueCounts.values())
+          binsUsed = distribution.length
+          uniqueValues = valueCounts.size
+        }
+
+        const entropy = computeEntropy(distribution)
+        const status = getEntropyStatus(entropy, threshold)
+        const recommendation = getRecommendation(status)
+
         results.push({
           feature,
-          entropy: 0,
-          bins: 0,
-          uniqueValues: 0,
-          status: 'low_entropy',
-          recommendation: 'Drop - no valid values',
+          entropy,
+          bins: binsUsed,
+          uniqueValues,
+          status,
+          recommendation,
         })
-        lowEntropyCount++
-        lowEntropyFeatures.push(feature)
-        continue
+
+        totalEntropy += entropy
+
+        if (status === 'low_entropy') {
+          lowEntropyCount++
+          lowEntropyFeatures.push(feature)
+        } else {
+          normalCount++
+        }
       }
 
-      // Try to parse as numeric
-      const numericValues = validValues.map(parseNumeric).filter((v): v is number => v !== null)
-
-      let distribution: number[]
-      let binsUsed: number
-      let uniqueValues: number
-
-      if (numericValues.length > validValues.length * 0.8) {
-        // Numeric feature - use binning
-        const binResult = createBins(numericValues, bins, 'quantile')
-        distribution = new Array(bins).fill(0)
-        numericValues.forEach(v => {
-          const binIndex = binResult.bins.findIndex(
-            bin => v >= bin.lower && v <= bin.upper,
-          )
-          if (binIndex >= 0) {
-            distribution[binIndex]++
-          }
-        })
-        binsUsed = bins
-        uniqueValues = new Set(numericValues).size
-      } else {
-        // Categorical feature - use actual values
-        const valueCounts = new Map<any, number>()
-        validValues.forEach(v => {
-          valueCounts.set(v, (valueCounts.get(v) || 0) + 1)
-        })
-        distribution = Array.from(valueCounts.values())
-        binsUsed = distribution.length
-        uniqueValues = valueCounts.size
+      const result: Output = {
+        entropy: results,
+        summary: {
+          totalFeatures: features.length,
+          lowEntropyCount,
+          normalCount,
+          lowEntropyFeatures,
+          avgEntropy: features.length > 0 ? totalEntropy / features.length : 0,
+        },
       }
 
-      const entropy = computeEntropy(distribution)
-      const status = getEntropyStatus(entropy, threshold)
-      const recommendation = getRecommendation(status)
-
-      results.push({
-        feature,
-        entropy,
-        bins: binsUsed,
-        uniqueValues,
-        status,
-        recommendation,
-      })
-
-      totalEntropy += entropy
-
-      if (status === 'low_entropy') {
-        lowEntropyCount++
-        lowEntropyFeatures.push(feature)
-      } else {
-        normalCount++
+      yield {
+        type: 'result' as const,
+        data: result,
+        resultForAssistant: this.renderResultForAssistant(result),
       }
-    }
-
-    return {
-      entropy: results,
-      summary: {
-        totalFeatures: features.length,
-        lowEntropyCount,
-        normalCount,
-        lowEntropyFeatures,
-        avgEntropy: features.length > 0 ? totalEntropy / features.length : 0,
-      },
+    } catch (error: unknown) {
+      const errorMessage =
+        error instanceof Error ? error.message : 'Unknown error'
+      const errorResult: Output = {
+        entropy: [],
+        summary: {
+          totalFeatures: 0,
+          lowEntropyCount: 0,
+          normalCount: 0,
+          lowEntropyFeatures: [],
+          avgEntropy: 0,
+        },
+      }
+      yield {
+        type: 'result' as const,
+        data: errorResult,
+        resultForAssistant: `Entropy computation failed: ${errorMessage}`,
+      }
     }
   },
 }
