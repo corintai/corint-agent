@@ -96,7 +96,7 @@ const BUILTIN_EXPLORE: AgentConfig = {
   whenToUse:
     'Fast agent specialized for exploring codebases. Use this when you need to quickly find files by patterns (eg. "src/components/**/*.tsx"), search code for keywords (eg. "API endpoints"), or answer questions about the codebase (eg. "how do API endpoints work?"). When calling this agent, specify the desired thoroughness level: "quick" for basic searches, "medium" for moderate exploration, or "very thorough" for comprehensive analysis across multiple locations and naming conventions.',
   tools: '*',
-  disallowedTools: ['Task', 'ExitPlanMode', 'Edit', 'Write', 'NotebookEdit'],
+  disallowedTools: ['Task', 'Edit', 'Write'],
   model: 'haiku',
   systemPrompt: `You are a file search specialist. You excel at thoroughly navigating and exploring codebases.
 
@@ -143,7 +143,7 @@ const BUILTIN_PLAN: AgentConfig = {
   whenToUse:
     'Software architect agent for designing implementation plans. Use this when you need to plan the implementation strategy for a task. Returns step-by-step plans, identifies critical files, and considers architectural trade-offs.',
   tools: '*',
-  disallowedTools: ['Task', 'ExitPlanMode', 'Edit', 'Write', 'NotebookEdit'],
+  disallowedTools: ['Task', 'Edit', 'Write'],
   model: 'inherit',
   systemPrompt: `You are a software architect and planning specialist. Your role is to explore the codebase and design implementation plans.
 

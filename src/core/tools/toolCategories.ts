@@ -1,6 +1,8 @@
 /**
- * Tool categorization for smart tool selection
- * Core tools are always included, optional tools are selected based on user intent
+ * Tool categorization for documentation and organization purposes
+ *
+ * All tools are now loaded by default (no conditional loading).
+ * This categorization is kept for documentation and potential future use.
  */
 
 export const CORE_TOOLS: readonly string[] = [
@@ -19,10 +21,6 @@ export const CORE_TOOLS: readonly string[] = [
   // User interaction
   'AskUserQuestion',
 
-  // Plan mode
-  'EnterPlanMode',
-  'ExitPlanMode',
-
   // Todo management
   'TodoWrite',
   'TodoGet',
@@ -35,7 +33,6 @@ export const CORE_TOOLS: readonly string[] = [
 
   // Agent delegation
   'Task',
-  'AskExpertModel',
 
   // Network operations
   'WebSearch',
@@ -45,46 +42,20 @@ export const CORE_TOOLS: readonly string[] = [
 export const TOOL_CATEGORIES = {
   // Data query and analysis
   data: [
+    'InspectDatabase',  // Merged: ListDataSources + ExploreSchema
     'QuerySQL',
-    'ExploreSchema',
-    'ListDataSources',
     'AnalyzeLocalFile',
-    'ConvertToParquet',
-    'ConvertExcelToCSV',
+    'FileConverter',  // Merged: ConvertToParquet + ConvertExcelToCSV
   ],
 
-  // Credit modeling and feature engineering
-  credit: [
-    'ProfileDataset',
-    'ComputeMissingRate',
-    'ComputePsi',
-    'ComputeIv',
-    'ComputeCoverage',
-    'DetectSingleValue',
-    'ComputeVariance',
-    'ComputeEntropy',
-    'ComputeQuantileCollapse',
-    'ComputeTemporalConsistency',
-    'DetectCollinearity',
+  // Credit modeling and feature engineering (5 consolidated tools)
+  modeling: [
+    'AnalyzeDataQuality',      // Merged 8 tools: ProfileDataset, ComputeMissingRate, DetectSingleValue, ComputeVariance, ComputeEntropy, ComputeQuantileCollapse, ComputeTemporalConsistency, DetectCollinearity
+    'EvaluateFeatures',        // Merged 3 tools: ComputeIv, ComputePsi, ComputeCoverage
+    'DefineFeaturePrimitives', // Kept independent
+    'GenerateFeatures',        // Merged 4 tools: GenerateWindowFeatures, GenerateRatioFeatures, GenerateCrossFeatures, GenerateCreditFeatures
+    'OptimizeFeatures',        // Merged 3 tools: SemanticPruning, ProxyEvaluation, BeamSearchFeatures
   ],
-
-  // Feature engineering
-  feature: [
-    'DefineFeaturePrimitives',
-    'SemanticPruning',
-    'ProxyEvaluation',
-    'BeamSearchFeatures',
-    'GenerateWindowFeatures',
-    'GenerateRatioFeatures',
-    'GenerateCrossFeatures',
-    'GenerateCreditFeatures',
-  ],
-
-  // Notebook operations
-  notebook: ['NotebookEdit'],
-
-  // MCP integration
-  mcp: ['ListMcpResources', 'ReadMcpResource', 'MCPTool'],
 } as const
 
 export type ToolCategory = keyof typeof TOOL_CATEGORIES
@@ -108,11 +79,9 @@ export function getToolCategory(toolName: string): ToolCategory | 'core' | null 
 
 export function getCategoryDescription(category: ToolCategory): string {
   const descriptions: Record<ToolCategory, string> = {
-    data: 'Database queries, schema exploration, local file analysis, data format conversion',
-    credit: 'Credit risk modeling, data profiling, statistical analysis (IV, PSI, variance, entropy, etc.)',
-    feature: 'Feature engineering, semantic pruning, proxy evaluation, beam search, feature generation',
-    notebook: 'Jupyter notebook editing',
-    mcp: 'MCP (Model Context Protocol) resource access',
+    data: 'Database queries, schema exploration, local file analysis, file format conversion',
+    modeling:
+      'Credit modeling (5 tools): data quality analysis, feature evaluation, primitive definition, feature generation, and optimization',
   }
   return descriptions[category]
 }

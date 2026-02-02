@@ -1,6 +1,7 @@
 import { zipObject, memoize } from 'lodash-es'
 import type { Tool } from '@tool'
-import { MCPTool } from '@tools/mcp/MCPTool/MCPTool'
+// Note: MCPTool is disabled but kept for reference
+// import { MCPTool } from '@tools/mcp/MCPTool/MCPTool'
 import { logMCPError } from '@utils/log'
 import type { Command } from '@commands'
 import type {
@@ -151,6 +152,9 @@ async function requestAll<
 }
 
 export const getMCPTools = memoize(async (): Promise<Tool[]> => {
+  // MCP tools are disabled
+  return []
+  /*
   const toolsList = await requestAll<
     ListToolsResult,
     typeof ListToolsResultSchema
@@ -218,6 +222,7 @@ export const getMCPTools = memoize(async (): Promise<Tool[]> => {
       })
       .filter((tool): tool is Tool => tool !== null)
   })
+  */
 })
 
 async function callMCPTool({

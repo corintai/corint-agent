@@ -1,5 +1,3 @@
-import { NotebookEditTool } from '@tools/NotebookEditTool/NotebookEditTool'
-
 export const DESCRIPTION = `This is a tool for making multiple edits to a single file in one operation. It is built on top of the Edit tool and allows you to perform multiple find-and-replace operations efficiently. Prefer this tool over the Edit tool when you need to make multiple edits to the same file.
 
 Before using this tool:
@@ -19,7 +17,7 @@ IMPORTANT:
 - Each edit operates on the result of the previous edit
 - All edits must be valid for the operation to succeed - if any edit fails, none will be applied
 - This tool is ideal when you need to make several changes to different parts of the same file
-- For Jupyter notebooks (.ipynb files), use the ${NotebookEditTool.name} instead
+- Jupyter notebooks (.ipynb files) are not supported
 
 CRITICAL REQUIREMENTS:
 1. All edits follow the same requirements as the single Edit tool

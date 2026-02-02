@@ -158,7 +158,6 @@ function buildPlanModeMainReminder(args: {
   const askUserToolName = 'AskUserQuestion'
   const exploreAgentType = 'Explore'
   const planAgentType = 'Plan'
-  const exitPlanModeToolName = 'ExitPlanMode'
 
   return `Plan mode is active. The user indicated that they do not want you to execute yet -- you MUST NOT make any edits (with the exception of the plan file mentioned below), run any non-readonly tools (including changing configs or making commits), or otherwise make any changes to the system. This supercedes any other instructions you have received.
 
@@ -225,10 +224,6 @@ Goal: Write your final plan to the plan file (the only file you can edit).
 - Ensure that the plan file is concise enough to scan quickly, but detailed enough to execute effectively
 - Include the paths of critical files to be modified
 
-### Phase 5: Call ${exitPlanModeToolName}
-At the very end of your turn, once you have asked the user questions and are happy with your final plan file - you should always call ${exitPlanModeToolName} to indicate to the user that you are done planning.
-This is critical - your turn should only end with either asking the user a question or calling ${exitPlanModeToolName}. Do not stop unless it's for these 2 reasons.
-
 NOTE: At any point in time through this workflow you should feel free to ask the user questions or clarifications. Don't make large assumptions about user intent. The goal is to present a well researched plan to the user, and tie any loose ends before implementation begins.`
 }
 
@@ -251,8 +246,6 @@ Answer the user's query comprehensively, using the ${askUserToolName} tool if yo
 }
 
 function buildPlanModeReentryReminder(planFilePath: string): string {
-  const exitPlanModeToolName = 'ExitPlanMode'
-
   return `## Re-entering Plan Mode
 
 You are returning to plan mode after having previously exited it. A plan file exists at ${planFilePath} from your previous planning session.
@@ -263,7 +256,7 @@ You are returning to plan mode after having previously exited it. A plan file ex
 3. Decide how to proceed:
    - **Different task**: If the user's request is for a different task—even if it's similar or related—start fresh by overwriting the existing plan
    - **Same task, continuing**: If this is explicitly a continuation or refinement of the exact same task, modify the existing plan while cleaning up outdated or irrelevant sections
-4. Continue on with the plan process and most importantly you should always edit the plan file one way or the other before calling ${exitPlanModeToolName}
+4. Continue on with the plan process and most importantly you should always edit the plan file one way or the other before responding to the user
 
 Treat this as a fresh planning session. Do not assume the existing plan is relevant without evaluating it first.`
 }

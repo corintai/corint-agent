@@ -4,7 +4,6 @@ import { TaskTool } from './TaskTool'
 import { BashTool } from '@tools/BashTool/BashTool'
 import { FileWriteTool } from '@tools/FileWriteTool/FileWriteTool'
 import { FileEditTool } from '@tools/FileEditTool/FileEditTool'
-import { NotebookEditTool } from '@tools/NotebookEditTool/NotebookEditTool'
 import { GlobTool } from '@tools/GlobTool/GlobTool'
 import { FileReadTool } from '@tools/FileReadTool/FileReadTool'
 import { getModelManager } from '@utils/model'
@@ -14,8 +13,6 @@ const SUBAGENT_DISALLOWED_TOOL_NAMES = new Set<string>([
   'Task',
   'TaskOutput',
   'KillShell',
-  'EnterPlanMode',
-  'ExitPlanMode',
   'AskUserQuestion',
 ])
 

@@ -13,7 +13,6 @@ import { useNotifyAfterTimeout } from '@hooks/useNotifyAfterTimeout'
 import { FileWritePermissionRequest } from './file-write-permission-request/FileWritePermissionRequest'
 import { type CommandSubcommandPrefixResult } from '@utils/commands'
 import { FilesystemPermissionRequest } from './filesystem-permission-request/FilesystemPermissionRequest'
-import { NotebookEditTool } from '@tools/NotebookEditTool/NotebookEditTool'
 import { GlobTool } from '@tools/GlobTool/GlobTool'
 import { GrepTool } from '@tools/search/GrepTool/GrepTool'
 import { FileReadTool } from '@tools/FileReadTool/FileReadTool'
@@ -24,10 +23,6 @@ import { SlashCommandPermissionRequest } from './slash-command-permission-reques
 import { SkillPermissionRequest } from './skill-permission-request/SkillPermissionRequest'
 import { WebFetchTool } from '@tools/network/WebFetchTool/WebFetchTool'
 import { WebFetchPermissionRequest } from './web-fetch-permission-request/WebFetchPermissionRequest'
-import { EnterPlanModeTool } from '@tools/agent/PlanModeTool/EnterPlanModeTool'
-import { ExitPlanModeTool } from '@tools/agent/PlanModeTool/ExitPlanModeTool'
-import { EnterPlanModePermissionRequest } from './plan-mode-permission-request/EnterPlanModePermissionRequest'
-import { ExitPlanModePermissionRequest } from './plan-mode-permission-request/ExitPlanModePermissionRequest'
 import { AskUserQuestionTool } from '@tools/interaction/AskUserQuestionTool/AskUserQuestionTool'
 import { AskUserQuestionPermissionRequest } from './ask-user-question-permission-request/AskUserQuestionPermissionRequest'
 import type { ToolPermissionContextUpdate } from '@kode-types/toolPermissionContext'
@@ -43,7 +38,6 @@ function permissionComponentForTool(tool: Tool) {
     case GlobTool:
     case GrepTool:
     case FileReadTool:
-    case NotebookEditTool:
       return FilesystemPermissionRequest
     case SlashCommandTool:
       return SlashCommandPermissionRequest
@@ -51,10 +45,6 @@ function permissionComponentForTool(tool: Tool) {
       return SkillPermissionRequest
     case WebFetchTool:
       return WebFetchPermissionRequest
-    case EnterPlanModeTool:
-      return EnterPlanModePermissionRequest
-    case ExitPlanModeTool:
-      return ExitPlanModePermissionRequest
     case AskUserQuestionTool:
       return AskUserQuestionPermissionRequest
     default:

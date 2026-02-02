@@ -11,7 +11,7 @@ import {
 import { readFileBun, fileExistsBun } from '@utils/bun/file'
 import { logError } from '@utils/log'
 import { getCwd } from '@utils/state'
-import { NotebookEditTool } from '@tools/NotebookEditTool/NotebookEditTool'
+
 function applyContentEdit(
   content: string,
   oldString: string,
@@ -122,7 +122,7 @@ export const MultiEditTool = {
       return {
         result: false,
         errorCode: 1,
-        message: `For Jupyter notebooks (.ipynb files), use the ${NotebookEditTool.name} tool instead.`,
+        message: `Jupyter notebooks (.ipynb files) are not supported.`,
       }
     }
 

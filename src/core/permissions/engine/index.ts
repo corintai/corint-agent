@@ -1,17 +1,12 @@
 import type { CanUseToolFn } from '@kode-types/canUseTool'
 import type { Tool, ToolUseContext } from '@tool'
 import { BashTool, inputSchema } from '@tools/BashTool/BashTool'
-import { EnterPlanModeTool } from '@tools/agent/PlanModeTool/EnterPlanModeTool'
-import { ExitPlanModeTool } from '@tools/agent/PlanModeTool/ExitPlanModeTool'
 import { FileEditTool } from '@tools/FileEditTool/FileEditTool'
 import { FileReadTool } from '@tools/FileReadTool/FileReadTool'
 import { FileWriteTool } from '@tools/FileWriteTool/FileWriteTool'
 import { GlobTool } from '@tools/GlobTool/GlobTool'
 import { GrepTool } from '@tools/search/GrepTool/GrepTool'
 import { KillShellTool } from '@tools/KillShellTool/KillShellTool'
-import { NotebookEditTool } from '@tools/NotebookEditTool/NotebookEditTool'
-import { ListMcpResourcesTool } from '@tools/mcp/ListMcpResourcesTool/ListMcpResourcesTool'
-import { ReadMcpResourceTool } from '@tools/mcp/ReadMcpResourceTool/ReadMcpResourceTool'
 import { WebFetchTool } from '@tools/network/WebFetchTool/WebFetchTool'
 import { WebSearchTool } from '@tools/network/WebSearchTool/WebSearchTool'
 import { AskUserQuestionTool } from '@tools/interaction/AskUserQuestionTool/AskUserQuestionTool'
@@ -163,16 +158,6 @@ export const hasPermissionsToUseTool: CanUseToolFn = async (
         }
       }
 
-      if (tool === NotebookEditTool) {
-        const notebookPath =
-          typeof (input as any).notebook_path === 'string'
-            ? String((input as any).notebook_path)
-            : ''
-        if (notebookPath) {
-          const denied = denyIfUnsafeWrite(notebookPath)
-          if (denied) return denied
-        }
-      }
     }
 
     return { result: true }
@@ -199,7 +184,6 @@ export const hasPermissionsToUseTool: CanUseToolFn = async (
     tool === FileReadTool ||
     tool === FileEditTool ||
     tool === FileWriteTool ||
-    tool === NotebookEditTool ||
     tool === GlobTool ||
     tool === GrepTool
 
@@ -590,16 +574,11 @@ export const hasPermissionsToUseTool: CanUseToolFn = async (
         }
       }
       case FileEditTool:
-      case FileWriteTool:
-      case NotebookEditTool: {
+      case FileWriteTool: {
         const targetPath =
-          tool === NotebookEditTool
-            ? typeof (input as any).notebook_path === 'string'
-              ? (input as any).notebook_path
-              : ''
-            : typeof (input as any).file_path === 'string'
-              ? (input as any).file_path
-              : ''
+          typeof (input as any).file_path === 'string'
+            ? (input as any).file_path
+            : ''
         const toolPath = targetPath || getCwd()
         return checkEditPermissionForPath(toolPath)
       }

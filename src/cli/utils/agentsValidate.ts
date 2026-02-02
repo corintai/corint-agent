@@ -31,8 +31,6 @@ const SUBAGENT_HARD_BLOCKED_TOOLS = new Set([
   'Task',
   'TaskOutput',
   'KillShell',
-  'EnterPlanMode',
-  'ExitPlanMode',
   'AskUserQuestion',
 ])
 

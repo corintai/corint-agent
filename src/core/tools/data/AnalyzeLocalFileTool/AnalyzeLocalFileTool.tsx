@@ -142,6 +142,7 @@ async function runDuckDbCli(
     'duckdb',
     ['-json', ':memory:', '-c', sql],
     abortSignal,
+    30000, // 30 second timeout
   )
 
   if (result.code !== 0) {

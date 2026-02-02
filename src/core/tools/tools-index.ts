@@ -1,114 +1,65 @@
 import { memoize } from 'lodash-es'
 import { Tool } from '@tool'
-import { AskExpertModelTool } from './ai/AskExpertModelTool/AskExpertModelTool'
 import { AskUserQuestionTool } from './interaction/AskUserQuestionTool/AskUserQuestionTool'
 import { BashTool } from './system/BashTool/BashTool'
 import { TaskOutputTool } from './system/TaskOutputTool/TaskOutputTool'
-import { EnterPlanModeTool } from './agent/PlanModeTool/EnterPlanModeTool'
-import { ExitPlanModeTool } from './agent/PlanModeTool/ExitPlanModeTool'
 import { FileEditTool } from './filesystem/FileEditTool/FileEditTool'
 import { FileReadTool } from './filesystem/FileReadTool/FileReadTool'
 import { FileWriteTool } from './filesystem/FileWriteTool/FileWriteTool'
 import { GlobTool } from './filesystem/GlobTool/GlobTool'
 import { GrepTool } from './search/GrepTool/GrepTool'
 import { KillShellTool } from './system/KillShellTool/KillShellTool'
-import { ListMcpResourcesTool } from './mcp/ListMcpResourcesTool/ListMcpResourcesTool'
-import { LspTool } from './search/LspTool/LspTool'
-import { MCPTool } from './mcp/MCPTool/MCPTool'
-import { NotebookEditTool } from './filesystem/NotebookEditTool/NotebookEditTool'
-import { ReadMcpResourceTool } from './mcp/ReadMcpResourceTool/ReadMcpResourceTool'
 import { SlashCommandTool } from './interaction/SlashCommandTool/SlashCommandTool'
 import { SkillTool } from './ai/SkillTool/SkillTool'
 import { TaskTool } from './agent/TaskTool/TaskTool'
 import { TodoWriteTool } from './interaction/TodoWriteTool/TodoWriteTool'
 import { WebFetchTool } from './network/WebFetchTool/WebFetchTool'
 import { WebSearchTool } from './network/WebSearchTool/WebSearchTool'
-import { getMCPTools } from '@services/mcpClient'
 // Data tools for risk management
+import { InspectDatabaseTool } from './data/InspectDatabaseTool/InspectDatabaseTool'
 import { QuerySQLTool } from './data/QuerySQLTool/QuerySQLTool'
-import { ExploreSchemaTool } from './data/ExploreSchemaTool/ExploreSchemaTool'
-import { ListDataSourcesTool } from './data/ListDataSourcesTool/ListDataSourcesTool'
 import { AnalyzeLocalFileTool } from './data/AnalyzeLocalFileTool/AnalyzeLocalFileTool'
-import { ConvertToParquetTool } from './data/ConvertToParquetTool/ConvertToParquetTool'
-import { ConvertExcelToCSVTool } from './data/ConvertExcelToCSVTool/ConvertExcelToCSVTool'
-// Credit modeling tools
-import { ProfileDatasetTool } from './credit/ProfileDatasetTool/ProfileDatasetTool'
-import { ComputeMissingRateTool } from './credit/ComputeMissingRateTool/ComputeMissingRateTool'
-import { ComputePsiTool } from './credit/ComputePsiTool/ComputePsiTool'
-import { ComputeIvTool } from './credit/ComputeIvTool/ComputeIvTool'
-import { ComputeCoverageTool } from './credit/ComputeCoverageTool/ComputeCoverageTool'
-import { DetectSingleValueTool } from './credit/DetectSingleValueTool/DetectSingleValueTool'
-import { ComputeVarianceTool } from './credit/ComputeVarianceTool/ComputeVarianceTool'
-import { ComputeEntropyTool } from './credit/ComputeEntropyTool/ComputeEntropyTool'
-import { ComputeQuantileCollapseTool } from './credit/ComputeQuantileCollapseTool/ComputeQuantileCollapseTool'
-import { ComputeTemporalConsistencyTool } from './credit/ComputeTemporalConsistencyTool/ComputeTemporalConsistencyTool'
-import { DetectCollinearityTool } from './credit/DetectCollinearityTool/DetectCollinearityTool'
-import { DefineFeaturePrimitivesTool } from './credit/featureEngineering/DefineFeaturePrimitivesTool/DefineFeaturePrimitivesTool'
-import { SemanticPruningTool } from './credit/featureEngineering/SemanticPruningTool/SemanticPruningTool'
-import { ProxyEvaluationTool } from './credit/featureEngineering/ProxyEvaluationTool/ProxyEvaluationTool'
-import { BeamSearchFeaturesTool } from './credit/featureEngineering/BeamSearchFeaturesTool/BeamSearchFeaturesTool'
-import { GenerateWindowFeaturesTool } from './credit/featureEngineering/GenerateWindowFeaturesTool/GenerateWindowFeaturesTool'
-import { GenerateRatioFeaturesTool } from './credit/featureEngineering/GenerateRatioFeaturesTool/GenerateRatioFeaturesTool'
-import { GenerateCrossFeaturesTool } from './credit/featureEngineering/GenerateCrossFeaturesTool/GenerateCrossFeaturesTool'
-import { GenerateCreditFeaturesTool } from './credit/featureEngineering/GenerateCreditFeaturesTool/GenerateCreditFeaturesTool'
+import { FileConverterTool } from './data/FileConverterTool/FileConverterTool'
+// Credit modeling tools (consolidated)
+import { AnalyzeDataQualityTool } from './modeling/AnalyzeDataQualityTool/AnalyzeDataQualityTool'
+import { EvaluateFeaturesTool } from './modeling/EvaluateFeaturesTool/EvaluateFeaturesTool'
+import { DefineFeaturePrimitivesTool } from './modeling/featureEngineering/DefineFeaturePrimitivesTool/DefineFeaturePrimitivesTool'
+import { GenerateFeaturesTool } from './modeling/GenerateFeaturesTool/GenerateFeaturesTool'
+import { OptimizeFeaturesTool } from './modeling/OptimizeFeaturesTool/OptimizeFeaturesTool'
 
 export const getAllTools = (): Tool[] => [
   TaskTool as unknown as Tool,
-  AskExpertModelTool as unknown as Tool,
   BashTool as unknown as Tool,
   TaskOutputTool as unknown as Tool,
   KillShellTool as unknown as Tool,
   GlobTool as unknown as Tool,
   GrepTool as unknown as Tool,
-  LspTool as unknown as Tool,
   FileReadTool as unknown as Tool,
   FileEditTool as unknown as Tool,
   FileWriteTool as unknown as Tool,
-  NotebookEditTool as unknown as Tool,
   TodoWriteTool as unknown as Tool,
   WebSearchTool as unknown as Tool,
   WebFetchTool as unknown as Tool,
   AskUserQuestionTool as unknown as Tool,
-  EnterPlanModeTool as unknown as Tool,
-  ExitPlanModeTool as unknown as Tool,
   SlashCommandTool as unknown as Tool,
   SkillTool as unknown as Tool,
-  ListMcpResourcesTool as unknown as Tool,
-  ReadMcpResourceTool as unknown as Tool,
-  MCPTool as unknown as Tool,
   // Data tools
+  InspectDatabaseTool as unknown as Tool,
   QuerySQLTool as unknown as Tool,
-  ExploreSchemaTool as unknown as Tool,
-  ListDataSourcesTool as unknown as Tool,
   AnalyzeLocalFileTool as unknown as Tool,
-  ConvertToParquetTool as unknown as Tool,
-  ConvertExcelToCSVTool as unknown as Tool,
-  // Credit modeling tools
-  ProfileDatasetTool as unknown as Tool,
-  ComputeMissingRateTool as unknown as Tool,
-  ComputePsiTool as unknown as Tool,
-  ComputeIvTool as unknown as Tool,
-  ComputeCoverageTool as unknown as Tool,
-  DetectSingleValueTool as unknown as Tool,
-  ComputeVarianceTool as unknown as Tool,
-  ComputeEntropyTool as unknown as Tool,
-  ComputeQuantileCollapseTool as unknown as Tool,
-  ComputeTemporalConsistencyTool as unknown as Tool,
-  DetectCollinearityTool as unknown as Tool,
-  // Feature engineering tools
+  FileConverterTool as unknown as Tool,
+  // Credit modeling tools (5 consolidated tools)
+  AnalyzeDataQualityTool as unknown as Tool,
+  EvaluateFeaturesTool as unknown as Tool,
   DefineFeaturePrimitivesTool as unknown as Tool,
-  SemanticPruningTool as unknown as Tool,
-  ProxyEvaluationTool as unknown as Tool,
-  BeamSearchFeaturesTool as unknown as Tool,
-  GenerateWindowFeaturesTool as unknown as Tool,
-  GenerateRatioFeaturesTool as unknown as Tool,
-  GenerateCrossFeaturesTool as unknown as Tool,
-  GenerateCreditFeaturesTool as unknown as Tool,
+  GenerateFeaturesTool as unknown as Tool,
+  OptimizeFeaturesTool as unknown as Tool,
 ]
 
 export const getTools = memoize(
   async (_includeOptional?: boolean): Promise<Tool[]> => {
-    const tools = [...getAllTools(), ...(await getMCPTools())]
+    const tools = getAllTools()
+    // Note: MCP tools are disabled but the service remains for compatibility
 
     const isEnabled = await Promise.all(tools.map(tool => tool.isEnabled()))
     return tools.filter((_, i) => isEnabled[i])

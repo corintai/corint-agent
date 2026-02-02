@@ -45,7 +45,6 @@ import {
 } from '@utils/binaryFeedback'
 import { resolveMainAgentId } from '@utils/agent/storage'
 import { resolveToolNameAlias } from '@utils/tooling/toolNameAliases'
-import { selectToolsForRequest } from '@tools/toolSelector'
 import { ToolUseQueue } from './executor'
 import type {
   Message,
@@ -285,33 +284,6 @@ async function* queryCore(
         }
       }
     }
-
-    // ========================================================================
-    // Phase 1.5: Smart Tool Selection
-    // ========================================================================
-
-    markPhase('TOOL_SELECTION')
-
-    const toolsBeforeSelection = toolUseContext.options.tools.length
-
-    // Use quick model to select tools based on conversation context
-    const { selectedTools, selectedCategories, reasoning } = await selectToolsForRequest(
-      messages,
-      toolUseContext.options.tools,
-      toolUseContext.abortController.signal,
-    )
-
-    // Update tools in context
-    toolUseContext.options.tools = selectedTools
-
-    const toolsAfterSelection = selectedTools.length
-
-    debug.info('TOOL_SELECTION_APPLIED', {
-      before: toolsBeforeSelection,
-      after: toolsAfterSelection,
-      categories: selectedCategories,
-      reasoning,
-    })
 
     // ========================================================================
     // Phase 2: Build System Prompt

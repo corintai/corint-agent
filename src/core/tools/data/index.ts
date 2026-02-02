@@ -1,6 +1,4 @@
 export { QuerySQLTool } from './QuerySQLTool/QuerySQLTool'
-export { ExploreSchemaTool } from './ExploreSchemaTool/ExploreSchemaTool'
-export { ListDataSourcesTool } from './ListDataSourcesTool/ListDataSourcesTool'
 export { AnalyzeLocalFileTool } from './AnalyzeLocalFileTool/AnalyzeLocalFileTool'
-export { ConvertToParquetTool } from './ConvertToParquetTool/ConvertToParquetTool'
-export { ConvertExcelToCSVTool } from './ConvertExcelToCSVTool/ConvertExcelToCSVTool'
+export { InspectDatabaseTool } from './InspectDatabaseTool/InspectDatabaseTool'
+export { FileConverterTool } from './FileConverterTool/FileConverterTool'

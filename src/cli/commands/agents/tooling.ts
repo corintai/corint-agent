@@ -9,10 +9,10 @@ export type Tool = {
 
 export const TOOL_CATEGORIES = {
   read: ['Read', 'Glob', 'Grep', 'LS'],
-  edit: ['Edit', 'MultiEdit', 'Write', 'NotebookEdit'],
+  edit: ['Edit', 'MultiEdit', 'Write'],
   execution: ['Bash', 'BashOutput', 'KillBash'],
   web: ['WebFetch', 'WebSearch'],
-  other: ['TodoWrite', 'ExitPlanMode', 'Task'],
+  other: ['TodoWrite', 'Task'],
 } as const
 
 function getCoreTools(): Tool[] {
@@ -21,7 +21,6 @@ function getCoreTools(): Tool[] {
     { name: 'Write', description: 'Write files to filesystem' },
     { name: 'Edit', description: 'Edit existing files' },
     { name: 'MultiEdit', description: 'Make multiple edits to files' },
-    { name: 'NotebookEdit', description: 'Edit Jupyter notebooks' },
     { name: 'Bash', description: 'Execute bash commands' },
     { name: 'Glob', description: 'Find files matching patterns' },
     { name: 'Grep', description: 'Search file contents' },
@@ -31,7 +30,7 @@ function getCoreTools(): Tool[] {
     { name: 'TodoWrite', description: 'Manage task lists' },
   ]
 
-  return tools.filter(t => t.name !== 'Task' && t.name !== 'ExitPlanMode')
+  return tools.filter(t => t.name !== 'Task')
 }
 
 export async function getAvailableTools(): Promise<Tool[]> {

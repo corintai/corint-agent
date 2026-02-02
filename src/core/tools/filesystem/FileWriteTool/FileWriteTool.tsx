@@ -65,8 +65,7 @@ export const FileWriteTool = {
     if (fullFilePath.endsWith('.ipynb')) {
       return {
         result: false,
-        message:
-          'This tool cannot write Jupyter notebooks. Use the NotebookEdit tool instead.',
+        message: 'This tool cannot write Jupyter notebooks.',
       }
     }
     if (!fileExistsBun(fullFilePath)) {

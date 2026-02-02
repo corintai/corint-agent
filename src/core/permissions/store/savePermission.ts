@@ -1,7 +1,6 @@
 import type { Tool, ToolUseContext } from '@tool'
 import { FileEditTool } from '@tools/FileEditTool/FileEditTool'
 import { FileWriteTool } from '@tools/FileWriteTool/FileWriteTool'
-import { NotebookEditTool } from '@tools/NotebookEditTool/NotebookEditTool'
 import {
   getCurrentProjectConfig,
   saveCurrentProjectConfig,
@@ -20,19 +19,11 @@ export async function savePermission(
 ): Promise<void> {
   const key = getPermissionKey(tool, input, prefix)
 
-  if (
-    tool === FileEditTool ||
-    tool === FileWriteTool ||
-    tool === NotebookEditTool
-  ) {
+  if (tool === FileEditTool || tool === FileWriteTool) {
     const filePath =
-      tool === NotebookEditTool
-        ? typeof (input as any).notebook_path === 'string'
-          ? (input as any).notebook_path
-          : ''
-        : typeof (input as any).file_path === 'string'
-          ? (input as any).file_path
-          : ''
+      typeof (input as any).file_path === 'string'
+        ? (input as any).file_path
+        : ''
     if (filePath) {
       grantWritePermissionForPath(filePath)
     }

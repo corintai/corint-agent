@@ -15,7 +15,6 @@ import { readFileBun, fileExistsBun } from '@utils/bun/file'
 import { getCwd } from '@utils/state'
 import { emitReminderEvent } from '@services/systemReminder'
 import { recordFileEdit } from '@services/fileFreshness'
-import { NotebookEditTool } from '@tools/NotebookEditTool/NotebookEditTool'
 import { DESCRIPTION } from './prompt'
 import { applyEdit } from './utils'
 import { hasWritePermission } from '@utils/permissions/filesystem'
@@ -110,7 +109,7 @@ export const FileEditTool = {
     if (fullFilePath.endsWith('.ipynb')) {
       return {
         result: false,
-        message: `File is a Jupyter Notebook. Use the ${NotebookEditTool.name} to edit this file.`,
+        message: `File is a Jupyter Notebook. Notebook editing is not supported.`,
       }
     }
 

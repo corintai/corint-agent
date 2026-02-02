@@ -23,7 +23,6 @@ import { FileWriteTool } from '@tools/FileWriteTool/FileWriteTool'
 import { GrepTool } from '@tools/search/GrepTool/GrepTool'
 import { GlobTool } from '@tools/GlobTool/GlobTool'
 import { FileReadTool } from '@tools/FileReadTool/FileReadTool'
-import { NotebookEditTool } from '@tools/NotebookEditTool/NotebookEditTool'
 import { FallbackPermissionRequest } from '@components/permissions/FallbackPermissionRequest'
 import { toAbsolutePath } from '@utils/permissions/filesystem'
 import { getCwd } from '@utils/state'
@@ -43,9 +42,6 @@ function pathArgNameForToolUse(toolUseConfirm: ToolUseConfirm): string | null {
     case GlobTool:
     case GrepTool: {
       return 'path'
-    }
-    case NotebookEditTool: {
-      return 'notebook_path'
     }
   }
   return null
