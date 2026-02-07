@@ -7,6 +7,27 @@ import { terminalLog } from './terminal'
 
 let llmLogSequence = 0
 
+function cleanUserPrompt(text: string): string {
+  return text.replace(/<system-reminder>[\s\S]*?<\/system-reminder>/g, '').trim()
+}
+
+function extractUserPrompt(content: any): string {
+  if (typeof content === 'string') {
+    return cleanUserPrompt(content)
+  }
+  if (Array.isArray(content)) {
+    const textBlocks = content
+      .filter((block: any) => block?.type === 'text')
+      .map((block: any) => (typeof block?.text === 'string' ? block.text : ''))
+      .filter(Boolean)
+    for (let i = textBlocks.length - 1; i >= 0; i -= 1) {
+      const cleaned = cleanUserPrompt(textBlocks[i])
+      if (cleaned) return cleaned
+    }
+  }
+  return ''
+}
+
 function writeLLMLogToFile(context: {
   systemPrompt: string
   messages: any[]
@@ -52,19 +73,7 @@ function writeLLMLogToFile(context: {
     const userMessages = context.messages.filter((msg: any) => msg.role === 'user')
     if (userMessages.length > 0) {
       const lastUserMessage = userMessages[userMessages.length - 1]
-      let userPrompt = ''
-      if (typeof lastUserMessage.content === 'string') {
-        userPrompt = lastUserMessage.content
-      } else if (Array.isArray(lastUserMessage.content)) {
-        const textBlocks = lastUserMessage.content.filter((block: any) => block.type === 'text')
-        if (textBlocks.length > 0) {
-          userPrompt = textBlocks[0].text || ''
-        }
-      }
-      // Remove system-reminder tags and their content
-      if (userPrompt) {
-        userPrompt = userPrompt.replace(/<system-reminder>[\s\S]*?<\/system-reminder>/g, '').trim()
-      }
+      const userPrompt = extractUserPrompt(lastUserMessage.content)
       if (userPrompt) {
         logContent += `\n${subSeparator}\n`
         logContent += `User Prompt:\n${userPrompt}\n`

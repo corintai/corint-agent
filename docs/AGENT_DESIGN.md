@@ -240,105 +240,81 @@ Auto-save state before destructive operations, enabling rollback:
 - `simulate_threshold` → LLM generates Python code for threshold simulation
 - `simulate_strategy` → LLM generates Python code for multi-threshold analysis
 
-### 3.2 Foundation Tools (Basic Access)
+### 3.2 Tool Categories
 
-The most fundamental atomic tools, providing data access, file operations, search, sub-agent invocation, and code execution capabilities.
+**Core Tools** (15 foundation tools):
+- **File Operations**: Read, Edit, Write, Glob, Grep
+- **System Operations**: Bash, TaskOutput, KillShell
+- **User Interaction**: AskUserQuestion
+- **Task Management**: TodoWrite
+- **Commands & Skills**: SlashCommand, Skill
+- **Agent Delegation**: Task
+- **Network**: WebSearch, WebFetch
 
-#### 3.2.1 Data Access Tools
+**Data Tools** (4 data tools):
+| Tool Name | Purpose | Key Features |
+|-----------|---------|--------------|
+| **InspectDatabase** | List data sources and explore table schemas | Supports PostgreSQL, MySQL, ClickHouse, SQLite, Databricks |
+| **QuerySQL** | Execute SQL queries | Timeout control, result limiting, blocks destructive operations |
+| **AnalyzeLocalFile** | Analyze local data files | Auto-detects CSV/Excel/Parquet, provides schema and statistics |
+| **FileConverter** | Convert file formats | Excel→CSV, CSV→Parquet |
 
-| Tool | Purpose | Input | Output |
-|------|---------|-------|--------|
-| `explore_schema` | Get table structure, fields, comments | `table_name`, `data_source` | Schema JSON |
-| `query_sql` | Execute SQL queries | `sql`, `data_source` | DataFrame / JSON |
+**Modeling Tools** (5 modeling tools):
+| Tool Name | Purpose | Merged From |
+|-----------|---------|-------------|
+| **AnalyzeDataQuality** | Comprehensive data quality analysis | Merged 8 tools: ProfileDataset, ComputeMissingRate, DetectSingleValue, ComputeVariance, ComputeEntropy, ComputeQuantileCollapse, ComputeTemporalConsistency, DetectCollinearity |
+| **EvaluateFeatures** | Feature predictive power assessment | Merged 3 tools: ComputeIv, ComputePsi, ComputeCoverage |
+| **DefineFeaturePrimitives** | Define reusable feature transformation primitives | Independent tool |
+| **GenerateFeatures** | Automated feature engineering | Merged 4 tools: GenerateWindowFeatures, GenerateRatioFeatures, GenerateCrossFeatures, GenerateCreditFeatures |
+| **OptimizeFeatures** | Feature selection and optimization | Merged 3 tools: SemanticPruning, ProxyEvaluation, BeamSearchFeatures |
 
-**Supported Data Sources**: PostgreSQL, MySQL, ClickHouse, Spark SQL, Snowflake, Hive, etc.
+### 3.3 Key Tool Capabilities
 
-#### 3.2.2 File Tools
+**Bash Tool**:
+- Sandboxed isolated execution environment
+- Background async execution support
+- Timeout control and destructive command blocking
+- LLM intent safety gate
 
-| Tool | Purpose | Input | Output |
-|------|---------|-------|--------|
-| `read_file` | Read local files | `file_path`, `offset?`, `limit?` | Content (text/binary) |
-| `write_file` | Write/create files | `file_path`, `content` | Success / Fail |
-| `edit_file` | Precisely edit files | `file_path`, `old_string`, `new_string` | Success / Fail |
+**Task Tool**:
+- Create isolated sub-agents for specialized tasks
+- Support multiple agent types (code-reviewer, design-agent, general-purpose, task-executor)
+- Fork context for conversation continuity
+- Background execution and session resumption support
 
-#### 3.2.3 Search Tools
+**QuerySQL Tool**:
+- Support multiple databases (PostgreSQL, MySQL, ClickHouse, SQLite, Databricks)
+- Auto-block destructive SQL operations
+- Result row limiting and query timeout control
 
-| Tool | Purpose | Input | Output |
-|------|---------|-------|--------|
-| `glob_files` | Pattern-based file search | `pattern`, `path?` | File path list |
-| `grep_content` | Regex content search | `pattern`, `path?`, `include?` | Matches with context |
+**EvaluateFeatures Tool**:
+- Compute feature IV (Information Value), PSI (Population Stability Index), Coverage
+- Auto-binning (quantile, equal_width, tree)
+- Identify strong/weak/suspicious features (data leakage detection)
 
-#### 3.2.4 Execution Tools
+### 3.4 Domain-Specific Tools (Future)
 
-| Tool | Purpose | Input | Output |
-|------|---------|-------|--------|
-| `run_bash` | Execute commands in sandbox | `command`, `working_dir` | stdout / stderr |
+**Domain Validation Tools** (Not yet implemented):
+| Tool | Purpose | Rationale |
+|------|---------|-----------|
+| `validate_rdl` | RDL syntax validation | Requires CORINT RDL parser integration |
+| `validate_semantics` | RDL semantic validation | Requires schema access and type checking |
+| `backtest_rule` | Backtest rule on historical data | Requires RDL rule engine execution |
 
-**Design Rationale**:
-- `run_bash` can execute code in any language: `python3 -c "code"`, `node -e "code"`, etc.
-- No need for separate `execute_code` tool - reduces complexity and maintenance
-- For complex scripts, write to file first then execute: `write_file` + `run_bash`
-
-#### 3.2.5 Web Tools
-
-| Tool | Purpose | Input | Output |
-|------|---------|-------|--------|
-| `fetch_web` | Fetch web content | `url`, `prompt` | Extracted content |
-
-#### 3.2.6 Agent Tools
-
-| Tool | Purpose | Input | Output |
-|------|---------|-------|--------|
-| `spawn_agent` | Create isolated sub-agent for tasks | `agent_type`, `prompt`, `model?` | Agent result |
-| `todo_write` | Update task list status | `todos[]` | Updated list |
-
-**Notes**:
-
-- **Data Access**: LLM is responsible for generating correct SQL based on requirements; `fetch_web` is used to retrieve external documents or web pages
-- **File Operations**: `edit_file` uses precise string matching for replacement, avoiding rewriting entire files; `read_file` supports paginated reading of large files
-- **Search Tools**: `glob_files` for quick file location, `grep_content` for searching code content; combining both reduces token consumption
-- **Execution Tools**: `run_bash` handles all code execution needs - Python (`python3 -c "code"`), Node.js (`node -e "code"`), or any shell command; for complex scripts, use `write_file` first then execute
-- **Agent Tools**:
-  - `spawn_agent` creates isolated sub-sessions, supports parallel execution of multiple sub-tasks, sub-agents have independent context and token budgets
-  - `todo_write` for UI state management, displays task progress to users in real-time, not file write operations
-
-### 3.3 Domain Validation Tools
-
-Encapsulates **RDL-specific validation logic** that requires deep integration with the CORINT decision engine.
-
-| Tool | Purpose | Input | Output | Rationale |
-|------|---------|-------|--------|-----------|
-| `validate_rdl` | RDL syntax validation | `rdl_content` | Valid / Syntax Errors | Requires RDL parser and grammar rules |
-| `validate_semantics` | RDL semantic validation | `rdl_content`, `schema` | Valid / Semantic Errors | Requires schema access and type checking |
-| `backtest_rule` | Backtest rule on historical data | `rule_definition`, `historical_data` | HitRate / Precision / Recall | Requires RDL rule engine execution |
+**Domain Action Tools** (Not yet implemented):
+| Tool | Purpose | Rationale |
+|------|---------|-----------|
+| `deploy_config` | Deploy config to CORINT engine | Requires CORINT Engine API integration |
+| `rollback_config` | Rollback to previous version | Requires version control system access |
+| `create_ab_test` | Create A/B test experiment | Requires experiment platform integration |
+| `stop_ab_test` | Stop running experiment | Requires experiment platform integration |
 
 **Design Rationale**:
-- These tools require deep integration with CORINT's RDL engine and cannot be easily replicated with generic code
-- For all other calculations (metrics, vintage, DPD, flow rate, simulations), LLM generSQL code using standard libraries
-- Code generation approach provides:
-  - **Infinite extensibility**: Support any new metric without tool updates
-  - **Transparency**: Users see and understand the calculation logic
-  - **Lower maintenance**: No need to maintain calculation implementations
-  - **Flexibility**: Easy to customize calculations for specific use cases
+- These tools require deep integration with CORINT's decision engine
+- For calculations (metrics, vintage, DPD, etc.), LLM generates Python/SQL code instead
+- Code-first approach provides infinite extensibility without tool maintenance
 
-### 3.4 Domain Action Tools
-
-Execute domain operations with side effects, typically requiring user confirmation.
-
-| Tool | Purpose | Input | Output | Rationale |
-|------|---------|-------|--------|-----------|
-| `deploy_config` | Deploy configuration to repository | `config`, `env`, `version` | Deployment Result | Requires CORINT Engine API integration |
-| `rollback_config` | Rollback to specified version | `config_name`, `target_version` | Rollback Result | Requires version control system access |
-| `create_ab_test` | Create A/B test | `variants[]`, `traffic_split` | Experiment ID | Requires experiment platform integration |
-| `stop_ab_test` | Stop A/B test | `experiment_id` | Stop Result | Requires experiment platform integration |
-
-**Design Rationale**:
-- These tools involve external system integration and operations with side effects
-- Cannot be replaced by simple code generation
-- Require proper authentication, authorization, and audit logging
-- Note: `export_report` removed - can be handled by `write_file` tool
-
-### 3.5 Tool Execution Flow
+### 3.5 Tool Execution Flow Example
 
 ```
 User Request: "Calculate KS and AUC for this model, then optimize the threshold"
@@ -356,9 +332,9 @@ User Request: "Calculate KS and AUC for this model, then optimize the threshold"
     ▼ (Tool Calls)
 ┌─────────────────────────────────────────────────────────┐
 │               Foundation Tools                           │
-│  query_sql → Fetch predictions and labels                │
-│  write_file → Save Python script to /tmp/calc_ks.py     │
-│  run_bash → Execute: python3 /tmp/calc_ks.py            │
+│  QuerySQL → Fetch predictions and labels from database  │
+│  Write → Save Python script to /tmp/calc_ks.py         │
+│  Bash → Execute: python3 /tmp/calc_ks.py               │
 │    # calc_ks.py content:                                │
 │    from sklearn.metrics import roc_auc_score, roc_curve │
 │    auc = roc_auc_score(labels, predictions)             │
@@ -370,8 +346,8 @@ User Request: "Calculate KS and AUC for this model, then optimize the threshold"
     ▼ (If threshold simulation needed)
 ┌─────────────────────────────────────────────────────────┐
 │            Foundation Tools (Code Generation)            │
-│  write_file → Save simulation script                     │
-│  run_bash → Execute: python3 /tmp/simulate.py           │
+│  Write → Save simulation script to /tmp/simulate.py     │
+│  Bash → Execute: python3 /tmp/simulate.py               │
 │    # simulate.py content:                               │
 │    for t in [0.5, 0.55, 0.6, 0.65, 0.7]:               │
 │        passed = df[df['score'] >= t]                    │
@@ -381,7 +357,7 @@ User Request: "Calculate KS and AUC for this model, then optimize the threshold"
 │        }                                                │
 └─────────────────────────────────────────────────────────┘
     │
-    ▼ (If RDL validation needed)
+    ▼ (If RDL validation needed - future)
 ┌─────────────────────────────────────────────────────────┐
 │            Domain Validation Tools                       │
 │  validate_rdl → Validate RDL syntax                      │
@@ -397,20 +373,20 @@ User Request: "Calculate KS and AUC for this model, then optimize the threshold"
 │   - Expected: approval rate +3%, bad rate +0.2%"        │
 └─────────────────────────────────────────────────────────┘
     │
-    ▼ (After user confirmation)
+    ▼ (After user confirmation - future)
 ┌─────────────────────────────────────────────────────────┐
 │              Domain Action Tools                         │
 │  deploy_config → Deploy new strategy to CORINT Engine   │
 └─────────────────────────────────────────────────────────┘
 ```
 
-**Key Changes from Original Design**:
-- Removed 6 specialized calculation tools (calculate_metrics, calculate_vintage, etc.)
-- Removed `execute_code` tool - `run_bash` handles all execution needs
-- LLM now generates Python/SQL code for all calculations using `write_file` + `run_bash` or `query_sql`
-- Only 3 domain validation tools remain (validate_rdl, validate_semantics, backtest_rule)
-- 4 domain action tools for external system integration
-- Total reduction: 10 tools → 7 tools (30% fewer tools, 70% less maintenance)
+**Implementation Status Summary**:
+- ✅ **Implemented**: 15 core tools + 4 data tools + 5 modeling tools (24 total)
+- ⏳ **Future**: Domain validation tools (RDL validation, backtest) + Domain action tools (deployment, A/B testing)
+- **Design Philosophy**: Code-first approach - LLM generates Python/SQL for calculations instead of specialized tools
+- **Benefit**: Infinite extensibility without tool maintenance burden (70% fewer specialized tools needed)
+
+---
 
 ## 4. Skills Design
 
@@ -587,6 +563,6 @@ corint-cognition/
 
 ---
 
-**Document Version**: 2.0
-**Last Updated**: 2026-01-24
-**Status**: Design Phase - Optimized (Code-First Approach)
+**Document Version**: 2.1
+**Last Updated**: 2026-02-07
+**Status**: Implementation Phase - Core Tools Complete, Domain Tools Pending
